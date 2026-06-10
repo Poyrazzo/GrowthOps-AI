@@ -1,0 +1,343 @@
+Geliştirmeyi düşündüğümüz sistem, sadece teknoloji şirketlerindeki HR / People / Talent / Learning &
+Development ekiplerini hedefleyen basit bir lead toplama sistemi değil; farklı sektörlerde farklı hedef
+segmentlere göre çalışabilen, veri toplayan, veriyi temizleyen, AI ile analiz eden, lead magnet kullanan,
+outbound akışları yöneten, LinkedIn tarafını insan onaylı workflow şeklinde ele alan, SMTP ile mail
+gönderen, IMAP ile gelen yanıtları okuyan, AI ile bu yanıtları kategorize eden ve tüm süreci CRM/
+database üzerinde takip eden uçtan uca bir Growth Automation & AI Ops sistemidir.
+Bu sistemin temel amacı şudur: Firma bir hedef pazar veya hedef persona belirlediğinde sistem
+otomatik veya yarı otomatik şekilde ilgili şirketleri ve kişileri bulur, bu verileri temizler, zenginleştirir, lead
+score üretir, uygun lead magnet veya outreach mesajını seçer, kişiselleştirilmiş mail veya LinkedIn mesaj
+taslağı oluşturur, insan onayından sonra gönderim sürecine alır, gelen cevapları AI ile sınıflandırır, CRM
+status bilgisini günceller ve en sonunda hangi kanalın, hangi mesajın, hangi segmentin daha iyi
+çalıştığını raporlar.
+Sistemin en üst seviyedeki akışı şu şekildedir: Önce hedef segment seçilir. Bu segment teknoloji
+şirketleri, ihracat yapan firmalar, üniversiteler, sağlık turizmi şirketleri, yazılım ajansları, çağrı merkezleri,
+turizm firmaları, kurumsal eğitim ihtiyacı olan şirketler, akademisyenler, HR ekipleri, satış ekipleri,
+müşteri destek ekipleri veya yabancı müşteriyle çalışan herhangi bir sektör olabilir. Daha sonra sistem
+bu hedef segmente uygun veri kaynaklarını belirler. Bu kaynaklar şirket web siteleri, kariyer sayfaları,
+iletişim sayfaları, açık kurum listeleri, etkinlik sayfaları, sektörel dizinler, teknopark firma listeleri,
+üniversite sayfaları, kamuya açık şirket rehberleri, lead magnet formları, CRM içi eski kayıtlar veya
+manuel eklenen listeler olabilir. Sistem daha sonra Python, Playwright ve gerektiğinde AdsPower profil
+yönetimi gibi araçlarla bu kaynaklar üzerinde veri toplama, sayfa gezme, form kontrolü, veri çıkarma ve
+doğrulama işlemleri yapar. Toplanan veriler Pandas veya benzeri araçlarla temizlenir, duplicate kayıtlar
+silinir, eksik alanlar işaretlenir, e-posta ve domain tutarlılığı kontrol edilir. Daha sonra AI devreye girer ve
+lead’in persona’sını, sektörünü, uygunluğunu, potansiyel ihtiyacını, lead score’unu ve en uygun mesaj
+açısını belirler. Bu kayıtlar Google Sheets, Airtable, Notion, HubSpot, Pipedrive, Supabase, PostgreSQL
+veya başka bir CRM/database sistemine aktarılır. Ardından sistem her lead için uygun outreach kanalı
+seçer: e-posta, LinkedIn, lead magnet follow-up, webinar daveti veya manuel satış araması. Mail
+tarafında SMTP kullanılarak gönderim yapılır, IMAP ile gelen cevaplar okunur. Gelen cevaplar AI ile
+interested, not_interested, meeting_request, price_question, unsubscribe, bounce, out_of_office,
+wrong_person veya needs_human_review gibi kategorilere ayrılır. Bu sonuçlara göre CRM status
+güncellenir ve sistem reply rate, positive reply rate, meeting rate, bounce rate, unsubscribe rate, lead
+magnet conversion rate gibi metrikleri raporlar.
+Bu sistemin ana modülleri şunlardır: Segment & Campaign Planner, Lead Source Finder, Scraping &
+Browser Automation Engine, AdsPower Profile Manager, Proxy & Session Management Layer, Data
+Cleaning Module, AI Enrichment Module, Lead Magnet Engine, CRM / Database Layer, Outreach
+Sequence Manager, SMTP Mail Sender, IMAP Inbox Reader, AI Reply Classifier, LinkedIn Workflow
+Manager, Human Approval Queue, Reporting & Analytics Module ve Compliance / Risk Control Layer.
+İlk modül Segment & Campaign Planner’dır. Bu modül sistemin hangi hedef kitle için çalışacağını belirler.
+Örneğin “Türkiye’deki teknoloji şirketlerinde HR yöneticileri” bir segmenttir, ama sistem bununla sınırlı
+değildir. Başka bir kampanyada “sağlık turizmi firmalarında uluslararası hasta koordinatörleri”, başka bir
+kampanyada “ihracat yapan KOBİ’lerde satış müdürleri”, başka bir kampanyada “üniversitelerde yabancı
+diller bölümü akademisyenleri”, başka bir kampanyada “call center ekiplerinde eğitim yöneticileri”
+hedeflenebilir. Her kampanyanın kendi hedef persona’sı, mesaj açısı, veri kaynağı, lead magnet’i,
+outreach kanalı ve başarı metriği olur. Bu yüzden sistem kampanya bazlı tasarlanmalıdır. Her campaign
+kaydında campaign_id, campaign_name, target_sector, target_country, target_persona,
+
+1
+
+value_proposition, lead_magnet, outreach_channel, success_metric, start_date, end_date gibi alanlar
+bulunmalıdır.
+İkinci modül Lead Source Finder’dır. Bu modül, hedef segmente göre hangi veri kaynaklarının
+kullanılacağını belirler. Örneğin teknoloji şirketleri için teknopark firma listeleri, şirket web siteleri,
+kariyer sayfaları ve startup dizinleri kullanılabilir. Üniversite segmenti için bölüm sayfaları, akademik
+personel sayfaları ve fakülte dizinleri kullanılabilir. Sağlık turizmi segmenti için klinik web siteleri,
+uluslararası hasta birimi sayfaları ve sağlık turizmi rehberleri kullanılabilir. Kurumsal firmalar için kariyer
+sayfaları, iletişim sayfaları, LinkedIn üzerinde manuel olarak bulunan karar verici profiller ve eski CRM
+kayıtları kullanılabilir. Bu modül her kaynağı source_url, source_type, sector, expected_data_fields,
+access_rules, priority_score gibi alanlarla kaydeder. Böylece sistem rastgele internet gezmek yerine
+kontrollü ve kampanya hedefiyle uyumlu kaynaklar üzerinde çalışır.
+Üçüncü modül Scraping & Browser Automation Engine’dir. Bu modül veri toplama işini yapar. Basit statik
+web sitelerinde requests ve BeautifulSoup yeterli olabilir. Ancak modern, JavaScript ile yüklenen, scroll
+gerektiren, buton tıklaması isteyen veya form etkileşimi bulunan sitelerde Playwright kullanılır.
+Playwright gerçek bir tarayıcı gibi sayfayı açar, DOM yüklendiğinde elementleri bulur, butonlara tıklar,
+formları doldurur, sayfayı kaydırır, linkleri gezer, ekran görüntüsü alabilir ve HTML veya text içinden veri
+çıkarabilir. Scraper önce şirket ana sayfasına gider, contact, about, career, team, people, faculty,
+department, staff, akademik-kadro, insan-kaynaklari, kariyer, iletisim gibi linkleri bulur. Daha sonra bu
+sayfalara girerek e-posta, isim, unvan, departman, şirket adı, lokasyon, LinkedIn URL, telefon, kaynak
+URL ve sayfada geçen açıklayıcı metinleri çıkarmaya çalışır. Bu aşamada her kayıt mutlaka source_url ile
+tutulmalıdır. Çünkü daha sonra verinin nereden geldiği, güvenilir olup olmadığı ve tekrar kontrol
+edilmesi gerektiğinde bu URL’ye dönülür.
+Dördüncü modül AdsPower Profile Manager’dır. AdsPower bu sistemde doğrudan “platform kurallarını
+aşmak” için değil, profil izolasyonu, oturum yönetimi, test ortamları, farklı kampanyaların ayrı browser
+profillerinde takip edilmesi ve izinli otomasyonların düzenli yönetilmesi için düşünülmelidir. AdsPower
+ile her kampanya, her müşteri hesabı veya her test ortamı ayrı browser profile altında tutulabilir. Bu
+profillerde cookie, local storage, oturum bilgisi, proxy bilgisi ve browser ayarları ayrıştırılır. Playwright
+veya Puppeteer gibi browser automation araçları AdsPower’ın açtığı profile bağlanarak izinli
+kaynaklarda otomasyon gerçekleştirebilir. Bu sayede örneğin bir lead magnet landing page testi, kendi
+CRM paneli, kendi web uygulaman, izinli bir dizin veya manuel kontrol gerektiren operasyon paneli ayrı
+profillerle yönetilebilir. Ancak sistem LinkedIn gibi açıkça otomatik aktiviteyi yasaklayan platformlarda
+bot aktivitesi yapacak şekilde tasarlanmamalıdır. LinkedIn tarafı için sistem insan onaylı hatırlatma,
+mesaj taslağı oluşturma, manuel aksiyon kaydı ve CRM güncelleme mantığıyla çalışmalıdır.
+Beşinci modül Proxy & Session Management Layer’dır. Proxy ve session yönetimi sistemde yalnızca
+bağlantı stabilitesi, güvenli test ayrımı, coğrafi olarak izinli kaynaklara erişim, kurumsal ağ ayrımı veya
+farklı kampanyaların teknik olarak izole edilmesi için düşünülmelidir. Bu katmanın görevi agresif veri
+çekmek, platform kısıtlarını aşmak veya tespit mekanizmalarını bypass etmek değildir. Her proxy veya
+session kullanımı kampanya, profil ve veri kaynağı ile ilişkilendirilir. Sistem her isteği loglar, hangi profile
+hangi kaynağa ne zaman eriştiğini kaydeder, hata ve engel durumlarını raporlar. Eğer bir kaynak erişime
+izin vermiyorsa veya platform kuralları otomasyonu yasaklıyorsa sistem o kaynağı otomatik işlemden
+çıkarır ve manuel kontrol kuyruğuna gönderir. Bu katmanda rate limit, timeout, retry, backoff, source
+policy, allowed_domains ve blocked_domains gibi güvenlik kuralları bulunur.
+Altıncı modül Data Cleaning Module’dür. Scraping’den gelen veri doğrudan kullanılmaz çünkü ham veri
+çoğu zaman hatalı, eksik, tekrarlı veya dağınıktır. Bu modül Pandas ile veriyi temizler. E-posta adresleri
+küçük harfe çevrilir, baştaki ve sondaki boşluklar silinir, geçersiz e-posta formatları çıkarılır, duplicate
+kayıtlar temizlenir, source_url olmayan kayıtlar düşük güvenilir olarak işaretlenir, generic mail adresleri
+
+2
+
+ayrı işaretlenir. Örneğin info@, support@, hello@, contact@ gibi adresler doğrudan karar verici kişi
+olmayabilir ama bazı kampanyalarda yine de başlangıç noktası olabilir. Eğer email domain’i şirket
+websitesinin domain’iyle uyuşmuyorsa sistem bunu kontrol gerektiren kayıt olarak işaretler. Aynı kişi
+farklı kaynaklardan geldiyse kayıtlar birleştirilir. Deduplication için email, LinkedIn URL, telefon, domain,
+ad-soyad + şirket kombinasyonu gibi alanlar kullanılabilir.
+Yedinci modül AI Enrichment Module’dür. Bu modül lead verisini AI ile anlamlandırır. Ham veya
+temizlenmiş lead kaydı AI’a gönderilir ve AI bu kayıttan persona, sektör, departman, karar verici olma
+ihtimali, potansiyel ihtiyaç, mesaj açısı ve lead score üretir. Örneğin bir kişi “People & Culture Manager”
+ise persona HR / People olarak sınıflanabilir. Bir şirketin web sitesinde “global müşteriler”, “ihracat”,
+“uluslararası satış”, “customer support”, “call center”, “health tourism” gibi ifadeler geçiyorsa sistem bu
+şirket için İngilizce eğitim ihtiyacının daha yüksek olabileceğini düşünebilir. AI burada serbest metin
+üretmek yerine yapılandırılmış JSON output üretmelidir. Örnek çıktı şu şekildedir: persona, sector,
+department, lead_score, score_reason, recommended_message_angle, recommended_lead_magnet,
+requires_human_review. Lead score 0 ile 100 arasında verilir. Örneğin karar verici role sahip, sektör
+uyumu yüksek, şirket ölçeği uygun, kaynak güvenilir ve iletişim bilgisi net olan bir kayıt 80+ puan alabilir.
+Sadece generic mail bulunan, kaynak belirsiz veya hedef persona ile zayıf ilişkili kayıtlar düşük skor alır.
+Sekizinci modül Lead Magnet Engine’dir. Sistem sadece soğuk mesaj atmakla kalmamalı; hedef kişiye
+değer sunan lead magnet’ler kullanmalıdır. Lead magnet, potansiyel müşterinin ilgisini çekmek ve
+iletişim başlatmak için sunulan ücretsiz değerli içerik veya araçtır. Örneğin Konuşarak Öğren benzeri bir
+firma için lead magnet örnekleri şunlar olabilir: “Ekibiniz için ücretsiz İngilizce seviye analizi”,
+“Şirketinizin İngilizce iletişim ihtiyaç raporu”, “HR ekipleri için kurumsal İngilizce eğitim checklist’i”,
+“İhracat ekipleri için iş İngilizcesi yetkinlik testi”, “Müşteri destek ekipleri için İngilizce konuşma
+simülasyonu”, “Akademisyenler için akademik İngilizce speaking analizi”, “Sağlık turizmi ekipleri için
+hasta iletişimi İngilizcesi mini değerlendirme”. Sistem her persona için uygun lead magnet seçer. HR için
+çalışan gelişimi raporu, satış ekipleri için müşteri görüşmesi İngilizcesi analizi, akademisyenler için
+akademik konuşma pratiği, sağlık turizmi için hasta iletişimi simülasyonu kullanılabilir. Lead magnet
+formları CRM’e veri gönderir, AI form cevaplarını analiz eder ve kişiye özel mini rapor üretebilir.
+Dokuzuncu modül CRM / Database Layer’dır. Sistemin merkezi burasıdır. Google Sheets, Airtable, Notion,
+HubSpot, Pipedrive, Zoho CRM, Supabase veya PostgreSQL kullanılabilir. MVP aşamasında Google
+Sheets veya Airtable yeterlidir. Daha profesyonel versiyonda PostgreSQL + admin panel daha sağlam
+olur. CRM’de leads, companies, campaigns, messages, replies, activities, lead_magnets ve reports
+tabloları bulunabilir. Leads tablosunda lead_id, campaign_id, full_name, email, phone, linkedin_url, title,
+department, company_id, persona, sector, source_url, lead_score, lead_status, reply_category,
+next_action, owner, created_at, updated_at gibi alanlar olur. Companies tablosunda company_name,
+website, sector, location, employee_count, source_url, company_score gibi bilgiler tutulur. Messages
+tablosunda hangi lead’e hangi mesajın ne zaman gönderildiği, hangi kanalın kullanıldığı ve mesaj içeriği
+tutulur. Replies tablosunda gelen cevaplar, AI sınıflandırması ve confidence score tutulur. Activities
+tablosu her aksiyonu loglar: lead created, enriched, approved, email sent, reply received, status
+changed, human reviewed gibi.
+Onuncu modül Outreach Sequence Manager’dır. Bu modül outbound akışları yönetir. Her kampanya için
+bir outreach sequence tanımlanır. Örneğin e-posta kampanyasında ilk mail, 3 gün sonra follow-up, 7
+gün sonra lead magnet hatırlatma, 12 gün sonra nazik kapanış mesajı olabilir. LinkedIn tarafında ise
+sistem otomatik bot aktivitesi yapmak yerine manuel aksiyon destekli workflow şeklinde çalışır. Örneğin
+sistem LinkedIn profil URL’sini CRM’de tutar, AI bağlantı mesajı taslağı oluşturur, satış/growth ekibine “bu
+kişiye manuel bağlantı isteği gönder” görevi açar, kullanıcı aksiyonu manuel yaptıktan sonra CRM’de
+status değiştirir. Bağlantı kabul edilirse sistem DM taslağı oluşturabilir ama gönderimi yine insan
+onayına ve manuel aksiyona bırakır. Bu yapı hem LinkedIn workflow’unu sisteme dahil eder hem de
+
+3
+
+platform kurallarını aşan otomatik scraping veya bot aktivitesinden kaçınır. E-posta tarafında ise izinli ve
+kontrollü gönderim yapılır. Outreach sequence içinde stop condition çok önemlidir. Eğer kişi cevap
+verdiyse follow-up durur. Eğer unsubscribe dediyse tüm outreach durur. Bounce geldiyse e-posta
+geçersiz işaretlenir. Eğer wrong_person dediyse sistem yeni karar verici bulma görevine geçer. Eğer
+meeting_request geldiyse satış ekibine bildirim gider.
+On birinci modül SMTP Mail Sender’dır. Bu modül onaylanmış lead’lere e-posta gönderir. SMTP mail
+göndermek için kullanılır. Sistem SMTP kullanırken sadece teknik bağlantıyı değil, deliverability tarafını
+da düşünmelidir. SPF, DKIM ve DMARC kayıtları doğru kurulmalıdır. Yeni domain ile bir anda yüksek
+hacimli gönderim yapılmamalıdır. Mail içeriği kişiselleştirilmiş, kısa, net ve değer odaklı olmalıdır. Her
+mailde unsubscribe veya tekrar iletişim istememe seçeneği düşünülmelidir. Gönderim hacmi kampanya
+bazlı sınırlandırılır. Sistem her mail gönderiminde sent_at, sender_email, recipient_email, subject, body,
+campaign_id ve message_id bilgilerini kaydeder. Mail gönderimi ilk versiyonda tamamen otomatik
+olmamalıdır. Daha güvenli MVP yapısında AI mail taslağı üretir, insan onaylar, sistem SMTP ile gönderir.
+Bu sayede yanlış kişiye yanlış mesaj gönderme riski azalır.
+On ikinci modül IMAP Inbox Reader’dır. IMAP gelen kutusunu okumak için kullanılır. Sistem belirli
+aralıklarla gelen kutusunu kontrol eder, yeni mailleri okur, gönderen adresini CRM’deki lead kayıtlarıyla
+eşleştirir, subject ve body içeriğini çıkarır, daha önce işlenmiş mi kontrol eder ve reply classification
+modülüne gönderir. IMAP modülü ayrıca out-of-office, bounce, delivery failure, automatic reply gibi
+otomatik mesajları da yakalamaya çalışır. Her gelen cevap replies tablosuna kaydedilir. Eğer cevap bir
+lead ile eşleşmiyorsa sistem bunu unmatched_reply olarak işaretler ve insan kontrolüne gönderir. Eğer
+aynı thread içinde daha önce konuşma varsa sistem thread history bilgisini de AI’a verebilir. Böylece AI
+sadece tek maili değil konuşmanın bağlamını da değerlendirir.
+On üçüncü modül AI Reply Classifier’dır. Bu modül gelen e-postaları okur ve kategori belirler. Kategoriler
+interested, not_interested, meeting_request, price_question, unsubscribe, bounce, out_of_office,
+wrong_person, referral, competitor, spam, unknown ve needs_human_review olabilir. AI cevabı sadece
+serbest metin olarak değil, JSON formatında üretmelidir. Örnek çıktı şu şekildedir: category, sentiment,
+confidence, summary, next_action, requires_human_review. Örneğin “Önümüzdeki hafta görüşebiliriz”
+cevabı meeting_request olarak sınıflanır. “Fiyat bilgisi alabilir miyim?” price_question olur. “Bir daha mail
+atmayın” unsubscribe olur ve sistem tüm follow-up’ları durdurur. “Şu anda ilgilenmiyoruz”
+not_interested olur. “Ben doğru kişi değilim, eğitim ekibiyle görüşmelisiniz” wrong_person veya referral
+olarak işaretlenebilir. AI’ın confidence değeri düşükse sistem otomatik aksiyon almaz, insan kontrol
+kuyruğuna gönderir. Örneğin confidence 0.85 üzerindeyse CRM status otomatik güncellenebilir;
+0.70-0.85 arası insan kontrolüne düşebilir; 0.70 altı needs_human_review olabilir. Unsubscribe gibi
+hassas kategorilerde otomatik stop uygulanmalıdır.
+On dördüncü modül LinkedIn Workflow Manager’dır. Bu modül LinkedIn’i sisteme dahil eder ama bunu
+güvenli ve insan onaylı şekilde yapar. LinkedIn üzerinde otomatik scraping, otomatik bağlantı isteği,
+otomatik DM veya bot davranışı yerine sistem şunları yapar: hedef persona’ya göre LinkedIn arama
+stratejisi önerir, manuel olarak bulunan LinkedIn profillerini CRM’e kaydeder, profil bilgisine göre AI
+mesaj taslağı oluşturur, kullanıcıya “bağlantı isteği gönder”, “DM gönder”, “yanıtı CRM’e işle” gibi
+görevler açar, yanıt metni sisteme girildiğinde AI bunu sınıflandırır, follow-up zamanını hatırlatır ve
+pipeline status günceller. Bu sayede LinkedIn lead generation süreci sistemin içinde yer alır ancak
+platform kurallarını ihlal eden doğrudan bot otomasyonu yapılmaz. Eğer firma LinkedIn için resmi/izinli
+entegrasyon, Sales Navigator içinde manuel çalışma veya onaylı veri sağlayıcılar kullanıyorsa sistem bu
+kaynaklardan gelen veriyi CRM’e bağlayabilir. Bu modülde amaç LinkedIn’i “kontrolsüz otomatik kanal”
+değil, “insan onaylı outbound workflow kanalı” olarak yönetmektir.
+
+4
+
+On beşinci modül Human Approval Queue’dur. AI ve otomasyon sistemlerinde kritik noktalarda insan
+kontrolü olmalıdır. Sistem şu durumları insan onayına gönderir: yüksek hacimli mail gönderimi, ilk kez
+iletişim kurulacak lead, AI confidence düşük cevap sınıflandırması, fiyat sorusu, toplantı talebi, hassas
+müşteri cevabı, LinkedIn mesaj taslağı, unsubscribe dışındaki karmaşık durumlar, yanlış kişi/referral gibi
+belirsiz cevaplar. İnsan onay ekranında lead bilgisi, kaynak URL, AI özeti, önerilen kategori, önerilen
+mesaj, confidence score ve önerilen next_action gösterilir. Kullanıcı approve, edit, reject veya
+mark_as_do_not_contact seçeneklerinden birini seçer. Bu sistem hem hata riskini azaltır hem de AI’ın
+gerçek operasyon içinde güvenli kullanılmasını sağlar.
+On altıncı modül Workflow / Automation Orchestrator’dır. Sistem hem workflow hem automation olarak
+çalışabilir. Automation tekil bir otomatik işlemdir; örneğin “yeni reply gelirse AI ile sınıflandır” bir
+automation’dır. Workflow ise birden fazla adımdan oluşan uçtan uca süreçtir; örneğin “lead topla,
+temizle, score ver, CRM’e yaz, mail taslağı oluştur, insan onayından geçir, gönder, yanıtı oku, AI ile
+sınıflandır, CRM status güncelle, raporla” bir workflow’dur. Bu sistem n8n, Make, Zapier gibi low-code
+araçlarla da kurulabilir; custom Python backend ile de kurulabilir. En iyi yaklaşım hibrittir: karmaşık
+scraping, Playwright, AI enrichment ve özel veri temizleme Python ile yapılır; basit bildirim, Google
+Sheets/Airtable güncelleme, Slack bildirimi, scheduled task ve webhook akışları n8n/Make/Zapier ile
+yönetilir. Örneğin yeni lead Google Sheets’e eklenince n8n tetiklenir, AI scoring node çalışır, sonuç
+Airtable’a yazılır, lead_score 80 üzerindeyse Slack’e onay bildirimi gider. Ya da IMAP ile yeni mail
+geldiğinde Make workflow’u tetiklenir, AI reply classifier çalışır, CRM status güncellenir.
+On yedinci modül Reporting & Analytics Module’dür. Sistemin sadece çalışması yetmez; sonuç üretip
+üretmediği ölçülmelidir. Temel metrikler şunlardır: total_leads_collected, cleaned_leads_count,
+enriched_leads_count, approved_leads_count, emails_sent_count, replies_count, positive_replies_count,
+meeting_requests_count, bounce_count, unsubscribe_count, reply_rate, positive_reply_rate,
+meeting_rate, bounce_rate, unsubscribe_rate, lead_magnet_conversion_rate,
+campaign_conversion_rate. Reply rate gönderilen maillere gelen toplam cevap oranıdır. Positive reply
+rate interested, price_question ve meeting_request gibi olumlu cevapların gönderilen maillere oranıdır.
+Meeting rate toplantı isteyen kişilerin gönderilen maillere oranıdır. Bounce rate ulaşmayan mail oranıdır.
+Ayrıca sistem sektör bazlı, persona bazlı, lead magnet bazlı, mesaj açısı bazlı ve kanal bazlı performans
+raporu üretmelidir. Örneğin HR persona’sı %8 reply rate üretirken, satış müdürü persona’sı %3 reply rate
+üretiyorsa kampanya stratejisi buna göre optimize edilir.
+On sekizinci modül Compliance / Risk Control Layer’dır. Bu sistemde scraping, e-posta, LinkedIn ve AI
+kullanıldığı için güvenlik ve uyumluluk katmanı şarttır. Sistem kaynakların kullanım şartlarını dikkate
+almalı, izinli ve kamuya açık veriyle çalışmalı, gereksiz kişisel veri toplamamalı, unsubscribe isteyen
+kişilere tekrar ulaşmamalı, LinkedIn gibi platformlarda yasaklı otomasyon davranışlarından kaçınmalı, eposta gönderiminde SPF/DKIM/DMARC, bounce, unsubscribe ve sender reputation konularını
+yönetmelidir. Ayrıca AI tarafında hallucination, yanlış sınıflandırma, prompt injection, hassas veri sızıntısı
+ve hatalı otomatik aksiyon riskleri vardır. Bu yüzden sistemde audit log, human approval, confidence
+threshold, allowed actions, blocked actions, data retention ve manual override mekanizmaları
+bulunmalıdır.
+Sistemin veri modeli şöyle olabilir. Campaigns tablosunda campaign_id, campaign_name, target_sector,
+target_persona, country, value_proposition, lead_magnet_id, outreach_channels, status, created_at
+alanları olur. Companies tablosunda company_id, company_name, website, sector, location, source_url,
+company_score, created_at alanları olur. Leads tablosunda lead_id, campaign_id, company_id,
+full_name, email, phone, linkedin_url, title, department, persona, source_url, lead_score, score_reason,
+recommended_message_angle, recommended_lead_magnet, lead_status, owner, created_at,
+updated_at alanları olur. Messages tablosunda message_id, lead_id, campaign_id, channel, subject,
+body, status, sent_at, approved_by_human, sender_account alanları olur. Replies tablosunda reply_id,
+
+5
+
+lead_id, message_id, sender_email, subject, body, category, sentiment, confidence, summary,
+next_action, requires_human_review, received_at alanları olur. Activities tablosunda activity_id, lead_id,
+action_type, old_status, new_status, note, created_at alanları olur. Suppression list tablosunda email,
+reason, source, created_at alanları bulunur; unsubscribe veya do_not_contact kayıtları burada tutulur.
+Sistemin örnek uçtan uca senaryosu şöyle çalışır. Önce growth ekibi yeni bir kampanya oluşturur:
+“Türkiye’de ihracat yapan B2B şirketlerinde satış ve HR ekipleri.” Kampanyanın amacı, bu şirketlere iş
+İngilizcesi konuşma eğitimi veya ücretsiz İngilizce ihtiyaç analizi sunmaktır. Sistem kaynak olarak şirket
+web siteleri, açık firma dizinleri, kariyer sayfaları ve manuel LinkedIn araştırma workflow’unu seçer.
+Scraper şirket sitelerini gezer, iletişim ve kariyer sayfalarından e-posta ve ilgili departman bilgilerini
+toplar. Data cleaning modülü duplicate kayıtları siler ve generic e-postaları işaretler. AI enrichment
+modülü her lead için persona, sektör ve lead score üretir. Lead score 75 üzerindeyse sistem bu lead’i
+human approval queue’ya gönderir. AI aynı zamanda lead için en uygun mesaj açısını belirler: “global
+müşteriyle çalışan satış ekipleri için İngilizce konuşma pratiği.” Lead magnet engine, bu persona için
+“ücretsiz iş İngilizcesi ihtiyaç analizi” lead magnet’ini seçer. Sistem mail taslağı oluşturur. İnsan taslağı
+kontrol eder ve onaylar. SMTP modülü maili gönderir ve CRM status contacted yapar. Daha sonra IMAP
+modülü gelen cevapları kontrol eder. Bir cevap geldiğinde AI reply classifier bunu meeting_request
+olarak sınıflandırır, confidence 0.93 verir ve next_action olarak “calendar link gönder veya satış ekibine
+bildir” önerir. CRM status meeting_request yapılır, satış ekibine bildirim gider. Raporlama modülü bu
+kampanyanın kaç lead topladığını, kaç mail gönderdiğini, kaç olumlu cevap aldığını ve kaç toplantı talebi
+oluştuğunu gösterir.
+Bu sistemin LinkedIn tarafındaki örnek senaryosu ise daha kontrollüdür. Sistem hedef persona için
+LinkedIn arama kriterlerini üretir: örneğin “People Manager”, “HR Manager”, “Learning and
+Development Manager”, “Sales Director”, “Export Manager” gibi unvanlar ve Türkiye lokasyonu. Kullanıcı
+bu aramaları manuel yapar veya izinli araçlar üzerinden aday profilleri belirler. Profil URL’leri CRM’e girilir.
+AI profil, şirket ve kampanya bağlamına göre bağlantı mesajı taslağı oluşturur. Sistem kullanıcıya görev
+açar: “Bu kişiye manuel bağlantı isteği gönder.” Kullanıcı manuel aksiyonu tamamlayınca CRM’de status
+linkedin_connection_sent olur. Kişi bağlantıyı kabul ederse kullanıcı bunu işaretler ve sistem DM taslağı
+üretir. DM yine insan tarafından manuel gönderilir. Yanıt geldiğinde kullanıcı yanıtı CRM’e girer veya
+mail/inbox entegrasyonu varsa sistem otomatik okur. AI yanıtı kategorize eder ve next_action belirler.
+Böylece LinkedIn lead generation süreci sistemin içinde takip edilir, ama doğrudan platform üzerinde
+bot/scraper davranışı tasarlanmaz.
+Bu sistemde AdsPower + Playwright kullanımı şu şekilde konumlandırılmalıdır. AdsPower profil ve
+oturum yönetimi katmanıdır. Playwright ise browser automation motorudur. AdsPower içinde her
+kampanya veya operasyon için ayrı browser profili oluşturulur. Playwright bu profile bağlanarak izinli
+kaynaklarda test, veri kontrolü, form doğrulama, lead magnet landing page QA, kendi CRM/admin
+panel işlemleri veya kamuya açık ve otomasyona izin veren kaynaklarda veri çıkarma işlemi yapabilir.
+AdsPower profile_id, campaign_id ve source_id ile eşleştirilir. Sistem hangi profilin hangi kampanyada
+kullanıldığını loglar. Eğer bir kaynak LinkedIn gibi otomatik aktiviteyi yasaklıyorsa sistem bu kaynakta
+Playwright bot çalıştırmaz; sadece insan onaylı task üretir. Bu ayrım mülakat ve case study açısından
+önemlidir çünkü teknik bilgiyi gösterirken risk yönetimini de gösterir.
+Sistemin MVP versiyonu şöyle kurulabilir: İlk olarak Google Sheets veya Airtable üzerinde campaigns,
+leads, messages ve replies tabloları oluşturulur. Sonra Python ile basit bir scraper yazılır; bu scraper
+verilen şirket URL’lerinden contact/about/career/team sayfalarını gezer ve e-posta, isim, unvan, şirket,
+source_url bilgilerini raw_leads.csv dosyasına yazar. Sonra Pandas ile cleaner yazılır; e-posta normalize
+edilir, duplicate silinir, generic mail işaretlenir ve cleaned_leads.csv oluşturulur. Sonra AI enrichment
+script’i yazılır; her lead için persona, sector, lead_score, recommended_message_angle ve
+requires_human_review üretir. Sonra bu veriler Google Sheets veya Airtable’a aktarılır. Daha sonra mail
+
+6
+
+template sistemi kurulur; AI her lead için kişiselleştirilmiş mail taslağı üretir. İlk aşamada mail otomatik
+gönderilmez, approved_for_outreach olan lead’ler insan kontrolünden geçer. Onaylananlara SMTP ile
+mail gönderilir. Sonra IMAP inbox reader son gelen mailleri okur, gönderen adresiyle lead’i eşleştirir ve
+AI reply classifier’a yollar. AI cevap kategorisini, confidence score’u, özeti ve next_action’ı üretir. CRM
+status güncellenir. En sonunda reporter modülü reply_rate, positive_reply_rate, meeting_rate,
+bounce_rate ve unsubscribe_rate üretir.
+Daha gelişmiş versiyonda sisteme n8n veya Make eklenebilir. Örneğin yeni lead Airtable’a geldiğinde
+n8n tetiklenir. AI scoring çalışır. Lead score 80 üzerindeyse Slack veya e-posta ile onay bildirimi gider.
+İnsan onay verirse SMTP gönderim modülü çalışır. Yeni mail geldiğinde IMAP trigger çalışır. AI reply
+classifier sonucu CRM’e yazar. Eğer category meeting_request ise satış ekibine bildirim gider. Eğer
+unsubscribe ise suppression list güncellenir ve tüm sequence durur. Eğer bounce ise email_invalid
+yapılır. Eğer wrong_person ise sistem “alternatif karar verici bul” görevi açar. Make veya n8n burada
+workflow orchestration görevini üstlenir; Python ise scraping, AI enrichment, özel veri temizleme ve
+daha teknik işlemleri yapar.
+Bu sistemde outbound akışlar kampanya türüne göre değişebilir. E-posta outbound akışında ilk mail,
+follow-up 1, lead magnet hatırlatma, follow-up 2 ve kapanış maili olabilir. LinkedIn workflow akışında
+manuel bağlantı isteği, kabul sonrası DM, lead magnet paylaşımı, follow-up ve CRM güncelleme olabilir.
+Lead magnet akışında kullanıcı form doldurur, AI mini rapor üretir, CRM’e lead eklenir, kişiye özel followup gider. Webinar akışında hedef persona’ya webinar daveti gönderilir, kayıt olanlar CRM’de activated
+olarak işaretlenir, katılanlara satış follow-up’ı yapılır. Her outbound akışta stop condition olmalıdır. Kişi
+cevap verdiyse otomatik follow-up durur. Unsubscribe dediyse tüm iletişim durur. Bounce geldiyse mail
+adresi geçersiz yapılır. Meeting request varsa otomatik satış bildirimi açılır. Not interested ise nurture
+veya closed_lost yapılır.
+Sistemin AI tarafında üç ana kullanım vardır. Birincisi AI enrichment: lead’in kim olduğunu, hangi
+persona’ya ait olduğunu ve ne kadar değerli olduğunu anlamak. İkincisi AI personalization: kişiye,
+şirkete ve sektöre göre mesaj açısı ve mail taslağı üretmek. Üçüncüsü AI reply classification: gelen
+cevapları okuyup kategori ve next_action belirlemek. Bu üç kullanımda da AI çıktısı JSON formatında
+alınmalıdır. Serbest metin çıktısı operasyonel sistemler için risklidir. Her AI çıktısında confidence score
+bulunmalıdır. Eğer confidence düşükse insan onayı gerekir. Kritik aksiyonlar, özellikle mail gönderimi,
+toplantı planlama, fiyat cevabı verme ve CRM’de kapatma işlemleri insan kontrolüne bağlanmalıdır.
+Sistemin başarılı olması için sadece teknik olarak çalışması yetmez. Veri kalitesi, kişiselleştirme, doğru
+segment seçimi ve metrik takibi de önemlidir. Kötü veriyle en iyi AI bile kötü sonuç verir. Yanlış kişiye
+giden en iyi mesaj bile dönüşüm üretmez. Bu yüzden sistemin her aşamasında kalite kontrol olmalıdır.
+Scraping sonrası veri temizliği, AI scoring sonrası insan onayı, mail gönderimi öncesi taslak kontrolü,
+reply classification sonrası düşük confidence kontrolü ve kampanya sonrası metrik analizi yapılmalıdır.
+Bu sistemin case study veya mülakatta anlatılabilecek en güçlü özeti şudur: Ben bu sistemi sadece lead
+scraping aracı olarak değil, uçtan uca bir growth automation platformu olarak tasarlarım. Sistem farklı
+sektör ve personaya göre kampanya oluşturur, izinli ve kamuya açık kaynaklardan veri toplar, Playwright
+ve gerektiğinde AdsPower profil yönetimiyle browser automation süreçlerini yönetir, proxy/session
+katmanını güvenli ve kurallı şekilde ele alır, Pandas ile veriyi temizler, AI ile persona ve lead score üretir,
+lead magnet seçer, Google Sheets/Airtable/CRM üzerinde pipeline oluşturur, SMTP ile insan onaylı
+kişiselleştirilmiş mail gönderir, IMAP ile gelen cevapları okur, AI ile cevapları kategorize eder, LinkedIn
+tarafını bot değil insan onaylı workflow olarak sisteme dahil eder, CRM status ve next_action bilgisini
+otomatik günceller ve tüm kampanyayı reply rate, positive reply rate, meeting rate, bounce rate ve lead
+magnet conversion rate gibi metriklerle raporlar. Bu mimari hem teknik otomasyon kabiliyetini hem AI
+kullanımını hem de operasyonel risk yönetimini aynı anda kapsar.
+
+7
+
+
