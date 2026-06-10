@@ -3,16 +3,42 @@ from crm.models import Lead, Message, EmailAccount
 from outreach.smtp import SMTPSender
 from ai_engine.email_generator import generate_followup_draft
 
+def get_account_with_capacity() -> EmailAccount:
+    """Finds the active EmailAccount with the most remaining daily capacity."""
+    today = timezone.now().date()
+    accounts = EmailAccount.objects.filter(is_active=True)
+    best_account = None
+    most_capacity = -1
+    
+    for acc in accounts:
+        sent_today = Message.objects.filter(sender_account=acc, status='sent', sent_at__date=today).count()
+        capacity = acc.daily_limit - sent_today
+        if capacity > most_capacity:
+            most_capacity = capacity
+            best_account = acc
+            
+    if most_capacity > 0:
+        return best_account
+    return None
+
 def dispatch_pending_emails() -> int:
     pending_messages = Message.objects.filter(status='pending')
     count = 0
+    today = timezone.now().date()
+    
     for msg in pending_messages:
         if not msg.sender_account:
-            account = EmailAccount.objects.filter(is_active=True).first()
+            account = get_account_with_capacity()
             if not account:
-                continue
+                # No system-wide capacity left today
+                break
             msg.sender_account = account
             msg.save()
+        else:
+            # It's a follow-up, check if THIS specific account has capacity
+            sent_today = Message.objects.filter(sender_account=msg.sender_account, status='sent', sent_at__date=today).count()
+            if sent_today >= msg.sender_account.daily_limit:
+                continue
             
         sender = SMTPSender(msg)
         if sender.send():
@@ -53,6 +79,7 @@ def process_followups() -> int:
                 Message.objects.create(
                     lead=lead,
                     campaign=lead.campaign,
+                    sender_account=latest_msg.sender_account, # Identity preservation fix
                     channel='email',
                     subject=draft_data['subject'],
                     body=draft_data['body'],

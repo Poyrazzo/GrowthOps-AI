@@ -18,6 +18,14 @@ class SMTPSender:
             self._log_audit("Failed", "Lead has no email address")
             return False
             
+        # Check daily limit
+        sent_today = Message.objects.filter(sender_account=self.account, status='sent', sent_at__date=timezone.now().date()).count()
+        if sent_today >= self.account.daily_limit:
+            self.message.status = 'failed'
+            self.message.save()
+            self._log_audit("Failed", "Daily limit exceeded for this account")
+            return False
+            
         # Check suppression list
         if SuppressionList.objects.filter(email=self.message.lead.email).exists():
             self.message.status = 'bounced' # Treat suppressed as bounced/failed
