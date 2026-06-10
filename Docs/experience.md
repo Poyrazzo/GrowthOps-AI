@@ -56,8 +56,9 @@ This document serves as our project diary and knowledge base.
 - **Docker Host Compatibility:** Appended `extra_hosts: ["host.docker.internal:host-gateway"]` to `docker-compose.yml` to guarantee the containers can resolve requests back to the local machine across Linux, Mac, and Windows.
 - **Verification:** Simulated a dry-run connection. The container correctly resolved `host.docker.internal` and gracefully handled the connection exception (since AdsPower wasn't actively running on the host), proving the network bridge and error handling are fully operational.
 
-## Implementation of Phase 3 (Step 3.5)
+## Implementation of Phase 3 (Step 3.5 & Architecture Fixes)
 - **Celery Pipeline:** Created `backend/crm/tasks.py` to house the orchestration logic.
-- **Task Definitions:** Built two `@shared_task` endpoints. `run_static_scrape` handles standard requests, and `run_dynamic_scrape` explicitly targets the isolated `playwright` queue.
+- **Task Definitions:** Built two `@shared_task` endpoints (`run_static_scrape` and `run_dynamic_scrape`), wiring them to bind=True with `autoretry_for` and exponential backoffs to prevent silent network failures.
+- **Proxy Support:** Engineered `proxy_url` passthrough capabilities deep into both the `StaticScraper` (requests) and `DynamicScraper` (Playwright proxy launches).
 - **Fan-Out & Saving:** The tasks retrieve the unified output dictionary from the scrapers. They fan out the discovered emails and social links into individual Lead profiles, run them through the `DataCleaner`, and use `Lead.objects.get_or_create()` to safely insert them into the Postgres database without violating unique constraints.
-- **Verification:** Fixed a missing dependency bug by ensuring the Celery containers rebuilt with the latest `requirements.txt`. Sent an async `.delay()` payload directly to Redis via the Django shell. The celery worker successfully picked it up, executed the entire pipeline, and logged the transaction seamlessly.
+- **Verification:** Tasks were overhauled to return structured JSON dictionaries (`{"success": True, "processed": X, "saved": Y}`) rather than strings. Verified the async `.delay()` payload directly to Redis via the Django shell; the worker successfully digested it and returned the correct dictionary structure.
