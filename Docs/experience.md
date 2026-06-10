@@ -104,3 +104,22 @@ This document serves as our project diary and knowledge base.
 
 ## Implementation of Phase 7 Final Audit (Step 7.5)
 - **Architecture Stabilization:** Executed a deep diagnostic hunt across Phase 7 deliverables. Found and patched a silently-failed patch inside `tasks.py` to restore n8n webhook firing. Rebuilt the E2E test scripts (`test_e2e_email.py`, `test_e2e_linkedin.py`) to correctly mock the `Campaign` database schema. Finally, engineered a dynamic TLS bypass inside `backend/outreach/smtp.py` so standard Django `EmailBackend` can securely ping local mock containers (like GreenMail) on port 3025 without crashing via missing STARTTLS extensions. Phase 7 is officially robust and locked.
+
+## Full-System Independent Audit (Post-Phase 7, 2026-06-11)
+A complete code review of all 7 phases against the SRS/PDF goals was performed. No code was changed; findings only. Key confirmed bugs (verified experimentally where noted):
+- **CRITICAL — `scraper/cleaner.py` collapses all leads from a page to ONE.** `drop_duplicates(subset=['linkedin_url'])` treats identical AND NaN/None linkedin values as duplicates (pandas behavior, verified with a live test). Since `tasks._process_and_save_scrape_result` attaches the same page-level linkedin URL (or None) to every harvested email, every scrape saves at most 1 lead.
+- **CRITICAL — `cleaner.py` converts `email=None` to the literal string `'none'`** (`astype(str)` + lowercase; the replace dict only handles `'nan'`/`''`). LinkedIn-only leads get saved with `email='none'`, and all later linkedin-only leads silently merge into that one lead.
+- **No scrape entry point:** `run_static_scrape`/`run_dynamic_scrape` have zero callers (no API action, no beat schedule); `LeadSource` is never consumed by the pipeline.
+- **LinkedIn tasks are never generated** outside the E2E test; campaigns with `outreach_channel='linkedin'` still receive *email* drafts (channel is never checked in `score_lead_task`/`generate_draft_task`).
+- **Reply confidence threshold (SRS 3.13) not implemented:** low-confidence classifications are never routed to the ApprovalQueue.
+- **Sentiment case bug:** `classify_reply_task` compares `sentiment == 'positive'` but the Pydantic schema suggests "Positive/Negative/Neutral" (free-form str) — the n8n webhook + lead status update will usually not fire. Should be a lowercase `Literal`.
+- **Approval UI is blind:** the approvals page shows only `reason_for_review` + item UUID, not the draft subject/body (SRS 3.15 requires lead context and proposed action).
+- **Frontend port mismatch:** `lib/api.ts` targets `127.0.0.1:8000` but docker-compose maps Django to host port `18000`.
+- **Stop-condition gap:** `dispatch_pending_emails` ignores `lead.status` and `campaign.status` — pending drafts still send after a lead replied/disqualified or a campaign is paused.
+- **Daily-limit kill:** `SMTPSender` marks messages `'failed'` (permanent) when the daily limit is hit instead of deferring to tomorrow.
+- **Follow-ups don't thread:** outgoing follow-ups have no `In-Reply-To`/`References` headers, so "bump the thread" arrives as a new conversation.
+- **IMAP gaps:** matching relies solely on `In-Reply-To`/`References` (bounces/NDRs usually lack them → bounce suppression loop rarely fires); unmatched mail is implicitly marked `\Seen` and lost; `IMAP4_SSL` is hardcoded so the GreenMail (plaintext, 3143) inbound flow was never actually testable; port-465 SSL accounts will fail (needs `use_ssl`, not `use_tls`).
+- **Draft dedupe check** only looks at `status='pending'` → duplicate initial drafts possible for leads with `needs_review`/`sent` messages.
+- **Directory attribution flaw:** the scraped page's domain becomes the lead's Company — wrong for directories/technoparks, which the SRS names as primary source types; AI then enriches the directory site as the lead's company.
+- **Security:** no API auth at all; `EmailAccountSerializer` exposes `password_encrypted`; Fernet key derives from the hardcoded `SECRET_KEY` committed in settings.py.
+- Misc: score threshold is `>= 50` in code vs 70/75 in docs/PDF; `Activities` model (Step 2.3) was never built; generic-email flagging (info@/support@, SRS 3.6) missing; analytics endpoints missing (dashboard is mock data); `langchain_core.pydantic_v1` is deprecated and mixed with pydantic v2 across ai_engine modules; duplicate imports in `crm/tasks.py`.

@@ -70,3 +70,14 @@ This document serves as the single source of truth for the current state of the 
     - `backend/crm/tasks.py`: Injected missing `send_notification_webhook` logic. Now, positive incoming replies correctly and safely push real-time webhooks to the external n8n cluster.
     - `backend/crm/management/commands/test_e2e_email.py` & `test_e2e_linkedin.py`: Fixed the `Campaign` database model seeding schemas, removing the nonexistent `daily_limit` field and adding all necessary mandatory fields to prevent Postgres integrity crashes.
     - `backend/outreach/smtp.py`: Added dynamic fallback `use_tls=(self.account.smtp_port not in [3025, 1025, 2525])` so the `EmailBackend` cleanly pushes payloads to local mock servers without throwing `STARTTLS` exceptions.
+
+## Post-Phase 7 Independent Audit (2026-06-11)
+A full-system audit was performed against the SRS and original PDF goals. Architecture and module coverage largely match the intended design, but the system is **not yet functional end-to-end** due to confirmed blocking bugs (see the matching entry in `experience.md` for the full list). Highest-priority blockers before the system can be considered working:
+1. `scraper/cleaner.py` dedup collapses every scrape to a single lead + converts null emails to the string `'none'` (verified).
+2. Nothing triggers scraping (no API/beat caller of the scrape tasks; `LeadSource` unused).
+3. Frontend `api.ts` points at port 8000; Docker exposes Django on 18000.
+4. Approval Queue UI does not display the email draft being approved.
+5. Reply sentiment comparison case-mismatch breaks the positive-reply webhook/state update; low-confidence replies are not routed to human review (SRS 3.13).
+6. LinkedIn task auto-generation does not exist; linkedin campaigns produce email drafts.
+7. Dispatch ignores lead/campaign status (stop conditions incomplete); daily-limit overflow permanently fails messages.
+Status: Phases 1–7 structurally complete; pipeline requires the above fixes to actually deliver the ToFu automation goal.
