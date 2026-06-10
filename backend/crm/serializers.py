@@ -1,7 +1,8 @@
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from .models import (
     Campaign, LeadSource, Company, Lead, EmailAccount, LeadMagnet, Message, Reply,
-    SuppressionList, ApprovalQueue, LinkedInTask, AuditLog
+    SuppressionList, ApprovalQueue, LinkedInTask, AuditLog, Activity, LeadMagnetSubmission
 )
 
 class CampaignSerializer(serializers.ModelSerializer):
@@ -28,6 +29,8 @@ class EmailAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailAccount
         fields = '__all__'
+        # Never leak mailbox credentials through the API
+        extra_kwargs = {'password_encrypted': {'write_only': True}}
 
 class LeadMagnetSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,9 +53,53 @@ class SuppressionListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ApprovalQueueSerializer(serializers.ModelSerializer):
+    context_data = serializers.SerializerMethodField()
+
     class Meta:
         model = ApprovalQueue
         fields = '__all__'
+
+    def get_context_data(self, obj):
+        """SRS 3.15: the reviewer must see the lead context and the proposed action,
+        not just an opaque item id."""
+        try:
+            if obj.item_type == 'message_draft':
+                message = Message.objects.select_related('lead').filter(id=obj.item_id).first()
+                if not message:
+                    return None
+                lead = message.lead
+                return {
+                    'kind': 'message_draft',
+                    'subject': message.subject,
+                    'body': message.body,
+                    'lead_name': f"{lead.first_name or ''} {lead.last_name or ''}".strip() or lead.email,
+                    'lead_email': lead.email,
+                    'lead_title': lead.title,
+                    'lead_score': lead.lead_score,
+                    'score_reason': lead.score_reason,
+                }
+            if obj.item_type == 'reply_review':
+                reply = Reply.objects.select_related('lead').filter(id=obj.item_id).first()
+                if not reply:
+                    return None
+                lead = reply.lead
+                return {
+                    'kind': 'reply_review',
+                    'body': reply.body,
+                    'category': reply.category,
+                    'sentiment': reply.sentiment,
+                    'confidence': reply.confidence,
+                    'summary': reply.summary,
+                    'next_action': reply.next_action,
+                    'lead_name': f"{lead.first_name or ''} {lead.last_name or ''}".strip() or lead.email,
+                    'lead_email': lead.email,
+                    'lead_title': lead.title,
+                    'lead_score': lead.lead_score,
+                    'score_reason': lead.score_reason,
+                }
+        except (ValueError, ValidationError):
+            return None
+        return None
 
 class LinkedInTaskSerializer(serializers.ModelSerializer):
     lead_name = serializers.SerializerMethodField()
@@ -74,3 +121,14 @@ class AuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditLog
         fields = '__all__'
+
+class ActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = '__all__'
+
+class LeadMagnetSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LeadMagnetSubmission
+        fields = '__all__'
+        read_only_fields = ['lead']

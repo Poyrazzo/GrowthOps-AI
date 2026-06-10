@@ -7,7 +7,7 @@ class ReplyClassification(BaseModel):
     category: Literal['interested', 'not_interested', 'meeting_request', 'price_question', 'unsubscribe', 'bounce', 'wrong_person', 'other'] = Field(
         description="The category of the prospect's reply."
     )
-    sentiment: str = Field(description="The general sentiment of the reply (e.g., Positive, Negative, Neutral).")
+    sentiment: Literal['positive', 'negative', 'neutral'] = Field(description="The general sentiment of the reply.")
     confidence: float = Field(description="Confidence score of the classification between 0.0 and 1.0.")
     summary: str = Field(description="A brief 1-2 sentence summary of what the prospect said.")
     next_action: str = Field(description="A short recommendation on what the human operator or system should do next.")
@@ -43,16 +43,15 @@ Classify the prospect's reply strictly into one of the allowed categories. Provi
     handler = get_langfuse_handler()
     if handler:
         callbacks.append(handler)
-        
-    try:
-        result = chain.invoke(
-            {
-                "reply_body": reply_body,
-                "original_message_body": original_message_body
-            },
-            config={"callbacks": callbacks}
-        )
-        return result.dict()
-    except Exception as e:
-        print(f"Failed to classify reply: {e}")
-        return {}
+
+    # Exceptions intentionally propagate: the calling Celery task declares
+    # autoretry_for=(Exception,), and swallowing errors here used to leave
+    # bounced/unsubscribed leads permanently unclassified and unsuppressed.
+    result = chain.invoke(
+        {
+            "reply_body": reply_body,
+            "original_message_body": original_message_body or "(original message unavailable)"
+        },
+        config={"callbacks": callbacks}
+    )
+    return result.dict() if result else {}

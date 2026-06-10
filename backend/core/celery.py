@@ -22,6 +22,10 @@ def debug_task(self):
     print(f'Request: {self.request!r}')
 
 app.conf.beat_schedule = {
+    'trigger-scrapes-every-6-hours': {
+        'task': 'crm.tasks.trigger_scheduled_scrapes_task',
+        'schedule': crontab(minute='0', hour='*/6'),
+    },
     'poll-inboxes-every-5-minutes': {
         'task': 'crm.tasks.poll_all_inboxes_task',
         'schedule': crontab(minute='*/5'),

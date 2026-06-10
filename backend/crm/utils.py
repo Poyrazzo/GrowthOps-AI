@@ -3,6 +3,28 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Free mailbox providers: an email on these domains tells us nothing about the
+# lead's employer, so we never create a Company from them.
+FREE_EMAIL_PROVIDERS = {
+    'gmail.com', 'googlemail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
+    'live.com', 'icloud.com', 'me.com', 'aol.com', 'protonmail.com', 'proton.me',
+    'mail.com', 'gmx.com', 'gmx.net', 'yandex.com', 'yandex.ru', 'zoho.com',
+}
+
+def log_activity(lead, activity_type: str, description: str = "", metadata: dict = None, campaign=None):
+    """Records a CRM Activity for a lead (SRS 3.9 'activities' entity)."""
+    from crm.models import Activity
+    try:
+        Activity.objects.create(
+            lead=lead,
+            campaign=campaign or lead.campaign,
+            activity_type=activity_type,
+            description=description,
+            metadata=metadata or {}
+        )
+    except Exception as e:
+        logger.error(f"Failed to log activity {activity_type} for lead {lead.id}: {e}")
+
 # The n8n container is accessible on the Docker network as 'n8n:5678'
 # This webhook URL should map to the Webhook Node in your n8n workflow.
 N8N_WEBHOOK_URL = "http://n8n:5678/webhook/growthops-events"

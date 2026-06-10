@@ -1,7 +1,10 @@
 from django.utils import timezone
-from crm.models import Lead, Message, EmailAccount
+from crm.models import Lead, Message, EmailAccount, ApprovalQueue
 from outreach.smtp import SMTPSender
 from ai_engine.email_generator import generate_followup_draft
+
+MAX_EMAILS_PER_SEQUENCE = 3
+FOLLOWUP_WAIT_DAYS = 3
 
 def get_account_with_capacity() -> EmailAccount:
     """Finds the active EmailAccount with the most remaining daily capacity."""
@@ -9,24 +12,47 @@ def get_account_with_capacity() -> EmailAccount:
     accounts = EmailAccount.objects.filter(is_active=True)
     best_account = None
     most_capacity = -1
-    
+
     for acc in accounts:
         sent_today = Message.objects.filter(sender_account=acc, status='sent', sent_at__date=today).count()
         capacity = acc.daily_limit - sent_today
         if capacity > most_capacity:
             most_capacity = capacity
             best_account = acc
-            
+
     if most_capacity > 0:
         return best_account
     return None
 
+def _campaign_is_sendable(campaign) -> bool:
+    """A campaign only sends while it is active and inside its date window."""
+    if not campaign or campaign.status != 'active':
+        return False
+    today = timezone.now().date()
+    if campaign.start_date and campaign.start_date > today:
+        return False
+    if campaign.end_date and campaign.end_date < today:
+        return False
+    return True
+
 def dispatch_pending_emails() -> int:
-    pending_messages = Message.objects.filter(status='pending')
+    pending_messages = Message.objects.filter(status='pending').select_related('lead', 'campaign', 'sender_account')
     count = 0
     today = timezone.now().date()
-    
+
     for msg in pending_messages:
+        # Stop conditions (SRS 3.10): the lead replied or was disqualified while
+        # this draft sat in the queue -> cancel it instead of sending.
+        if msg.lead and msg.lead.status in ('replied', 'disqualified'):
+            msg.status = 'cancelled'
+            msg.save()
+            continue
+
+        # Paused/draft/expired campaigns do not send; leave the message pending
+        # so it dispatches automatically if the campaign is (re)activated.
+        if not _campaign_is_sendable(msg.campaign):
+            continue
+
         if not msg.sender_account:
             account = get_account_with_capacity()
             if not account:
@@ -39,7 +65,7 @@ def dispatch_pending_emails() -> int:
             sent_today = Message.objects.filter(sender_account=msg.sender_account, status='sent', sent_at__date=today).count()
             if sent_today >= msg.sender_account.daily_limit:
                 continue
-            
+
         sender = SMTPSender(msg)
         if sender.send():
             if msg.lead.status == 'uncontacted':
@@ -49,54 +75,63 @@ def dispatch_pending_emails() -> int:
     return count
 
 def process_followups() -> int:
-    leads = Lead.objects.filter(status='in_sequence')
+    leads = Lead.objects.filter(status='in_sequence').select_related('campaign', 'company')
     count = 0
     now = timezone.now()
-    
+
     for lead in leads:
-        messages = Message.objects.filter(lead=lead).order_by('created_at')
+        if not _campaign_is_sendable(lead.campaign):
+            continue
+
+        messages = Message.objects.filter(lead=lead, channel='email').exclude(
+            status__in=['failed', 'cancelled']
+        ).order_by('created_at')
         if not messages.exists():
             continue
-            
+
         latest_msg = messages.last()
-        
-        # Check if latest msg is sent and > 3 days old
-        if latest_msg.status == 'sent' and latest_msg.sent_at and (now - latest_msg.sent_at).days >= 3:
-            if messages.count() >= 3:
+
+        # Check if latest msg is sent and the wait period has elapsed
+        if latest_msg.status == 'sent' and latest_msg.sent_at and (now - latest_msg.sent_at).days >= FOLLOWUP_WAIT_DAYS:
+            if messages.count() >= MAX_EMAILS_PER_SEQUENCE:
                 continue
-                
+
             # Draft followup
             previous_emails = "\n\n---\n\n".join([m.body for m in messages])
-            
+
             draft_data = generate_followup_draft(
                 lead_name=lead.first_name,
                 company_name=lead.company.name if lead.company else "",
                 previous_emails=previous_emails,
                 message_angle=lead.recommended_message_angle
             )
-            
-            if draft_data and draft_data.get('subject') and draft_data.get('body'):
+
+            if draft_data and draft_data.get('body'):
                 status = 'needs_review' if lead.requires_human_review else 'pending'
-                
+
+                # Keep the original subject ("Re: ...") so mail clients thread the
+                # bump into the existing conversation instead of a new one.
+                first_subject = messages.first().subject or draft_data.get('subject', '')
+                followup_subject = first_subject if first_subject.lower().startswith('re:') else f"Re: {first_subject}"
+
                 msg = Message.objects.create(
                     lead=lead,
                     campaign=lead.campaign,
                     sender_account=latest_msg.sender_account, # Identity preservation fix
                     channel='email',
-                    subject=draft_data['subject'],
+                    subject=followup_subject,
                     body=draft_data['body'],
                     status=status
                 )
-                
+
                 if status == 'needs_review':
-                    from crm.models import ApprovalQueue
                     ApprovalQueue.objects.create(
                         item_type='message_draft',
                         item_id=str(msg.id),
                         status='pending',
                         reason_for_review=f"AI drafted a follow-up email for {lead.email}."
                     )
-                
+
                 count += 1
-                
+
     return count

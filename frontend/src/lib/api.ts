@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://127.0.0.1:8000/api/crm";
+// Django is exposed on host port 18000 by docker-compose (not the in-container 8000)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:18000/api/crm";
 
 export interface Campaign {
   id: string;
@@ -58,12 +59,29 @@ export async function fetchLeads(): Promise<Lead[]> {
   return response.json();
 }
 
+export interface ApprovalContext {
+  kind: 'message_draft' | 'reply_review';
+  subject?: string;
+  body: string;
+  category?: string;
+  sentiment?: string;
+  confidence?: number;
+  summary?: string;
+  next_action?: string;
+  lead_name: string;
+  lead_email: string | null;
+  lead_title: string | null;
+  lead_score: number;
+  score_reason: string;
+}
+
 export interface ApprovalItem {
   id: string;
   item_type: string;
   item_id: string;
   status: 'pending' | 'approved' | 'rejected';
   reason_for_review: string;
+  context_data: ApprovalContext | null;
   created_at: string;
   updated_at: string;
 }

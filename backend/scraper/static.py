@@ -78,13 +78,22 @@ class StaticScraper:
                 
         return list(clean_emails)
 
-    def extract_social_links(self, soup: BeautifulSoup) -> Dict[str, str]:
-        """Extracts common social media profiles."""
-        socials = {}
+    def extract_social_links(self, soup: BeautifulSoup) -> Dict[str, Any]:
+        """Extracts social media links, distinguishing company pages from personal profiles.
+
+        'linkedin_company' is the organization's page (belongs on the Company record);
+        'linkedin_profiles' are individual people (each one is a potential Lead).
+        """
+        socials = {'linkedin_profiles': []}
+        seen_profiles = set()
         for a in soup.find_all('a', href=True):
             href = a['href'].lower()
             if 'linkedin.com/company/' in href:
-                socials['linkedin'] = a['href']
+                socials['linkedin_company'] = a['href']
+            elif 'linkedin.com/in/' in href:
+                if href not in seen_profiles:
+                    seen_profiles.add(href)
+                    socials['linkedin_profiles'].append(a['href'])
             elif 'twitter.com/' in href or 'x.com/' in href:
                 socials['twitter'] = a['href']
         return socials

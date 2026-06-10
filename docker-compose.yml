@@ -98,6 +98,8 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+      # Browser-side fetches go to the host-mapped Django port (18000), not the in-container 8000
+      - NEXT_PUBLIC_API_URL=http://localhost:18000/api/crm
 
   n8n:
     image: n8nio/n8n:latest

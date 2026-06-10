@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Campaign, LeadSource, Company, Lead, EmailAccount, LeadMagnet, Message, Reply,
-    SuppressionList, ApprovalQueue, LinkedInTask, AuditLog
+    SuppressionList, ApprovalQueue, LinkedInTask, AuditLog, Activity, LeadMagnetSubmission
 )
 
 @admin.register(Campaign)
@@ -73,3 +73,15 @@ class AuditLogAdmin(admin.ModelAdmin):
     list_display = ('action', 'resource_type', 'resource_id', 'created_at')
     search_fields = ('action', 'resource_type', 'resource_id')
     list_filter = ('resource_type', 'action')
+
+@admin.register(Activity)
+class ActivityAdmin(admin.ModelAdmin):
+    list_display = ('activity_type', 'lead', 'campaign', 'created_at')
+    search_fields = ('lead__email', 'description')
+    list_filter = ('activity_type', 'campaign')
+
+@admin.register(LeadMagnetSubmission)
+class LeadMagnetSubmissionAdmin(admin.ModelAdmin):
+    list_display = ('email', 'lead_magnet', 'lead', 'created_at')
+    search_fields = ('email', 'lead_magnet__name')
+    list_filter = ('lead_magnet',)

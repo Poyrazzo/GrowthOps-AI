@@ -146,6 +146,14 @@ CORS_ALLOWED_ORIGINS = [
 # AI Provider Configuration
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
+# Pipeline thresholds
+# Leads scoring at or above this are eligible for automatic outreach drafting (docs/PDF: 70-75).
+LEAD_SCORE_THRESHOLD = int(os.environ.get('LEAD_SCORE_THRESHOLD', 70))
+# AI reply classifications below this confidence are routed to the Human Approval Queue (SRS 3.13).
+REPLY_CONFIDENCE_THRESHOLD = float(os.environ.get('REPLY_CONFIDENCE_THRESHOLD', 0.85))
+# A LeadSource is automatically re-scraped only after this many hours have passed.
+SCRAPE_REFRESH_HOURS = int(os.environ.get('SCRAPE_REFRESH_HOURS', 24))
+
 LANGFUSE_SECRET_KEY = os.environ.get('LANGFUSE_SECRET_KEY', '')
 LANGFUSE_PUBLIC_KEY = os.environ.get('LANGFUSE_PUBLIC_KEY', '')
 LANGFUSE_HOST = os.environ.get('LANGFUSE_HOST', 'https://cloud.langfuse.com')

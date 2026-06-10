@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from crm.models import Campaign, Lead, LinkedInTask, AuditLog
+from crm.models import Campaign, Lead, LinkedInTask, AuditLog, Activity
 from rest_framework.test import APIClient
 
 class Command(BaseCommand):
@@ -16,15 +16,19 @@ class Command(BaseCommand):
                 'target_country': 'US',
                 'target_persona': 'CTO',
                 'value_proposition': 'We automate growth.',
-                'outreach_channel': 'linkedin'
+                'outreach_channel': 'linkedin',
+                'status': 'active'
             }
         )
+        campaign.status = 'active'
+        campaign.save()
         lead, _ = Lead.objects.get_or_create(
             email='linkedin_target@mock.com',
             defaults={
                 'campaign': campaign,
                 'first_name': 'LinkedIn',
                 'last_name': 'Target',
+                'linkedin_url': 'https://linkedin.com/in/linkedin-target-mock',
                 'status': 'uncontacted',
                 'requires_human_review': True
             }
@@ -70,5 +74,16 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('   SUCCESS: AuditLog generated to track manual human action.'))
         else:
             self.stdout.write(self.style.ERROR('   FAILED: AuditLog not found or action mismatch.'))
+
+        activity = Activity.objects.filter(lead=lead, activity_type='linkedin_task_completed').first()
+        if activity:
+            self.stdout.write(self.style.SUCCESS('   SUCCESS: CRM Activity recorded for the manual action.'))
+        else:
+            self.stdout.write(self.style.ERROR('   FAILED: Activity record not found.'))
+
+        self.stdout.write(self.style.NOTICE(
+            '   NOTE: Completing a "connect" task now queues an AI-drafted DM task in the '
+            'background (requires Celery worker + OpenAI key to materialize).'
+        ))
 
         self.stdout.write(self.style.SUCCESS('\nE2E LinkedIn Workflow Test Completed Successfully.'))

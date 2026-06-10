@@ -86,19 +86,66 @@ export default function ApprovalsPage() {
                   </span>
                 </div>
 
-                <div className="mb-6 flex-1">
+                <div className="mb-4">
                   <h3 className="text-sm font-semibold text-primary/80 mb-2 uppercase tracking-wider">Reason For Review</h3>
                   <p className="text-foreground/90 text-sm leading-relaxed">
                     {approval.reason_for_review || "No specific reason provided. General audit required."}
                   </p>
                 </div>
 
-                <div className="p-4 bg-black/30 rounded-xl border border-white/5 mb-6">
-                  <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">Target Item ID</p>
-                  <p className="font-mono text-xs text-primary truncate" title={approval.item_id}>
-                    {approval.item_id}
-                  </p>
-                </div>
+                {approval.context_data ? (
+                  <div className="space-y-3 mb-6 flex-1">
+                    {/* Lead context (SRS 3.15) */}
+                    <div className="p-4 bg-black/30 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">Lead</p>
+                      <p className="text-sm text-foreground font-medium">
+                        {approval.context_data.lead_name}
+                        {approval.context_data.lead_title && <span className="text-muted-foreground"> — {approval.context_data.lead_title}</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{approval.context_data.lead_email}</p>
+                      <p className="text-xs mt-1">
+                        <span className="text-primary font-semibold">Score {approval.context_data.lead_score}/100</span>
+                        {approval.context_data.score_reason && (
+                          <span className="text-muted-foreground"> · {approval.context_data.score_reason}</span>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* Proposed action: the actual draft, or the AI's reply analysis */}
+                    {approval.context_data.kind === 'message_draft' ? (
+                      <div className="p-4 bg-black/30 rounded-xl border border-white/5">
+                        <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">Proposed Email</p>
+                        <p className="text-sm text-foreground font-semibold mb-2">{approval.context_data.subject}</p>
+                        <p className="text-xs text-foreground/80 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                          {approval.context_data.body}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-black/30 rounded-xl border border-white/5">
+                        <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">
+                          AI Classification: {approval.context_data.category} ({approval.context_data.sentiment}
+                          {approval.context_data.confidence != null && `, ${Math.round(approval.context_data.confidence * 100)}% confident`})
+                        </p>
+                        {approval.context_data.summary && (
+                          <p className="text-sm text-foreground/90 mb-2">{approval.context_data.summary}</p>
+                        )}
+                        <p className="text-xs text-foreground/80 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
+                          {approval.context_data.body}
+                        </p>
+                        {approval.context_data.next_action && (
+                          <p className="text-xs text-primary mt-2 font-medium">Suggested next action: {approval.context_data.next_action}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-black/30 rounded-xl border border-white/5 mb-6 flex-1">
+                    <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">Target Item ID</p>
+                    <p className="font-mono text-xs text-primary truncate" title={approval.item_id}>
+                      {approval.item_id}
+                    </p>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4 mt-auto">
                   <button 

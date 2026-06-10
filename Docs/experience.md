@@ -123,3 +123,54 @@ A complete code review of all 7 phases against the SRS/PDF goals was performed. 
 - **Directory attribution flaw:** the scraped page's domain becomes the lead's Company — wrong for directories/technoparks, which the SRS names as primary source types; AI then enriches the directory site as the lead's company.
 - **Security:** no API auth at all; `EmailAccountSerializer` exposes `password_encrypted`; Fernet key derives from the hardcoded `SECRET_KEY` committed in settings.py.
 - Misc: score threshold is `>= 50` in code vs 70/75 in docs/PDF; `Activities` model (Step 2.3) was never built; generic-email flagging (info@/support@, SRS 3.6) missing; analytics endpoints missing (dashboard is mock data); `langchain_core.pydantic_v1` is deprecated and mixed with pydantic v2 across ai_engine modules; duplicate imports in `crm/tasks.py`.
+
+## Post-Audit Remediation Sprint (2026-06-11)
+All findings from the Full-System Independent Audit were fixed in one sprint. Everything below was implemented, migrated (`crm/0007`), and verified via `manage.py check`, both E2E harnesses, and a live pipeline simulation inside Docker.
+
+### Pipeline-critical fixes
+- **`scraper/cleaner.py` rewritten:** dedup now only compares rows that actually HAVE the key (null email/linkedin rows are never treated as duplicates of each other), and a `_clean_str` helper preserves `None` instead of coercing it to the strings `'None'`/`'nan'`. Verified: 3 emails in -> 3 leads out (previously 1). Also added `is_generic_email` flagging (info@, support@, 20+ role prefixes) per SRS 3.6.
+- **Scrape triggering now exists:** `trigger_scheduled_scrapes_task` runs via Celery Beat every 6h, walking ACTIVE campaigns (inside their start/end dates) -> their `LeadSource`s (new `campaign` FK + `last_scraped_at` cooldown, default 24h via `SCRAPE_REFRESH_HOURS`). LinkedIn-type sources are never auto-scraped (compliance). Manual trigger: `POST /api/crm/leadsources/{id}/scrape/`.
+- **Company attribution fixed:** leads are attributed to the Company of their corporate email domain (free providers -> page company; directories -> no page company at all). The scraped page's body text only enriches the page's own company. `extract_social_links` now separates `linkedin_company` (stored on Company) from `linkedin_profiles` (each becomes a Lead) — this also removes the duplicate-linkedin fan-out that used to collapse leads.
+
+### LinkedIn funnel (SRS 3.14) — now a real flow
+- `ai_engine/linkedin_generator.py`: AI drafts for connection requests (<280 chars) and post-acceptance DMs.
+- `score_lead_task` routes by `campaign.outreach_channel`: linkedin campaigns get `generate_linkedin_task_task` (manual 'connect' task with the AI note in instructions) instead of email drafts.
+- Completing a 'connect' task via the API now chains `generate_linkedin_dm_task`, creating the follow-up 'message' task — the full PDF workflow (connect -> accept -> DM) is closed.
+
+### Lead Magnet engine (SRS 3.8)
+- `Lead.recommended_lead_magnet` FK; the scoring AI now receives the LeadMagnet catalog and picks the best fit per persona (stored if the name matches).
+- New `LeadMagnetSubmission` model + `POST /api/crm/magnetsubmissions/`: matches/creates the lead by email, logs an Activity, and fires the n8n webhook (`lead_magnet_submission` event).
+
+### Activities entity (SRS 3.9)
+- New `Activity` model (+ read-only API at `/activities/`, admin) with a `log_activity()` helper; the pipeline logs lead_created, lead_scored, draft_created, email_sent, reply_received, reply_classified, linkedin_task_created/completed, lead_magnet_submitted, lead_suppressed.
+
+### Approval Queue (SRS 3.15 + 3.13)
+- `ApprovalQueueSerializer.context_data` now returns the full draft (subject/body) plus lead name/email/title/score/score_reason for `message_draft` items, and the AI classification (category/sentiment/confidence/summary/next_action) + reply body for the new `reply_review` items.
+- `classify_reply_task` routes classifications below `REPLY_CONFIDENCE_THRESHOLD` (default 0.85) into the ApprovalQueue.
+- The approvals page renders all of this; rejecting a draft now sets it to the new `cancelled` status (instead of `failed`).
+
+### Bug fixes
+- **Frontend port:** `api.ts` uses `NEXT_PUBLIC_API_URL` (docker-compose sets `http://localhost:18000/api/crm`).
+- **Sentiment:** `ReplyClassification.sentiment` is now `Literal['positive','negative','neutral']`; the webhook comparison is reliable.
+- **SMTP encryption:** new `EmailAccount.smtp_encryption` choice (tls/ssl/none) replaces the magic port list; port-465 providers use `use_ssl`. New `imap_use_ssl` flag lets IMAPReader connect plaintext (GreenMail).
+- **IMAP rewritten:** `BODY.PEEK` + explicit `\Seen` flagging (a crash no longer loses unread mail); thread matching checks ALL References ids; fallback matching by sender address (SRS 3.12); bounce/NDR detection by daemon sender markers + body scan for lead emails; bounce notifications no longer mark leads 'replied'.
+- **Classification retries:** `classify_reply` no longer swallows exceptions; the task raises on empty results so Celery autoretry works.
+- **Daily limit defers:** hitting the account cap leaves the message `pending` (sends next window) instead of permanently `failed`.
+- **Stop conditions:** `dispatch_pending_emails` cancels drafts whose lead replied/was disqualified, and skips campaigns that aren't active/in-date. `process_followups` respects the same gates and ignores failed/cancelled messages when counting the 3-email cap.
+- **Campaign lifecycle fields are live:** status + start/end dates gate scraping, drafting (score task), dispatch, and follow-ups. Pausing a campaign now actually stops it.
+- **Threading:** follow-ups reuse the original subject as `Re: ...` and SMTPSender sets `In-Reply-To`/`References` to the previous sent message — bumps land in the same conversation.
+- **Score threshold:** `LEAD_SCORE_THRESHOLD` setting (default 70, env-overridable) replaces the hardcoded `>= 50`.
+- **Lead constraint:** replaced the useless combined (email, linkedin_url) constraint with a conditional unique constraint on non-null `linkedin_url`; migration 0007 dedupes legacy duplicates first.
+- **Draft dedupe:** initial-draft check now treats any non-failed/cancelled email message as existing.
+- **Security:** `password_encrypted` is write-only in the EmailAccount serializer.
+- Removed the duplicate imports in `crm/tasks.py`.
+
+### Verification
+- `manage.py check`: clean. `tsc --noEmit`: clean.
+- `test_e2e_email`: outbound dispatch -> GreenMail REST verification (endpoint fixed to `/api/user/{login}/messages`) -> simulated prospect reply -> IMAPReader (plaintext) -> thread match -> Reply stored -> lead 'replied'. ALL PASS. (The inbound IMAP leg was verified for the first time ever.)
+- `test_e2e_linkedin`: PATCH complete -> AuditLog + Activity + lead 'in_sequence' + DM chaining queued. ALL PASS.
+- Live pipeline simulation: a fake directory scrape with 4 emails + 2 personal profiles produced 6 leads, per-domain companies, no directory company, generic flag on info@, no company for gmail, last_scraped_at stamped, activities logged.
+
+### Operational note (2026-06-11)
+- Celery workers do NOT hot-reload code the way Django's `runserver` does, even with the `./backend:/app` volume mount. After changing `crm/tasks.py` (or any task module), you must `docker compose restart celery_worker celery_beat playwright_worker` or new/renamed tasks (e.g., `trigger_scheduled_scrapes_task`) will not be registered and beat will fire into the void. Verified by checking the worker boot log lists all tasks after restart.
+- GreenMail's REST API in the current `greenmail/standalone:latest` image has no `/api/mail` endpoint; per-user messages live at `GET /api/user/{login}/messages` and full cleanup is `POST /api/service/reset`. `test_e2e_email.py` uses these now.

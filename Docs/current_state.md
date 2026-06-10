@@ -81,3 +81,16 @@ A full-system audit was performed against the SRS and original PDF goals. Archit
 6. LinkedIn task auto-generation does not exist; linkedin campaigns produce email drafts.
 7. Dispatch ignores lead/campaign status (stop conditions incomplete); daily-limit overflow permanently fails messages.
 Status: Phases 1–7 structurally complete; pipeline requires the above fixes to actually deliver the ToFu automation goal.
+
+## Post-Audit Remediation (2026-06-11) — System Now Functional End-to-End
+All blockers from the Post-Phase 7 Independent Audit are fixed and verified (see the matching entry in `experience.md` for full detail). Highlights:
+- **Scraping pipeline works:** DataCleaner bugs fixed (verified 3-emails-in -> 3-leads-out), and `trigger_scheduled_scrapes_task` (Celery Beat, every 6h) + `POST /leadsources/{id}/scrape/` finally connect Campaign/LeadSource to the scrapers. `LeadSource` gained `campaign` and `last_scraped_at` fields.
+- **Company attribution is per-email-domain** (directories are no longer treated as the lead's employer); personal vs company LinkedIn links separated.
+- **LinkedIn funnel is real:** AI connection-note + DM drafters (`ai_engine/linkedin_generator.py`); linkedin campaigns generate manual tasks (not email drafts); completing a connect task auto-chains the DM task.
+- **Lead Magnet engine:** AI picks per-lead magnets from the catalog (`Lead.recommended_lead_magnet`); `LeadMagnetSubmission` model + endpoint track form submissions with webhook notification.
+- **Activity entity** (SRS 3.9) added with full pipeline logging; **Approval Queue** now shows draft subject/body + lead context, and low-confidence reply classifications (< 0.85) are routed to it (SRS 3.13/3.15).
+- **Campaign status/start/end dates now gate** scraping, drafting, dispatch, and follow-ups. Stop conditions cancel queued drafts when leads reply or are disqualified. Daily limits defer instead of failing messages. Follow-ups thread via Re: subjects + In-Reply-To/References.
+- **EmailAccount** gained `smtp_encryption` (tls/ssl/none) and `imap_use_ssl`; IMAP reader rewritten (PEEK, sender fallback, bounce/NDR matching). Reply sentiment is a strict lowercase Literal. Score threshold is the `LEAD_SCORE_THRESHOLD` setting (default 70).
+- **Frontend** reads the API base URL from `NEXT_PUBLIC_API_URL` (set to port 18000 in docker-compose); approvals UI renders the proposed action and lead intel.
+- **Migration:** `crm/0007` (includes legacy linkedin_url dedupe). **Tests:** `manage.py check`, `tsc --noEmit`, `test_e2e_email` (outbound + inbound legs), `test_e2e_linkedin` — all passing in Docker.
+Remaining known gaps (unchanged, deliberately out of scope): external API keys not connected, no API authentication, analytics endpoints still mock-data on the dashboard.

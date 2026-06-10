@@ -42,6 +42,8 @@ class LeadSource(models.Model):
     expected_data_fields = models.JSONField(default=dict, blank=True)
     access_rules = models.TextField(blank=True)
     priority_score = models.IntegerField(default=0)
+    campaign = models.ForeignKey(Campaign, on_delete=models.SET_NULL, null=True, blank=True, related_name='sources')
+    last_scraped_at = models.DateTimeField(blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -88,9 +90,11 @@ class Lead(models.Model):
     lead_score = models.IntegerField(default=0)
     score_reason = models.TextField(blank=True)
     recommended_message_angle = models.TextField(blank=True)
+    recommended_lead_magnet = models.ForeignKey('LeadMagnet', on_delete=models.SET_NULL, null=True, blank=True, related_name='recommended_leads')
+    is_generic_email = models.BooleanField(default=False)
     requires_human_review = models.BooleanField(default=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='uncontacted')
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -99,17 +103,30 @@ class Lead(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['email', 'linkedin_url'], name='unique_lead')
+            # email already carries unique=True; linkedin_url must be unique only when present
+            # (NULLs are never equal in Postgres, so the old combined constraint enforced nothing useful)
+            models.UniqueConstraint(
+                fields=['linkedin_url'],
+                condition=models.Q(linkedin_url__isnull=False),
+                name='unique_lead_linkedin'
+            )
         ]
 
 class EmailAccount(models.Model):
+    ENCRYPTION_CHOICES = [
+        ('tls', 'STARTTLS'),
+        ('ssl', 'SSL/TLS'),
+        ('none', 'None (local/mock servers only)')
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
     provider = models.CharField(max_length=100)
     smtp_host = models.CharField(max_length=255, blank=True, null=True)
     smtp_port = models.IntegerField(blank=True, null=True)
+    smtp_encryption = models.CharField(max_length=10, choices=ENCRYPTION_CHOICES, default='tls')
     imap_host = models.CharField(max_length=255, blank=True, null=True)
     imap_port = models.IntegerField(default=993, blank=True, null=True)
+    imap_use_ssl = models.BooleanField(default=True)
     username = models.CharField(max_length=255, blank=True, null=True)
     password_encrypted = models.CharField(max_length=500, blank=True, null=True)
     is_active = models.BooleanField(default=True)
@@ -146,7 +163,8 @@ class Message(models.Model):
         ('pending', 'Pending'),
         ('sent', 'Sent'),
         ('failed', 'Failed'),
-        ('bounced', 'Bounced')
+        ('bounced', 'Bounced'),
+        ('cancelled', 'Cancelled')
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='messages')
@@ -258,8 +276,49 @@ class AuditLog(models.Model):
     resource_type = models.CharField(max_length=100)
     resource_id = models.CharField(max_length=255)
     details = models.JSONField(default=dict, blank=True)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.action} on {self.resource_type} ({self.resource_id})"
+
+class Activity(models.Model):
+    ACTIVITY_TYPES = [
+        ('lead_created', 'Lead Created'),
+        ('lead_enriched', 'Lead Enriched'),
+        ('lead_scored', 'Lead Scored'),
+        ('draft_created', 'Draft Created'),
+        ('email_sent', 'Email Sent'),
+        ('reply_received', 'Reply Received'),
+        ('reply_classified', 'Reply Classified'),
+        ('linkedin_task_created', 'LinkedIn Task Created'),
+        ('linkedin_task_completed', 'LinkedIn Task Completed'),
+        ('lead_magnet_submitted', 'Lead Magnet Submitted'),
+        ('lead_suppressed', 'Lead Suppressed'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='activities')
+    campaign = models.ForeignKey(Campaign, on_delete=models.SET_NULL, null=True, blank=True, related_name='activities')
+    activity_type = models.CharField(max_length=50, choices=ACTIVITY_TYPES)
+    description = models.TextField(blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = 'Activities'
+
+    def __str__(self):
+        return f"{self.activity_type} - {self.lead}"
+
+class LeadMagnetSubmission(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    lead_magnet = models.ForeignKey(LeadMagnet, on_delete=models.CASCADE, related_name='submissions')
+    lead = models.ForeignKey(Lead, on_delete=models.SET_NULL, null=True, blank=True, related_name='magnet_submissions')
+    email = models.EmailField()
+    form_data = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.email} -> {self.lead_magnet.name}"
