@@ -94,3 +94,6 @@ All blockers from the Post-Phase 7 Independent Audit are fixed and verified (see
 - **Frontend** reads the API base URL from `NEXT_PUBLIC_API_URL` (set to port 18000 in docker-compose); approvals UI renders the proposed action and lead intel.
 - **Migration:** `crm/0007` (includes legacy linkedin_url dedupe). **Tests:** `manage.py check`, `tsc --noEmit`, `test_e2e_email` (outbound + inbound legs), `test_e2e_linkedin` — all passing in Docker.
 Remaining known gaps (unchanged, deliberately out of scope): external API keys not connected, no API authentication, analytics endpoints still mock-data on the dashboard.
+
+## Go-Live Runbook (2026-06-11)
+A complete end-to-end deployment checklist now exists at `Docs/go-live runbook.md`. It covers: external accounts/API keys (OpenAI required; Langfuse/AdsPower/proxies/Slack optional), outreach domain + mailbox setup with SPF/DKIM/DMARC and warm-up limits, `.env` configuration, the SECRET_KEY-before-passwords caveat, stack bring-up, n8n workflow import/activation, seed-data steps (EmailAccounts, LeadMagnets, Campaign, LeadSources), the pre-launch verification sequence (E2E tests, manual scrape, approval + reply loop tests), the daily operator routine, and the security hardening checklist required before any non-local exposure.
