@@ -7,6 +7,10 @@ from crm.models import Lead, Campaign, Company, Message
 from ai_engine.company_profiler import extract_company_info
 from ai_engine.lead_profiler import score_lead
 from ai_engine.email_generator import generate_email_draft
+from ai_engine.reply_classifier import classify_reply
+from outreach.imap import IMAPReader
+from outreach.sequence import dispatch_pending_emails, process_followups
+from crm.models import Lead, Campaign, Company, Message, EmailAccount, Reply, SuppressionList
 
 def _process_and_save_scrape_result(result: dict, campaign_id: str = None) -> dict:
     """Fans out the raw scraper result, cleans it, and saves it to the DB."""
@@ -197,3 +201,63 @@ def generate_draft_task(self, lead_id: str):
         )
         return f"Drafted email for {lead.email}"
     return "Failed to draft email"
+
+@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+def poll_single_inbox_task(self, account_id: str):
+    """Connects to a single IMAP inbox and reads replies."""
+    account = EmailAccount.objects.filter(id=account_id, is_active=True).first()
+    if not account:
+        return "Account not found or inactive"
+        
+    reader = IMAPReader(account)
+    processed = reader.read_inbox()
+    return f"Processed {processed} replies for {account.email}"
+
+@shared_task
+def poll_all_inboxes_task():
+    """Fans out the inbox polling task to all active email accounts."""
+    accounts = EmailAccount.objects.filter(is_active=True).exclude(imap_host__isnull=True).exclude(imap_host__exact='')
+    count = 0
+    for account in accounts:
+        poll_single_inbox_task.delay(str(account.id))
+        count += 1
+    return f"Triggered polling for {count} accounts"
+
+@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+def classify_reply_task(self, reply_id: str):
+    """Uses LLM to classify a newly received reply and applies auto-suppression if needed."""
+    reply = Reply.objects.filter(id=reply_id).first()
+    if not reply or not reply.message:
+        return "Reply or original message not found"
+        
+    classification = classify_reply(reply.body, reply.message.body)
+    if classification:
+        reply.category = classification.get('category')
+        reply.sentiment = classification.get('sentiment')
+        reply.confidence = classification.get('confidence')
+        reply.summary = classification.get('summary')
+        reply.next_action = classification.get('next_action')
+        reply.save()
+        
+        if reply.category in ['unsubscribe', 'bounce'] and reply.lead.email:
+            SuppressionList.objects.get_or_create(
+                email=reply.lead.email,
+                defaults={'reason': 'unsubscribed' if reply.category == 'unsubscribe' else 'bounced'}
+            )
+            reply.lead.status = 'disqualified'
+            reply.lead.save()
+            
+        return f"Classified reply {reply.id} as {reply.category}"
+    return "Failed to classify reply"
+
+@shared_task
+def dispatch_emails_task():
+    """Dispatches all pending messages via SMTP."""
+    count = dispatch_pending_emails()
+    return f"Dispatched {count} emails"
+
+@shared_task
+def process_followups_task():
+    """Checks all leads in sequence and generates follow-ups if 3 days have passed."""
+    count = process_followups()
+    return f"Generated {count} follow-up drafts"

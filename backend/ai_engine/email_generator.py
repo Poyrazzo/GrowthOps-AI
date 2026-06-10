@@ -36,5 +36,37 @@ def generate_email_draft(lead_name: str, lead_title: str, company_name: str, com
         "message_angle": message_angle or "General introduction",
         "lead_magnet": lead_magnet or "None"
     }, config=config)
-    
     return result.dict() if result else {}
+
+def generate_followup_draft(lead_name: str, company_name: str, previous_emails: str, message_angle: str) -> dict:
+    llm = get_llm()
+    if not llm:
+        return {}
+    structured_llm = llm.with_structured_output(EmailDraft)
+    
+    prompt = PromptTemplate.from_template(
+        "You are an expert B2B copywriter writing a follow-up cold email.\n"
+        "Read the previous emails we have sent to this prospect:\n"
+        "---\n{previous_emails}\n---\n\n"
+        "Draft a short, polite, and bump-style follow-up email. Do not repeat the exact same pitch, just bump the thread and provide new value.\n"
+        "Lead Name: {lead_name}\n"
+        "Target Company Name: {company_name}\n"
+        "Message Angle: {message_angle}\n"
+    )
+    
+    chain = prompt | structured_llm
+    
+    handler = get_langfuse_handler()
+    config = {"callbacks": [handler]} if handler else {}
+    
+    try:
+        result = chain.invoke({
+            "lead_name": lead_name or "there",
+            "company_name": company_name or "your company",
+            "previous_emails": previous_emails,
+            "message_angle": message_angle or "General follow-up"
+        }, config=config)
+        return result.dict() if result else {}
+    except Exception as e:
+        print(f"Failed to generate follow-up: {e}")
+        return {}

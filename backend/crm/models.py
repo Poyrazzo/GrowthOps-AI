@@ -108,6 +108,8 @@ class EmailAccount(models.Model):
     provider = models.CharField(max_length=100)
     smtp_host = models.CharField(max_length=255, blank=True, null=True)
     smtp_port = models.IntegerField(blank=True, null=True)
+    imap_host = models.CharField(max_length=255, blank=True, null=True)
+    imap_port = models.IntegerField(default=993, blank=True, null=True)
     username = models.CharField(max_length=255, blank=True, null=True)
     password_encrypted = models.CharField(max_length=500, blank=True, null=True)
     is_active = models.BooleanField(default=True)
