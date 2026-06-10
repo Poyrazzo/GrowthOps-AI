@@ -16,13 +16,17 @@ class StaticScraper:
     def __init__(self, timeout: int = 10):
         self.timeout = timeout
 
-    def fetch_html(self, url: str) -> Optional[str]:
+    def fetch_html(self, url: str, proxy_url: Optional[str] = None) -> Optional[str]:
         """Fetches raw HTML from the given URL."""
         if not url.startswith('http'):
             url = 'https://' + url
+            
+        proxies = None
+        if proxy_url:
+            proxies = {"http": proxy_url, "https": proxy_url}
 
         try:
-            response = requests.get(url, headers=self.HEADERS, timeout=self.timeout)
+            response = requests.get(url, headers=self.HEADERS, timeout=self.timeout, proxies=proxies)
             response.raise_for_status()
             return response.text
         except requests.RequestException as e:
@@ -85,7 +89,7 @@ class StaticScraper:
                 socials['twitter'] = a['href']
         return socials
 
-    def scrape_website(self, url: str) -> Dict[str, Any]:
+    def scrape_website(self, url: str, proxy_url: Optional[str] = None) -> Dict[str, Any]:
         """Orchestrates the entire scraping process and returns structured data."""
         result = {
             'url': url,
@@ -96,7 +100,7 @@ class StaticScraper:
             'social_links': {}
         }
 
-        html = self.fetch_html(url)
+        html = self.fetch_html(url, proxy_url=proxy_url)
         if not html:
             return result
 

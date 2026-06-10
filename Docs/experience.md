@@ -38,3 +38,26 @@ This document serves as our project diary and knowledge base.
 - **Static Scraper Utility:** Created `backend/scraper/static.py` housing the `StaticScraper` class, built upon `requests` and `BeautifulSoup`.
 - **Extraction Capabilities:** Built robust methods to fetch page metadata (Title, OpenGraph Description), visible body text (stripping heavy HTML/CSS to save AI token bandwidth), embedded emails (via regex deduplication), and social media links.
 - **Verification:** Successfully executed the class against `example.com` inside the Django container, returning perfectly cleaned JSON mapping.
+
+## Implementation of Phase 3 (Step 3.2)
+- **Playwright Worker Node:** To protect the main Django API and Celery workers from the heavy resource usage of Chromium, we created a dedicated Dockerfile (`Dockerfile.playwright`) utilizing Microsoft's `mcr.microsoft.com/playwright/python:v1.44.0-jammy`.
+- **Docker Compose:** Added a `playwright_worker` service that spins up the new container and listens specifically to the `playwright` Celery queue.
+- **Dynamic Scraper Utility:** Created `backend/scraper/dynamic.py` containing the `DynamicScraper`. It launches a headless Chromium instance, waits for `networkidle` (ensuring React/SPA apps hydrate), and grabs the final rendered DOM. It then intentionally leverages the exact same `BeautifulSoup` parsing logic from our `StaticScraper` to return identical output schemas.
+- **Verification:** Ran a headless test script executing the `DynamicScraper` on `example.com` inside the new `playwright_worker` container. The execution completed perfectly in ~2 seconds.
+
+## Implementation of Phase 3 (Step 3.3)
+- **Data Cleaner Utility:** Created `backend/scraper/cleaner.py` and introduced `pandas` to the environment to handle vectorized data transformations.
+- **Normalization Pipeline:** Implemented `DataCleaner` which takes raw scraped dictionaries and applies a strict pipeline: converts emails to lowercase, prepends `https://` to URLs, capitalizes names, drops duplicates based on `email` or `linkedin_url`, and drops rows completely lacking contact info.
+- **Verification:** Ran an internal shell script testing a messy dataset; the output confirmed the Pandas logic correctly collapsed duplicates and normalized formatting without throwing `NaN` errors.
+
+## Implementation of Phase 3 (Step 3.4)
+- **AdsPower Manager Utility:** Created `backend/scraper/adspower.py` to interface with the local desktop API (`http://host.docker.internal:50325`). It launches and stops specific anti-detect browser profiles by ID, capturing their Chrome DevTools Protocol (CDP) WebSocket URLs.
+- **CDP Integration:** Modified `DynamicScraper` so it can accept an optional `adspower_profile_id`. If passed, instead of launching an empty Chromium process, Playwright connects remotely to the exact AdsPower fingerprint via `p.chromium.connect_over_cdp()`.
+- **Docker Host Compatibility:** Appended `extra_hosts: ["host.docker.internal:host-gateway"]` to `docker-compose.yml` to guarantee the containers can resolve requests back to the local machine across Linux, Mac, and Windows.
+- **Verification:** Simulated a dry-run connection. The container correctly resolved `host.docker.internal` and gracefully handled the connection exception (since AdsPower wasn't actively running on the host), proving the network bridge and error handling are fully operational.
+
+## Implementation of Phase 3 (Step 3.5)
+- **Celery Pipeline:** Created `backend/crm/tasks.py` to house the orchestration logic.
+- **Task Definitions:** Built two `@shared_task` endpoints. `run_static_scrape` handles standard requests, and `run_dynamic_scrape` explicitly targets the isolated `playwright` queue.
+- **Fan-Out & Saving:** The tasks retrieve the unified output dictionary from the scrapers. They fan out the discovered emails and social links into individual Lead profiles, run them through the `DataCleaner`, and use `Lead.objects.get_or_create()` to safely insert them into the Postgres database without violating unique constraints.
+- **Verification:** Fixed a missing dependency bug by ensuring the Celery containers rebuilt with the latest `requirements.txt`. Sent an async `.delay()` payload directly to Redis via the Django shell. The celery worker successfully picked it up, executed the entire pipeline, and logged the transaction seamlessly.

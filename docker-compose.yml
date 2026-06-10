@@ -24,6 +24,8 @@ services:
       - ./backend:/app
     ports:
       - "18000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - DATABASE_URL=postgres://admin:adminpassword@postgres:5432/growthops
       - REDIS_URL=redis://redis:6379/0
@@ -48,6 +50,22 @@ services:
     command: celery -A core beat -l info
     volumes:
       - ./backend:/app
+    environment:
+      - DATABASE_URL=postgres://admin:adminpassword@postgres:5432/growthops
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+
+  playwright_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.playwright
+    command: celery -A core worker -l info -Q playwright
+    volumes:
+      - ./backend:/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - DATABASE_URL=postgres://admin:adminpassword@postgres:5432/growthops
       - REDIS_URL=redis://redis:6379/0
