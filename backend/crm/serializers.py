@@ -55,9 +55,20 @@ class ApprovalQueueSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class LinkedInTaskSerializer(serializers.ModelSerializer):
+    lead_name = serializers.SerializerMethodField()
+    lead_linkedin_url = serializers.SerializerMethodField()
+
     class Meta:
         model = LinkedInTask
         fields = '__all__'
+
+    def get_lead_name(self, obj):
+        if obj.lead:
+            return f"{obj.lead.first_name or ''} {obj.lead.last_name or ''}".strip() or obj.lead.email
+        return "Unknown"
+
+    def get_lead_linkedin_url(self, obj):
+        return obj.lead.linkedin_url if obj.lead else None
 
 class AuditLogSerializer(serializers.ModelSerializer):
     class Meta:

@@ -191,14 +191,26 @@ def generate_draft_task(self, lead_id: str):
     )
     
     if draft_data and draft_data.get('subject') and draft_data.get('body'):
-        Message.objects.create(
+        status = 'needs_review' if lead.requires_human_review else 'pending'
+        
+        message = Message.objects.create(
             lead=lead,
             campaign=lead.campaign,
             channel='email',
             subject=draft_data['subject'],
             body=draft_data['body'],
-            status='pending'
+            status=status
         )
+        
+        if status == 'needs_review':
+            from crm.models import ApprovalQueue
+            ApprovalQueue.objects.create(
+                item_type='message_draft',
+                item_id=str(message.id),
+                status='pending',
+                reason_for_review=f"AI drafted an email for {lead.email}."
+            )
+            
         return f"Drafted email for {lead.email}"
     return "Failed to draft email"
 

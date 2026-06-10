@@ -12,4 +12,7 @@ Every AI agent starting a job on this project MUST read the following files to h
 
 **CRITICAL RULE FOR ALL MODIFICATIONS:**
 
-Whenever any changes, implementations, or bug fixes are made, the agent MUST update both `Docs/experience.md` and `Docs/current_state.md` to reflect the latest status, issues encountered, and work completed. This is mandatory to keep the project diary and single source of truth up-to-date.
+Whenever any changes, implementations, or bug fixes are made, the agent MUST update both `Docs/experience.md` and `Docs/current_state.md` to reflect the latest status, issues encountered, and work completed. 
+
+**STRICT APPEND-ONLY RULE FOR DOCS:**
+You MUST NEVER delete, overwrite, or erase the existing historical information in `Docs/experience.md` or `Docs/current_state.md`. You must only **APPEND** your new progress, thoughts, and updates on top of or beneath the old information. The historical logs of previous phases must remain intact for future agents to read.

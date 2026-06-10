@@ -142,6 +142,7 @@ class LeadMagnet(models.Model):
 
 class Message(models.Model):
     STATUS_CHOICES = [
+        ('needs_review', 'Needs Review'),
         ('pending', 'Pending'),
         ('sent', 'Sent'),
         ('failed', 'Failed'),

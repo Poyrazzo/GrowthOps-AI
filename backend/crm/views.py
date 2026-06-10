@@ -49,6 +49,15 @@ class ApprovalQueueViewSet(viewsets.ModelViewSet):
     queryset = ApprovalQueue.objects.all().order_by('-created_at')
     serializer_class = ApprovalQueueSerializer
 
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if instance.status == 'approved':
+            if instance.item_type == 'message_draft':
+                Message.objects.filter(id=instance.item_id).update(status='pending')
+        elif instance.status == 'rejected':
+            if instance.item_type == 'message_draft':
+                Message.objects.filter(id=instance.item_id).update(status='failed')
+
 class LinkedInTaskViewSet(viewsets.ModelViewSet):
     queryset = LinkedInTask.objects.all().order_by('-created_at')
     serializer_class = LinkedInTaskSerializer
