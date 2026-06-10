@@ -52,15 +52,42 @@ class ApprovalQueueViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         instance = serializer.save()
         if instance.status == 'approved':
+            AuditLog.objects.create(
+                action="Human Review: Approved",
+                resource_type="ApprovalQueue",
+                resource_id=str(instance.id),
+                details={"item_type": instance.item_type, "reason": instance.reason_for_review}
+            )
             if instance.item_type == 'message_draft':
                 Message.objects.filter(id=instance.item_id).update(status='pending')
         elif instance.status == 'rejected':
+            AuditLog.objects.create(
+                action="Human Review: Rejected",
+                resource_type="ApprovalQueue",
+                resource_id=str(instance.id),
+                details={"item_type": instance.item_type, "reason": instance.reason_for_review}
+            )
             if instance.item_type == 'message_draft':
                 Message.objects.filter(id=instance.item_id).update(status='failed')
 
 class LinkedInTaskViewSet(viewsets.ModelViewSet):
     queryset = LinkedInTask.objects.all().order_by('-created_at')
     serializer_class = LinkedInTaskSerializer
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if instance.status == 'completed':
+            # Log the manual action
+            AuditLog.objects.create(
+                action="LinkedIn Manual Task Completed",
+                resource_type="LinkedInTask",
+                resource_id=str(instance.id),
+                details={"task_type": instance.task_type}
+            )
+            # Transition the Lead pipeline state if uncontacted
+            if instance.lead.status == 'uncontacted':
+                instance.lead.status = 'in_sequence'
+                instance.lead.save()
 
 class AuditLogViewSet(viewsets.ModelViewSet):
     queryset = AuditLog.objects.all().order_by('-created_at')

@@ -58,3 +58,15 @@ This document serves as the single source of truth for the current state of the 
     - `backend/crm/utils.py`: Built `send_notification_webhook` to blast POST requests across the internal Docker network to n8n (`http://n8n:5678/webhook/growthops-events`).
     - `backend/crm/tasks.py`: Updated `process_reply_task` to instantly trigger the n8n webhook when the AI detects a `positive` sentiment reply.
     - `n8n_workflows/Slack_Notification_Template.json`: Constructed a visual node template featuring a Webhook trigger, an Event Router, and an HTTP Request node dynamically mapping the JSON payload to Slack/Discord markdown formatting.
+  - **E2E Email Testing (Step 7.2):**
+    - `docker-compose.yml`: Added `greenmail/standalone` container, providing a mock SMTP (port 3025), IMAP (port 3143), and REST API (port 8080) environment.
+    - `backend/crm/management/commands/test_e2e_email.py`: Built an automated test harness that provisions a mock `EmailAccount`, seeds a `Lead`, drafts a message, mathematically asserts the database state transitions to `sent` via Celery logic, and queries the `greenmail` REST API to physically verify the mock server received the payload.
+  - **LinkedIn Manual Workflow Validation (Step 7.3):**
+    - `backend/crm/views.py`: Overrode `perform_update` in `LinkedInTaskViewSet`. When the frontend patches a task to `completed`, the backend automatically generates an `AuditLog` entry (proving Human-in-the-Loop action) and transitions the `Lead` status from `uncontacted` to `in_sequence`.
+    - `backend/crm/management/commands/test_e2e_linkedin.py`: Built a Django test harness using `APIClient` to fully simulate an operator clicking "Mark Complete" on the Next.js dashboard, mathematically asserting the CRM state and Audit Log updates.
+  - **Compliance & Security Auditing (Step 7.4):**
+    - `backend/outreach/sequence.py`: Patched a massive vulnerability where automated follow-up drafts bypassed human gates. Follow-ups now respect `lead.requires_human_review`, spawning `ApprovalQueue` tasks instead of bypassing into `pending` state.
+  - **Phase 7 Final Audit & Bug Fixes (Step 7.5):**
+    - `backend/crm/tasks.py`: Injected missing `send_notification_webhook` logic. Now, positive incoming replies correctly and safely push real-time webhooks to the external n8n cluster.
+    - `backend/crm/management/commands/test_e2e_email.py` & `test_e2e_linkedin.py`: Fixed the `Campaign` database model seeding schemas, removing the nonexistent `daily_limit` field and adding all necessary mandatory fields to prevent Postgres integrity crashes.
+    - `backend/outreach/smtp.py`: Added dynamic fallback `use_tls=(self.account.smtp_port not in [3025, 1025, 2525])` so the `EmailBackend` cleanly pushes payloads to local mock servers without throwing `STARTTLS` exceptions.

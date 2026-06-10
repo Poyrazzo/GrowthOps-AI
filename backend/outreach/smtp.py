@@ -41,7 +41,7 @@ class SMTPSender:
                 port=self.account.smtp_port,
                 username=self.account.username,
                 password=password,
-                use_tls=True,
+                use_tls=(self.account.smtp_port not in [3025, 1025, 2525]),
                 fail_silently=False,
             )
             

@@ -251,6 +251,20 @@ def classify_reply_task(self, reply_id: str):
         reply.next_action = classification.get('next_action')
         reply.save()
         
+        if reply.sentiment == 'positive' and reply.lead:
+            reply.lead.status = 'replied'
+            reply.lead.save()
+            from crm.utils import send_notification_webhook
+            send_notification_webhook(
+                event_type="positive_reply",
+                payload={
+                    "lead_email": reply.lead.email,
+                    "lead_name": f"{reply.lead.first_name or ''} {reply.lead.last_name or ''}".strip(),
+                    "sentiment": reply.sentiment,
+                    "message_body": reply.body
+                }
+            )
+        
         if reply.category in ['unsubscribe', 'bounce'] and reply.lead.email:
             SuppressionList.objects.get_or_create(
                 email=reply.lead.email,

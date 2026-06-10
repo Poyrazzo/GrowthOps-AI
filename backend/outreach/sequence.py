@@ -76,15 +76,27 @@ def process_followups() -> int:
             )
             
             if draft_data and draft_data.get('subject') and draft_data.get('body'):
-                Message.objects.create(
+                status = 'needs_review' if lead.requires_human_review else 'pending'
+                
+                msg = Message.objects.create(
                     lead=lead,
                     campaign=lead.campaign,
                     sender_account=latest_msg.sender_account, # Identity preservation fix
                     channel='email',
                     subject=draft_data['subject'],
                     body=draft_data['body'],
-                    status='pending'
+                    status=status
                 )
+                
+                if status == 'needs_review':
+                    from crm.models import ApprovalQueue
+                    ApprovalQueue.objects.create(
+                        item_type='message_draft',
+                        item_id=str(msg.id),
+                        status='pending',
+                        reason_for_review=f"AI drafted a follow-up email for {lead.email}."
+                    )
+                
                 count += 1
                 
     return count
