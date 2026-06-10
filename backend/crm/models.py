@@ -57,6 +57,7 @@ class Company(models.Model):
     sector = models.CharField(max_length=255, blank=True, null=True)
     size = models.CharField(max_length=100, blank=True, null=True)
     location = models.CharField(max_length=255, blank=True, null=True)
+    value_proposition = models.TextField(blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -114,6 +115,12 @@ class EmailAccount(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if self.password_encrypted and not self.password_encrypted.startswith('gAAAAAB'):
+            from core.encryption import encrypt
+            self.password_encrypted = encrypt(self.password_encrypted)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.email

@@ -9,3 +9,7 @@ requests==2.31.0
 beautifulsoup4==4.12.3
 playwright==1.44.0
 pandas==2.2.2
+langchain==0.2.1
+langchain-openai==0.1.7
+langfuse
+cryptography

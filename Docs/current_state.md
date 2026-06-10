@@ -7,19 +7,13 @@ This document serves as the single source of truth for the current state of the 
 ## Architecture Status
 - **Docker Compose:** Fully initialized with `postgres` (15), `redis` (7-alpine), `django`, `celery_worker`, `celery_beat`, `playwright_worker`, and `frontend` services.
 - **Backend:** Django and Django REST Framework initialized in the `backend/` directory. 
-  - CORS is configured to allow Next.js (`http://localhost:3000`) to fetch API data securely.
-  - Celery is configured with Redis as the broker and PostgreSQL (`django-celery-results`) as the result backend.
-- **CRM App:** `crm` app initialized. 
-  - Core models (`Campaign`, `Company`, `LeadSource`, `Lead`)
-  - Secondary models (`EmailAccount`, `LeadMagnet`, `Message`, `Reply`)
-  - Utility models (`SuppressionList`, `ApprovalQueue`, `LinkedInTask`, `AuditLog`)
-  All are mapped to the database and registered in the Django Admin. `Campaign` and `Lead` models have lifecycle `status` fields.
-- **API Endpoints:** DRF serializers, viewsets, and a DefaultRouter are implemented. All 12 CRM models are fully exposed via REST APIs under `http://localhost:18000/api/crm/`.
-- **Scraping Engine:** 
-  - `StaticScraper` (`requests`/`BeautifulSoup`) is implemented for fast metadata and text extraction. It natively supports Proxy rotation.
-  - `DynamicScraper` (Playwright) is implemented for heavy JS/SPA extraction. It operates from a dedicated `playwright_worker` node to protect API stability. It natively supports AdsPower profile isolation via CDP, as well as standard Proxy rotation.
-  - `AdsPowerManager` is built to orchestrate starting/stopping external browser profiles for high-security scraping.
-  - `DataCleaner` (Pandas) is implemented to normalize, deduplicate, and filter raw scraped leads before database insertion.
-  - **Celery Orchestration** (`backend/crm/tasks.py`) connects the entire pipeline. It routes static scrapes to the standard worker and dynamic scrapes to the Playwright worker. Tasks return structured JSON dictionaries and feature exponential backoff retry mechanisms for network failures.
+- **CRM App:** Core models, secondary models, and utility models (`SuppressionList`, `EmailAccount`, `AuditLog`, etc.) are fully mapped to Postgres and exposed via DRF.
+- **Scraping Engine:** Fully functional static (`requests`) and dynamic (`Playwright`) scrapers with proxy support, AdsPower isolation, and Pandas data normalization.
+- **AI Enrichment & Classification:** Fully autonomous Celery pipeline: Scrape -> Clean -> Save Leads -> Enrich Company -> Score Leads -> Draft Emails. Guarded against infinite loops and uniquely constrained to save OpenAI tokens via Langfuse.
+- **Outreach Engine (Phase 5):**
+  - **Security:** Integrated `cryptography` (Fernet) to securely encrypt `EmailAccount` passwords via Django's `SECRET_KEY`.
+  - **SMTP Sender:** Implemented `backend/outreach/smtp.py`. The `SMTPSender` utility can accept pending AI messages, dynamically connect to custom SMTP providers (Google, Outlook, Postmark), and dispatch the email.
+  - **Tracking & Suppression:** The `SMTPSender` natively checks the `SuppressionList` before sending, aborting if the lead is blocked. It explicitly injects a custom `Message-ID` header `<{uuid}@growthops.ai>` to guarantee reply thread-matching later.
+  - **Audit Logging:** Emits detailed database records into `AuditLog` upon send success, failure, or suppression.
 - **Frontend:** Next.js initialized in the `frontend/` directory with `shadcn/ui` and `TanStack Query`.
-- **Current Completion:** Phase 1, Phase 2, and Phase 3 are completely finalized and architecturally hardened.
+- **Current Completion:** Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5 (Step 5.1) are completed.

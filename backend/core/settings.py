@@ -143,3 +143,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
+# AI Provider Configuration
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+
+LANGFUSE_SECRET_KEY = os.environ.get('LANGFUSE_SECRET_KEY', '')
+LANGFUSE_PUBLIC_KEY = os.environ.get('LANGFUSE_PUBLIC_KEY', '')
+LANGFUSE_HOST = os.environ.get('LANGFUSE_HOST', 'https://cloud.langfuse.com')
