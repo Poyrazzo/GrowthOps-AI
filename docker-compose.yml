@@ -29,10 +29,13 @@ services:
     environment:
       - DATABASE_URL=postgres://admin:adminpassword@postgres:5432/growthops
       - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
       - LANGFUSE_HOST=${LANGFUSE_HOST}
+      - OUTREACH_EMAIL=${OUTREACH_EMAIL}
+      - OUTREACH_APP_PASSWORD=${OUTREACH_APP_PASSWORD}
     depends_on:
       - postgres
       - redis
@@ -45,6 +48,7 @@ services:
     environment:
       - DATABASE_URL=postgres://admin:adminpassword@postgres:5432/growthops
       - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
@@ -61,6 +65,7 @@ services:
     environment:
       - DATABASE_URL=postgres://admin:adminpassword@postgres:5432/growthops
       - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
@@ -81,6 +86,7 @@ services:
     environment:
       - DATABASE_URL=postgres://admin:adminpassword@postgres:5432/growthops
       - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
