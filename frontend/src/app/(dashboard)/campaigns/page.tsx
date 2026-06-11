@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { motion, Variants } from "framer-motion";
-import { Plus, Megaphone, Target, MapPin, Search } from "lucide-react";
+import { Plus, Megaphone, Target, MapPin, Search, ChevronRight } from "lucide-react";
 import { fetchCampaigns } from "@/lib/api";
 import { CampaignModal } from "@/components/ui/campaign-modal";
 import { cn } from "@/lib/utils";
 
 export default function CampaignsPage() {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -85,11 +87,12 @@ export default function CampaignsPage() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {filteredCampaigns?.map((campaign) => (
-            <motion.div 
+            <motion.div
               key={campaign.id}
               variants={item}
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className="bg-card/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 shadow-xl group relative overflow-hidden flex flex-col"
+              onClick={() => router.push(`/campaigns/${campaign.id}`)}
+              className="bg-card/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 shadow-xl group relative overflow-hidden flex flex-col cursor-pointer hover:border-primary/50 transition-all"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
               
@@ -126,6 +129,11 @@ export default function CampaignsPage() {
               <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-sm relative z-10">
                 <span className="text-muted-foreground">Channel: <span className="text-foreground capitalize">{campaign.outreach_channel}</span></span>
                 <span className="text-muted-foreground">{new Date(campaign.created_at).toLocaleDateString()}</span>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between relative z-10">
+                <span className="text-xs text-muted-foreground">Click to view details & monitor</span>
+                <ChevronRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
               </div>
             </motion.div>
           ))}

@@ -1,24 +1,18 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, Variants } from "framer-motion";
 import { Activity, Users, Send, MousePointerClick } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const stats = [
-  { label: "Active Leads", value: "2,451", icon: Users, change: "+12%" },
-  { label: "Emails Sent", value: "14,092", icon: Send, change: "+5%" },
-  { label: "Reply Rate", value: "8.4%", icon: Activity, change: "+1.2%" },
-  { label: "Meetings Booked", value: "34", icon: MousePointerClick, change: "+3" },
-];
-
-const mockData = [
-  { date: "Mon", emails: 400, replies: 24, leads: 150 },
-  { date: "Tue", emails: 800, replies: 45, leads: 230 },
-  { date: "Wed", emails: 1200, replies: 80, leads: 340 },
-  { date: "Thu", emails: 1100, replies: 75, leads: 310 },
-  { date: "Fri", emails: 1600, replies: 120, leads: 400 },
-  { date: "Sat", emails: 500, replies: 10, leads: 90 },
-  { date: "Sun", emails: 450, replies: 15, leads: 110 },
+const CHART_DATA = [
+  { date: "Mon", emails: 0, replies: 0, leads: 0 },
+  { date: "Tue", emails: 0, replies: 0, leads: 0 },
+  { date: "Wed", emails: 0, replies: 0, leads: 0 },
+  { date: "Thu", emails: 0, replies: 0, leads: 0 },
+  { date: "Fri", emails: 0, replies: 0, leads: 0 },
+  { date: "Sat", emails: 0, replies: 0, leads: 0 },
+  { date: "Sun", emails: 0, replies: 0, leads: 0 },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -41,6 +35,38 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function DashboardHome() {
+  const [stats, setStats] = useState([
+    { label: "Active Leads", value: "—", icon: Users, change: "" },
+    { label: "Emails Sent", value: "—", icon: Send, change: "" },
+    { label: "Reply Rate", value: "—", icon: Activity, change: "" },
+    { label: "Meetings Booked", value: "—", icon: MousePointerClick, change: "" },
+  ]);
+
+  const [chartData, setChartData] = useState(CHART_DATA);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campaigns/`);
+        if (response.ok) {
+          const campaigns = await response.json();
+          const activeCampaigns = campaigns.filter((c: any) => c.status === 'active');
+
+          setStats([
+            { label: "Active Campaigns", value: activeCampaigns.length.toString(), icon: Users, change: "" },
+            { label: "Draft Messages", value: "—", icon: Send, change: "" },
+            { label: "Active Sources", value: "—", icon: Activity, change: "" },
+            { label: "Total Leads", value: "—", icon: MousePointerClick, change: "" },
+          ]);
+        }
+      } catch (error) {
+        console.log("Stats unavailable — system initializing");
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   const container: Variants = {
     hidden: { opacity: 0 },
     show: {
@@ -56,7 +82,7 @@ export default function DashboardHome() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -64,9 +90,9 @@ export default function DashboardHome() {
       >
         <div>
           <h2 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
-            Welcome back, Commander
+            Growth Automation Dashboard
           </h2>
-          <p className="text-muted-foreground mt-2">Here is the real-time telemetry for your outreach sequences.</p>
+          <p className="text-muted-foreground mt-2">Real-time metrics for your outreach campaigns.</p>
         </div>
       </motion.div>
 
@@ -114,7 +140,7 @@ export default function DashboardHome() {
         </div>
         <div className="w-full h-[380px] relative z-10">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={mockData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorEmails" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>

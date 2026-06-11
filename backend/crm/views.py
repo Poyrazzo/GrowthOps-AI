@@ -20,6 +20,34 @@ class CampaignViewSet(viewsets.ModelViewSet):
     queryset = Campaign.objects.all().order_by('-created_at')
     serializer_class = CampaignSerializer
 
+    @action(detail=True, methods=['post'])
+    def restart(self, request, pk=None):
+        """Reset campaign to active and re-trigger drafting for all uncontacted leads."""
+        campaign = self.get_object()
+        campaign.status = 'active'
+        campaign.save()
+
+        # Reset all leads in this campaign to uncontacted and re-trigger drafting
+        from .tasks import generate_draft_task
+        uncontacted_leads = Lead.objects.filter(
+            campaign=campaign,
+            status='uncontacted'
+        )
+
+        for lead in uncontacted_leads:
+            generate_draft_task.apply_async(args=[str(lead.id)], queue='default')
+
+        log_activity(
+            campaign=campaign,
+            action='campaign_restarted',
+            details=f'Campaign restarted. {uncontacted_leads.count()} leads queued for drafting.'
+        )
+
+        return Response({
+            "detail": f"Campaign restarted. {uncontacted_leads.count()} leads queued for drafting.",
+            "status": "active"
+        }, status=200)
+
 class LeadSourceViewSet(viewsets.ModelViewSet):
     queryset = LeadSource.objects.all().order_by('-created_at')
     serializer_class = LeadSourceSerializer
