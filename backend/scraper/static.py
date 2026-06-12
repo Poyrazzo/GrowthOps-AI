@@ -43,7 +43,7 @@ class StaticScraper:
     }
 
     # Max pages to visit per source (BFS). Each page costs ~1-10 s.
-    MAX_CRAWL_PAGES = 40
+    MAX_CRAWL_PAGES = 80
     # For directory sources: how many individual listing pages to crawl into.
     MAX_LISTING_PAGES = 20
 

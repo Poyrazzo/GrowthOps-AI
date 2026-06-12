@@ -31,6 +31,30 @@ _JUNK_LOCALPARTS = {
     'you', 'hello', 'hi', 'hey', 'me', 'placeholder',
 }
 
+# Words that appear in headings but are NEVER part of a real person's name.
+# Prevents "Teacher Workshops", "Want Take", "Ialf Serpong" etc. being saved as leads.
+_NON_PERSON_WORDS = frozenset({
+    # UI / call-to-action verbs
+    'want', 'take', 'learn', 'get', 'join', 'start', 'find', 'book',
+    'try', 'see', 'view', 'click', 'read', 'apply', 'register', 'sign',
+    'contact', 'call', 'reach', 'explore', 'discover', 'know', 'more', 'about',
+    # Education / product nouns
+    'workshop', 'workshops', 'training', 'trainings', 'course', 'courses',
+    'class', 'classes', 'program', 'programs', 'programme', 'programmes',
+    'seminar', 'seminars', 'webinar', 'webinars', 'event', 'events',
+    'session', 'sessions', 'lesson', 'lessons', 'module', 'modules',
+    # Institutional words
+    'school', 'college', 'university', 'academy', 'institute', 'institution',
+    'center', 'centre', 'foundation', 'association', 'organization', 'branch',
+    # Descriptors
+    'english', 'turkish', 'language', 'languages', 'online', 'digital',
+    'international', 'global', 'national', 'local', 'general', 'official',
+    'education', 'educational', 'development', 'learning', 'teaching',
+    # Generic business words
+    'solution', 'solutions', 'service', 'services', 'system', 'systems',
+    'group', 'network', 'community', 'club', 'society', 'department',
+})
+
 _ROLE_LOCALPART_WORDS = {
     'info', 'contact', 'sales', 'support', 'hello', 'admin', 'office',
     'mail', 'help', 'team', 'hr', 'jobs', 'careers', 'marketing',
@@ -160,6 +184,9 @@ def _name_from_text(text: str) -> Dict[str, Optional[str]]:
     if '@' in text or len(text) > 50:
         return {'first_name': None, 'last_name': None}
     tokens = [t for t in re.split(r'\s+', text) if t.isalpha() and len(t) > 1]
+    # Reject headings that contain any known non-person word (e.g. "Teacher Workshops", "Want Take")
+    if any(t.lower() in _NON_PERSON_WORDS for t in tokens):
+        return {'first_name': None, 'last_name': None}
     if len(tokens) == 2:
         return {'first_name': tokens[0].title(), 'last_name': tokens[1].title()}
     if len(tokens) == 3:
@@ -406,6 +433,17 @@ def extract_contacts(soup: BeautifulSoup, raw_html: str, source_url: str = '') -
     for source_text in (_deobfuscate(raw_html), _deobfuscate(soup.get_text(' '))):
         for match in EMAIL_RE.findall(source_text):
             _add(match)
+
+    # 5) Raw HTML LinkedIn profile URL scan — catches URLs in plain text, data-
+    #    attributes, and inline JS that are not wrapped in <a> tags.
+    _LINKEDIN_IN_RE = re.compile(r'linkedin\.com/in/([A-Za-z0-9\-]{3,80})', re.I)
+    seen_li = {(d.get('linkedin_url') or '').lower().rstrip('/') for d in by_key.values()}
+    for m in _LINKEDIN_IN_RE.finditer(raw_html):
+        slug = m.group(1).rstrip('/')
+        url = f'https://www.linkedin.com/in/{slug}'
+        if url.lower().rstrip('/') not in seen_li:
+            _add(linkedin_url=url)
+            seen_li.add(url.lower().rstrip('/'))
 
     return list(by_key.values())
 

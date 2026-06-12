@@ -207,6 +207,13 @@ class EmailAccountViewSet(viewsets.ModelViewSet):
     queryset = EmailAccount.objects.all().order_by('-created_at')
     serializer_class = EmailAccountSerializer
 
+    @action(detail=False, methods=['post'])
+    def poll_now(self, request):
+        """Immediately trigger IMAP inbox polling for all accounts, without waiting for the 5-min beat."""
+        from crm.tasks import poll_all_inboxes_task
+        poll_all_inboxes_task.delay()
+        return Response({"detail": "IMAP polling triggered. Any new replies will be processed within seconds."}, status=202)
+
 class LeadMagnetViewSet(viewsets.ModelViewSet):
     queryset = LeadMagnet.objects.all().order_by('-created_at')
     serializer_class = LeadMagnetSerializer

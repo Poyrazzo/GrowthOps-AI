@@ -7496,3 +7496,11 @@ navigating to "https://www.dogusakademi.com/iletisim", waiting until "networkidl
 [2026-06-12 17:02:56] [INFO] [crm.tasks] SEARCH DISCOVERY company=British Side results=6 contacts=7
 [2026-06-12 17:02:56] [INFO] [crm.tasks] Skipped 1 generic/low-confidence email-only leads for https://www.britishside.com/iletisim
 [2026-06-12 17:02:56] [INFO] [crm.tasks] SCRAPE RESULT url=https://www.britishside.com/iletisim processed=6 saved=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 17:10:23] [WARNING] [django.request] Bad Request: /api/crm/leads/9c90316e-91d6-4259-b5cc-01ccec4c7506/draft/
+[2026-06-12 17:10:23] [WARNING] [django.server] "POST /api/crm/leads/9c90316e-91d6-4259-b5cc-01ccec4c7506/draft/ HTTP/1.1" 400 39
+[2026-06-12 17:10:26] [WARNING] [django.request] Bad Request: /api/crm/leads/9c90316e-91d6-4259-b5cc-01ccec4c7506/draft/
+[2026-06-12 17:10:26] [WARNING] [django.server] "POST /api/crm/leads/9c90316e-91d6-4259-b5cc-01ccec4c7506/draft/ HTTP/1.1" 400 39
+[2026-06-12 17:10:30] [WARNING] [django.request] Bad Request: /api/crm/leads/2bae24b2-d01a-4209-8fe1-fccb53ee3ebb/draft/
+[2026-06-12 17:10:30] [WARNING] [django.server] "POST /api/crm/leads/2bae24b2-d01a-4209-8fe1-fccb53ee3ebb/draft/ HTTP/1.1" 400 39
+[2026-06-12 17:10:33] [WARNING] [django.request] Bad Request: /api/crm/leads/5ff082c2-2ab8-4adc-8cb5-3fbc743f9316/draft/
+[2026-06-12 17:10:33] [WARNING] [django.server] "POST /api/crm/leads/5ff082c2-2ab8-4adc-8cb5-3fbc743f9316/draft/ HTTP/1.1" 400 39

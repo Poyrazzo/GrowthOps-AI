@@ -13,7 +13,7 @@ class LeadScore(BaseModel):
     )
 
 def score_lead(lead_title: str, company_vp: str, campaign_persona: str, available_lead_magnets: list = None,
-               is_generic_email: bool = False, company_name: str = None) -> dict:
+               is_generic_email: bool = False, company_name: str = None, lead_name: str = None) -> dict:
     llm = get_llm()
     structured_llm = llm.with_structured_output(LeadScore)
 
@@ -36,9 +36,19 @@ def score_lead(lead_title: str, company_vp: str, campaign_persona: str, availabl
             "generic inbox is a reasonable score (around 55-75). Use the persona label 'Company Gateway Inbox'.\n"
         )
     else:
+        name_note = ""
+        if lead_name:
+            name_note = (
+                f"\nIMPORTANT: The lead's name is '{lead_name}'. "
+                "If this does NOT look like a real human name (e.g. it is an institution name, "
+                "a product name, a city name, an acronym, or a generic English noun like "
+                "'Teacher Workshops' or 'Want Take'), give a score of 0 and set persona to "
+                "'Non-Person / Bad Data'. Real human names have typical first-name + last-name "
+                "patterns from any culture.\n"
+            )
         contact_context = (
             "CONTACT TYPE: This is an individual person's address. Score on how well their role fits "
-            "the target persona.\n"
+            f"the target persona.{name_note}"
         )
 
     prompt = PromptTemplate.from_template(
@@ -47,6 +57,7 @@ def score_lead(lead_title: str, company_vp: str, campaign_persona: str, availabl
         "Score the lead from 0 to 100 on overall fit, assign a persona label, recommend a concrete outreach "
         "angle, and pick the single best-fitting lead magnet from the list (copy its name EXACTLY, or empty "
         "string if none fit).\n\n"
+        "Lead Name: {lead_name}\n"
         "Lead Job Title: {lead_title}\n"
         "Company Name: {company_name}\n"
         "Company Value Proposition: {company_vp}\n"
@@ -61,6 +72,7 @@ def score_lead(lead_title: str, company_vp: str, campaign_persona: str, availabl
 
     result = chain.invoke({
         "contact_context": contact_context,
+        "lead_name": lead_name or "Unknown",
         "lead_title": lead_title or "Unknown",
         "company_name": company_name or "Unknown",
         "company_vp": company_vp or "Unknown",

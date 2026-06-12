@@ -660,13 +660,16 @@ def score_lead_task(self, lead_id: str):
 
     magnets = list(LeadMagnet.objects.all().values('name', 'description', 'target_persona'))
 
+    lead_name = ' '.join(filter(None, [lead.first_name, lead.last_name])) or None
+
     score_data = score_lead(
         lead_title=lead.title,
         company_vp=company_vp,
         campaign_persona=campaign_persona,
         available_lead_magnets=magnets,
         is_generic_email=lead.is_generic_email,
-        company_name=lead.company.name if lead.company else None
+        company_name=lead.company.name if lead.company else None,
+        lead_name=lead_name,
     )
 
     if score_data:
