@@ -168,3 +168,54 @@ TEST_REDIRECT_EMAIL = os.environ.get('TEST_REDIRECT_EMAIL', os.environ.get('OUTR
 LANGFUSE_SECRET_KEY = os.environ.get('LANGFUSE_SECRET_KEY', '')
 LANGFUSE_PUBLIC_KEY = os.environ.get('LANGFUSE_PUBLIC_KEY', '')
 LANGFUSE_HOST = os.environ.get('LANGFUSE_HOST', 'https://cloud.langfuse.com')
+
+# --- LOGGING -----------------------------------------------------------
+# Writes EVERYTHING (DEBUG+) to /app/logs/growthops.log inside the container.
+# The backend volume is mounted at ./backend:/app, so on the host the file is
+# at  backend/logs/growthops.log  — readable with:
+#   tail -f backend/logs/growthops.log
+# or via the /api/crm/logs/ streaming endpoint.
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] [{levelname}] [{name}] {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_DIR / 'growthops.log'),
+            'maxBytes': 10 * 1024 * 1024,  # 10 MB
+            'backupCount': 3,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        # Our app code — DEBUG so every scrape step, task, and save is logged
+        'crm': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
+        'scraper': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
+        'ai_engine': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
+        'outreach': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
+        # Celery internals — INFO so we see task received/succeeded/failed
+        'celery': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
+        'celery.task': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
+        # Django request/db at WARNING (avoid noise)
+        'django': {'handlers': ['console', 'file'], 'level': 'WARNING', 'propagate': False},
+    },
+}

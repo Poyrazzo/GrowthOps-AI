@@ -1,0 +1,11 @@
+[2026-06-12 14:11:07] [INFO] [crm] TEST LOG ENTRY from shell check
+[2026-06-12 14:11:15] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.englishtime.com/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=5957b9ef-96f2-48c5-be8a-3af86d78b078
+[2026-06-12 14:11:15] [INFO] [scraper.static] StaticScraper starting: https://www.englishtime.com/iletisim
+[2026-06-12 14:11:21] [INFO] [scraper.static] StaticScraper done https://www.englishtime.com/iletisim — 1 contacts found
+[2026-06-12 14:11:21] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://www.englishtime.com/iletisim contacts=1 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=5957b9ef-96f2-48c5-be8a-3af86d78b078
+[2026-06-12 14:11:21] [INFO] [crm.tasks] LEAD CREATED email=info@englishtime.com campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=5957b9ef-96f2-48c5-be8a-3af86d78b078
+[2026-06-12 14:11:21] [INFO] [crm.tasks] SCRAPE RESULT url=https://www.englishtime.com/iletisim processed=1 saved=1 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:11:21] [INFO] [crm.tasks] TASK score_lead_task START lead=c04443f4-097a-4c6f-a61b-1d48f260453f
+[2026-06-12 14:11:24] [INFO] [crm.tasks] TASK score_lead_task DONE lead=c04443f4-097a-4c6f-a61b-1d48f260453f score=70
+[2026-06-12 14:11:24] [INFO] [crm.tasks] TASK generate_draft_task START lead=c04443f4-097a-4c6f-a61b-1d48f260453f
+[2026-06-12 14:11:28] [INFO] [crm.tasks] TASK generate_draft_task DONE lead=c04443f4-097a-4c6f-a61b-1d48f260453f status=needs_review

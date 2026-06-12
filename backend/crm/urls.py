@@ -4,7 +4,7 @@ from .views import (
     CampaignViewSet, LeadSourceViewSet, CompanyViewSet, LeadViewSet,
     EmailAccountViewSet, LeadMagnetViewSet, MessageViewSet, ReplyViewSet,
     SuppressionListViewSet, ApprovalQueueViewSet, LinkedInTaskViewSet, AuditLogViewSet,
-    ActivityViewSet, LeadMagnetSubmissionViewSet
+    ActivityViewSet, LeadMagnetSubmissionViewSet, logs_view
 )
 
 router = DefaultRouter()
@@ -25,4 +25,5 @@ router.register(r'magnetsubmissions', LeadMagnetSubmissionViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('logs/', logs_view, name='system-logs'),
 ]

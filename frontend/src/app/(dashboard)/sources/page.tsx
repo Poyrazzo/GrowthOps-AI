@@ -1,17 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, Variants } from "framer-motion";
-import { LayoutList, Search, ShieldAlert, Globe, FileCode2, BookOpen, Users, Megaphone, PlayCircle, Loader2 } from "lucide-react";
+import { LayoutList, Search, ShieldAlert, Globe, FileCode2, BookOpen, Users, Megaphone, PlayCircle, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { fetchLeadSources, triggerScrape } from "@/lib/api";
 import { SourceModal } from "@/components/ui/source-modal";
 import { cn } from "@/lib/utils";
+
+type ScrapeState = 'idle' | 'loading' | 'success' | 'error';
 
 export default function SourcesPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [scrapeStates, setScrapeStates] = useState<Record<string, ScrapeState>>({});
   // Read ?campaign= once on mount (set when arriving via "View Sources" on a campaign)
   const [campaignFilter] = useState<string | null>(() =>
     typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("campaign") : null
@@ -22,12 +25,18 @@ export default function SourcesPage() {
     queryFn: () => fetchLeadSources(campaignFilter ?? undefined),
   });
 
-  const scrapeMutation = useMutation({
-    mutationFn: triggerScrape,
-    onSuccess: () => {
+  const handleScrapeNow = async (sourceId: string) => {
+    setScrapeStates(s => ({ ...s, [sourceId]: 'loading' }));
+    try {
+      await triggerScrape(sourceId);
       queryClient.invalidateQueries({ queryKey: ["lead_sources"] });
-    },
-  });
+      setScrapeStates(s => ({ ...s, [sourceId]: 'success' }));
+      setTimeout(() => setScrapeStates(s => ({ ...s, [sourceId]: 'idle' })), 3000);
+    } catch {
+      setScrapeStates(s => ({ ...s, [sourceId]: 'error' }));
+      setTimeout(() => setScrapeStates(s => ({ ...s, [sourceId]: 'idle' })), 4000);
+    }
+  };
 
   const filteredSources = sources?.filter(s =>
     s.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -165,18 +174,29 @@ export default function SourcesPage() {
                   </div>
                 </div>
 
-                {source.source_type !== 'linkedin' && (
-                  <button
-                    onClick={() => scrapeMutation.mutate(source.id)}
-                    disabled={scrapeMutation.isPending}
-                    className="mt-4 w-full py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 transition-all bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50"
-                  >
-                    {scrapeMutation.isPending
-                      ? <Loader2 className="w-4 h-4 animate-spin" />
-                      : <PlayCircle className="w-4 h-4" />}
-                    Scrape Now
-                  </button>
-                )}
+                {source.source_type !== 'linkedin' && (() => {
+                  const state = scrapeStates[source.id] ?? 'idle';
+                  return (
+                    <button
+                      onClick={() => handleScrapeNow(source.id)}
+                      disabled={state === 'loading'}
+                      className={cn(
+                        "mt-4 w-full py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 transition-all border disabled:opacity-50",
+                        state === 'success'
+                          ? "bg-green-500/20 border-green-500/40 text-green-400"
+                          : state === 'error'
+                          ? "bg-red-500/20 border-red-500/40 text-red-400"
+                          : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                      )}
+                    >
+                      {state === 'loading' && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {state === 'success' && <CheckCircle2 className="w-4 h-4" />}
+                      {state === 'error' && <XCircle className="w-4 h-4" />}
+                      {state === 'idle' && <PlayCircle className="w-4 h-4" />}
+                      {state === 'loading' ? 'Queuing…' : state === 'success' ? 'Queued! Check Activity' : state === 'error' ? 'Failed — try again' : 'Scrape Now'}
+                    </button>
+                  );
+                })()}
               </div>
             </motion.div>
           ))}

@@ -1,3 +1,4 @@
+import logging
 import urllib.parse
 from celery import shared_task
 from django.conf import settings
@@ -17,6 +18,8 @@ from ai_engine.linkedin_generator import generate_connection_request, generate_d
 from ai_engine.reply_classifier import classify_reply
 from outreach.imap import IMAPReader
 from outreach.sequence import dispatch_pending_emails, process_followups
+
+logger = logging.getLogger(__name__)
 
 
 def _resolve_company(email: str, page_company: Company, page_domain: str):
@@ -41,7 +44,12 @@ def _resolve_company(email: str, page_company: Company, page_domain: str):
 def _process_and_save_scrape_result(result: dict, campaign_id: str = None, source_id: str = None) -> dict:
     """Fans out the raw scraper result, cleans it, and saves it to the DB."""
     if not result.get('success'):
+        logger.error("SCRAPE FAILED url=%s campaign=%s source=%s", result.get('url'), campaign_id, source_id)
         return {"success": False, "error": "Scrape failed or returned empty HTML.", "processed": 0, "saved": 0}
+
+    logger.info("SCRAPE SUCCESS url=%s contacts=%d campaign=%s source=%s",
+                result.get('url'), len(result.get('contacts') or result.get('emails', [])),
+                campaign_id, source_id)
 
     url = result.get('url', '')
     page_domain = urllib.parse.urlparse(url).netloc.lower()
@@ -61,7 +69,18 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
             page_company.linkedin_url = linkedin_company
             page_company.save()
 
-    raw_leads = [{'email': email} for email in result.get('emails', [])]
+    # Prefer the richer 'contacts' (email + extracted names) when the scraper
+    # provides them; fall back to bare emails for older code paths.
+    contacts = result.get('contacts')
+    if contacts:
+        raw_leads = [
+            {'email': c.get('email'),
+             'first_name': c.get('first_name'),
+             'last_name': c.get('last_name')}
+            for c in contacts
+        ]
+    else:
+        raw_leads = [{'email': email} for email in result.get('emails', [])]
     for profile_url in result.get('social_links', {}).get('linkedin_profiles', []):
         raw_leads.append({'email': None, 'linkedin_url': profile_url})
 
@@ -99,6 +118,7 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
                 status='uncontacted'
             )
             saved_count += 1
+            logger.info("LEAD CREATED email=%s campaign=%s source=%s", email, campaign_id, source_id)
             log_activity(lead, 'lead_created', f"Scraped from {url}", {"source_url": url})
             # Leads not tied to the page's own company won't be reached by the
             # page-company enrichment fan-out below, so score them directly.
@@ -125,6 +145,8 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
     for lead_id in leads_to_score:
         score_lead_task.delay(lead_id)
 
+    logger.info("SCRAPE RESULT url=%s processed=%d saved=%d campaign=%s",
+                result.get('url'), len(cleaned_leads), saved_count, campaign_id)
     return {
         "success": True,
         "processed": len(cleaned_leads),
@@ -134,40 +156,53 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
 def run_static_scrape(self, url: str, campaign_id: str = None, proxy_url: str = None, source_id: str = None):
-    """Executes a static scrape in the background on the default Celery queue."""
+    """Static scrape on the default queue. If a static fetch succeeds but finds no
+    contacts, the page is likely JS-rendered — automatically retry with the
+    Playwright (dynamic) scraper before giving up."""
+    logger.info("TASK run_static_scrape START url=%s campaign=%s source=%s", url, campaign_id, source_id)
     scraper = StaticScraper()
     result = scraper.scrape_website(url, proxy_url=proxy_url)
+
+    no_contacts = not result.get('emails') and not result.get('social_links', {}).get('linkedin_profiles')
+    if no_contacts:
+        logger.info("TASK run_static_scrape no contacts found, escalating to dynamic scraper: %s", url)
+        # Hand off to the JS-capable worker; that task saves its own results.
+        run_dynamic_scrape.delay(url, campaign_id=campaign_id, source_id=source_id, proxy_url=proxy_url)
+        return {"success": True, "processed": 0, "saved": 0,
+                "note": "No contacts via static fetch; escalated to dynamic scraper."}
+
     return _process_and_save_scrape_result(result, campaign_id, source_id)
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3, queue='playwright')
 def run_dynamic_scrape(self, url: str, campaign_id: str = None, adspower_profile_id: str = None, proxy_url: str = None, source_id: str = None):
     """Executes a dynamic scrape explicitly on the isolated playwright_worker container."""
+    logger.info("TASK run_dynamic_scrape START url=%s campaign=%s source=%s", url, campaign_id, source_id)
     scraper = DynamicScraper()
     result = scraper.scrape_website(url, adspower_profile_id=adspower_profile_id, proxy_url=proxy_url)
     return _process_and_save_scrape_result(result, campaign_id, source_id)
 
 @shared_task
 def trigger_scheduled_scrapes_task():
-    """Beat task: walks active campaigns and enqueues scrapes for their due LeadSources.
-
-    This is the missing glue between 'operator configures Campaign + Sources' and
-    'scraping actually happens'. LinkedIn-type sources are NEVER auto-scraped
-    (human-in-the-loop compliance rule).
-    """
+    """Beat task: walks active campaigns and enqueues scrapes for their due LeadSources."""
     today = timezone.now().date()
     refresh_cutoff = timezone.now() - timezone.timedelta(hours=settings.SCRAPE_REFRESH_HOURS)
 
     campaigns = Campaign.objects.filter(status='active')
     triggered = 0
+    logger.info("BEAT trigger_scheduled_scrapes_task: checking %d active campaigns", campaigns.count())
     for campaign in campaigns:
         if campaign.start_date and campaign.start_date > today:
+            logger.debug("Campaign %s not started yet, skipping", campaign.name)
             continue
         if campaign.end_date and campaign.end_date < today:
+            logger.debug("Campaign %s ended, skipping", campaign.name)
             continue
 
         sources = campaign.sources.exclude(source_type='linkedin').order_by('-priority_score')
+        logger.info("Campaign %s has %d scrapeable sources", campaign.name, sources.count())
         for source in sources:
             if source.last_scraped_at and source.last_scraped_at > refresh_cutoff:
+                logger.debug("Source %s recently scraped, skipping", source.url)
                 continue
             # Stamp immediately so overlapping beat runs don't double-trigger
             source.last_scraped_at = timezone.now()
@@ -178,7 +213,9 @@ def trigger_scheduled_scrapes_task():
             else:
                 run_static_scrape.delay(source.url, campaign_id=str(campaign.id), source_id=str(source.id))
             triggered += 1
+            logger.info("QUEUED scrape for %s (campaign: %s)", source.url, campaign.name)
 
+    logger.info("BEAT trigger_scheduled_scrapes_task: triggered %d scrapes", triggered)
     return f"Triggered {triggered} scrapes"
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
@@ -207,8 +244,10 @@ def enrich_company_task(self, company_id: str, body_text: str):
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
 def score_lead_task(self, lead_id: str):
     """Uses LLM to score a lead, assign a persona, match a lead magnet, and recommend an angle."""
+    logger.info("TASK score_lead_task START lead=%s", lead_id)
     lead = Lead.objects.filter(id=lead_id).first()
     if not lead:
+        logger.warning("TASK score_lead_task lead not found: %s", lead_id)
         return "Lead not found"
 
     campaign_persona = lead.campaign.target_persona if lead.campaign else "Any B2B prospect"
@@ -248,13 +287,16 @@ def score_lead_task(self, lead_id: str):
             else:
                 generate_draft_task.delay(str(lead.id))
 
+    logger.info("TASK score_lead_task DONE lead=%s score=%s", lead_id, lead.lead_score)
     return f"Scored lead {lead.email or lead.linkedin_url} with score {lead.lead_score}"
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
 def generate_draft_task(self, lead_id: str):
     """Uses LLM to draft a personalized email and saves it to the database."""
+    logger.info("TASK generate_draft_task START lead=%s", lead_id)
     lead = Lead.objects.filter(id=lead_id).first()
     if not lead or not lead.campaign:
+        logger.warning("TASK generate_draft_task lead/campaign not found: %s", lead_id)
         return "Lead or campaign not found"
 
     if not lead.email:
@@ -306,7 +348,9 @@ def generate_draft_task(self, lead_id: str):
                 reason_for_review=f"AI drafted an email for {lead.email}."
             )
 
+        logger.info("TASK generate_draft_task DONE lead=%s status=%s", lead_id, status)
         return f"Drafted email for {lead.email}"
+    logger.error("TASK generate_draft_task FAILED to generate draft for lead=%s", lead_id)
     return "Failed to draft email"
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)

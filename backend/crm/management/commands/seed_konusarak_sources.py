@@ -42,7 +42,11 @@ class Command(BaseCommand):
             campaign = (Campaign.objects.filter(id=camp_arg).first()
                         or Campaign.objects.filter(name__icontains=camp_arg).first())
         else:
-            campaign = Campaign.objects.filter(name__icontains='Konuşarak').first()
+            # Prefer the real product campaign, not any "E2E"/"Test" verification one.
+            campaign = (Campaign.objects.filter(name__icontains='Konuşarak')
+                        .exclude(name__icontains='E2E')
+                        .exclude(name__icontains='Test')
+                        .order_by('created_at').first())
 
         if not campaign:
             self.stdout.write(self.style.ERROR(

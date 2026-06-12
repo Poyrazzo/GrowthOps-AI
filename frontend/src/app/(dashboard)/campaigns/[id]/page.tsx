@@ -278,6 +278,23 @@ export default function CampaignDetail() {
           <>
             <button
               onClick={async () => {
+                try {
+                  const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/campaigns/${campaignId}/scrape_now/`,
+                    { method: "POST" }
+                  );
+                  const data = await res.json();
+                  alert(data.detail);
+                } catch {
+                  alert("Failed to start. Is the campaign active and does it have sources?");
+                }
+              }}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-2 rounded-lg transition"
+            >
+              ▶ Run Now (Scrape All Sources)
+            </button>
+            <button
+              onClick={async () => {
                 const res = await fetch(
                   `${process.env.NEXT_PUBLIC_API_URL}/campaigns/${campaignId}/`,
                   {

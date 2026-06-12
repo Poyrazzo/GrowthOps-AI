@@ -2,11 +2,17 @@ import pandas as pd
 import numpy as np
 from typing import List, Dict, Any
 
-# Mailbox prefixes that indicate a generic/role inbox rather than a person (SRS 3.6)
+# Mailbox prefixes that indicate a generic/role inbox rather than a person (SRS 3.6).
+# Includes Turkish role inboxes since campaigns frequently target TR companies.
 GENERIC_EMAIL_PREFIXES = {
+    # English
     'info', 'support', 'sales', 'contact', 'hello', 'admin', 'office',
     'mail', 'help', 'team', 'hr', 'jobs', 'careers', 'marketing',
-    'press', 'billing', 'noreply', 'no-reply', 'webmaster', 'postmaster'
+    'press', 'billing', 'noreply', 'no-reply', 'webmaster', 'postmaster',
+    'enquiries', 'inquiries', 'general', 'reception',
+    # Turkish
+    'bilgi', 'iletisim', 'destek', 'kurumsal', 'satis', 'kayit',
+    'ik', 'ikbasvuru', 'basvuru', 'musteri', 'merhaba',
 }
 
 class DataCleaner:

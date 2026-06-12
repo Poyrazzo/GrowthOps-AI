@@ -1,5 +1,10 @@
 import logging
+import os
+from pathlib import Path
+from django.conf import settings
 from django.utils import timezone
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -320,3 +325,28 @@ class LeadMagnetSubmissionViewSet(viewsets.ModelViewSet):
                 "lead_magnet": submission.lead_magnet.name,
             }
         )
+
+
+@require_GET
+def logs_view(request):
+    """Returns the last N lines of the system log file.
+
+    Query params:
+      lines  — how many tail lines to return (default 200, max 2000)
+      filter — optional substring filter applied per line
+    """
+    log_path = Path(settings.BASE_DIR) / 'logs' / 'growthops.log'
+    n = min(int(request.GET.get('lines', 200)), 2000)
+    substring = request.GET.get('filter', '').lower()
+
+    if not log_path.exists():
+        return JsonResponse({'lines': [], 'note': 'Log file not created yet. Run a scrape first.'})
+
+    with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+        all_lines = f.readlines()
+
+    if substring:
+        all_lines = [l for l in all_lines if substring in l.lower()]
+
+    tail = [l.rstrip('\n') for l in all_lines[-n:]]
+    return JsonResponse({'lines': tail, 'total': len(all_lines)})
