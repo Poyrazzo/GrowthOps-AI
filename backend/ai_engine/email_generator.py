@@ -3,31 +3,65 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from ai_engine.llm import get_llm, get_langfuse_handler
 
 class EmailDraft(BaseModel):
-    subject: str = Field(description="A catchy, short, and personalized email subject line.")
-    body: str = Field(description="The body of the cold outreach email. Must be highly personalized and conversational.")
+    subject: str = Field(description="A short, specific, personalized subject line (no spammy words, under 60 chars).")
+    body: str = Field(description="The full cold email body, ready to send AS-IS with no placeholders to fill in.")
 
-def generate_email_draft(lead_name: str, lead_title: str, company_name: str, company_vp: str, campaign_vp: str, message_angle: str, lead_magnet: str = None) -> dict:
+# Shared rules so every draft is send-ready and never contains [bracketed] gaps.
+_STYLE_RULES = (
+    "STRICT RULES:\n"
+    "1. Output must be 100% ready to send. NEVER include bracketed placeholders like "
+    "[Your Name], [Company], [link], or [Your Position]. If you don't know a detail, omit it.\n"
+    "2. Sign off simply as 'The {sender_name} Team' — do NOT invent a personal name.\n"
+    "3. Keep the body under 120 words. Be specific and conversational, not generic or salesy.\n"
+    "4. One clear, low-friction call to action (a short reply or quick call).\n"
+    "5. Plain text only. No markdown, no subject line inside the body.\n"
+)
+
+def generate_email_draft(lead_name: str, lead_title: str, company_name: str, company_vp: str, campaign_vp: str, message_angle: str, lead_magnet: str = None, is_generic_email: bool = False, sender_name: str = "Konuşarak Öğren") -> dict:
     llm = get_llm()
     structured_llm = llm.with_structured_output(EmailDraft)
-    
+
+    if is_generic_email:
+        # A role inbox (info@, contact@) is read by an assistant/gatekeeper, not
+        # the decision-maker. Write a short note that asks to be forwarded.
+        audience_block = (
+            "AUDIENCE: This email goes to a GENERIC company inbox (e.g. info@/contact@), "
+            "read by a gatekeeper, not the decision-maker. Do NOT address a named person. "
+            "Open with a polite line asking them to forward this to the right person "
+            f"(the {message_angle or 'relevant decision-maker'}). Keep it brief and respectful.\n"
+        )
+        greeting_hint = "Use a neutral greeting like 'Hello,' (no personal name)."
+    else:
+        audience_block = (
+            "AUDIENCE: This email goes directly to the named individual below. "
+            "Address them by first name and reference their role.\n"
+        )
+        greeting_hint = "Greet the lead by their first name."
+
     prompt = PromptTemplate.from_template(
-        "You are an expert B2B copywriter writing a highly personalized cold email.\n"
-        "Draft the email based on the following context. Keep it concise, engaging, and professional.\n\n"
+        "You are an expert B2B copywriter writing a highly personalized cold email.\n\n"
+        "{audience_block}\n"
+        "{style_rules}\n"
+        "{greeting_hint}\n\n"
+        "CONTEXT:\n"
         "Lead Name: {lead_name}\n"
         "Lead Title: {lead_title}\n"
         "Target Company Name: {company_name}\n"
         "Target Company Value Proposition: {company_vp}\n"
-        "Our Campaign Value Proposition: {campaign_vp}\n"
+        "Our Value Proposition (what we offer): {campaign_vp}\n"
         "Recommended Message Angle: {message_angle}\n"
-        "Lead Magnet/Offer: {lead_magnet}\n"
+        "Lead Magnet/Offer to include: {lead_magnet}\n"
     )
-    
+
     chain = prompt | structured_llm
-    
+
     handler = get_langfuse_handler()
     config = {"callbacks": [handler]} if handler else {}
-    
+
     result = chain.invoke({
+        "audience_block": audience_block,
+        "style_rules": _STYLE_RULES.format(sender_name=sender_name),
+        "greeting_hint": greeting_hint,
         "lead_name": lead_name or "there",
         "lead_title": lead_title or "Professional",
         "company_name": company_name or "your company",

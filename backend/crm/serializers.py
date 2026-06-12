@@ -11,6 +11,8 @@ class CampaignSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class LeadSourceSerializer(serializers.ModelSerializer):
+    campaign_name = serializers.CharField(source='campaign.name', read_only=True, default=None)
+
     class Meta:
         model = LeadSource
         fields = '__all__'
@@ -21,6 +23,10 @@ class CompanySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class LeadSerializer(serializers.ModelSerializer):
+    campaign_name = serializers.CharField(source='campaign.name', read_only=True, default=None)
+    company_name = serializers.CharField(source='company.name', read_only=True, default=None)
+    source_url = serializers.CharField(source='source.url', read_only=True, default=None)
+
     class Meta:
         model = Lead
         fields = '__all__'
@@ -123,9 +129,16 @@ class AuditLogSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ActivitySerializer(serializers.ModelSerializer):
+    lead_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Activity
         fields = '__all__'
+
+    def get_lead_name(self, obj):
+        if obj.lead:
+            return f"{obj.lead.first_name or ''} {obj.lead.last_name or ''}".strip() or obj.lead.email
+        return None
 
 class LeadMagnetSubmissionSerializer(serializers.ModelSerializer):
     class Meta:

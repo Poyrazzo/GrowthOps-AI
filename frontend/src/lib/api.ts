@@ -42,6 +42,10 @@ export interface Lead {
   title: string | null;
   linkedin_url: string | null;
   company: string | null;
+  company_name: string | null;
+  campaign: string | null;
+  campaign_name: string | null;
+  source_url: string | null;
   persona: string | null;
   department: string | null;
   lead_score: number;
@@ -53,9 +57,36 @@ export interface Lead {
   updated_at: string;
 }
 
-export async function fetchLeads(): Promise<Lead[]> {
-  const response = await fetch(`${API_BASE_URL}/leads/`);
+export async function fetchLeads(campaignId?: string): Promise<Lead[]> {
+  const url = campaignId
+    ? `${API_BASE_URL}/leads/?campaign=${campaignId}`
+    : `${API_BASE_URL}/leads/`;
+  const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch leads");
+  return response.json();
+}
+
+export async function deleteLead(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/leads/${id}/`, { method: "DELETE" });
+  if (!response.ok) throw new Error("Failed to delete lead");
+}
+
+export async function queueLeadDraft(id: string): Promise<{ detail: string }> {
+  const response = await fetch(`${API_BASE_URL}/leads/${id}/draft/`, { method: "POST" });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.detail || "Failed to queue drafting");
+  }
+  return response.json();
+}
+
+export async function bulkDeleteLeads(params: { ids?: string[]; campaign?: string }): Promise<{ detail: string }> {
+  const response = await fetch(`${API_BASE_URL}/leads/bulk_delete/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!response.ok) throw new Error("Failed to bulk delete leads");
   return response.json();
 }
 
@@ -140,12 +171,68 @@ export interface LeadSource {
   expected_data_fields: Record<string, any>;
   access_rules: string;
   priority_score: number;
+  campaign: string | null;
+  campaign_name: string | null;
+  last_scraped_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export async function fetchLeadSources(): Promise<LeadSource[]> {
-  const response = await fetch(`${API_BASE_URL}/leadsources/`);
+export async function fetchLeadSources(campaignId?: string): Promise<LeadSource[]> {
+  const url = campaignId
+    ? `${API_BASE_URL}/leadsources/?campaign=${campaignId}`
+    : `${API_BASE_URL}/leadsources/`;
+  const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch lead sources");
+  return response.json();
+}
+
+export async function createLeadSource(data: {
+  url: string;
+  source_type: LeadSource['source_type'];
+  sector: string;
+  priority_score?: number;
+  campaign?: string | null;
+}): Promise<LeadSource> {
+  const response = await fetch(`${API_BASE_URL}/leadsources/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to create lead source");
+  return response.json();
+}
+
+export async function triggerScrape(sourceId: string): Promise<{ detail: string; task_id: string }> {
+  const response = await fetch(`${API_BASE_URL}/leadsources/${sourceId}/scrape/`, { method: "POST" });
+  if (!response.ok) throw new Error("Failed to trigger scrape");
+  return response.json();
+}
+
+export async function runCampaignNow(campaignId: string): Promise<{ detail: string }> {
+  const response = await fetch(`${API_BASE_URL}/campaigns/${campaignId}/scrape_now/`, { method: "POST" });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.detail || "Failed to run campaign");
+  }
+  return response.json();
+}
+
+export interface ActivityEntry {
+  id: string;
+  lead: string;
+  lead_name: string | null;
+  campaign: string | null;
+  activity_type: string;
+  description: string;
+  created_at: string;
+}
+
+export async function fetchActivities(campaignId?: string): Promise<ActivityEntry[]> {
+  const url = campaignId
+    ? `${API_BASE_URL}/activities/?campaign=${campaignId}`
+    : `${API_BASE_URL}/activities/`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Failed to fetch activities");
   return response.json();
 }

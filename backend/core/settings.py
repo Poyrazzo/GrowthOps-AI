@@ -155,6 +155,16 @@ REPLY_CONFIDENCE_THRESHOLD = float(os.environ.get('REPLY_CONFIDENCE_THRESHOLD', 
 # A LeadSource is automatically re-scraped only after this many hours have passed.
 SCRAPE_REFRESH_HOURS = int(os.environ.get('SCRAPE_REFRESH_HOURS', 24))
 
+# --- TEST-MODE SAFETY ---------------------------------------------------
+# While OUTREACH_TEST_MODE is on, EVERY outgoing email is redirected to
+# TEST_REDIRECT_EMAIL no matter which lead it was drafted for. This makes it
+# impossible to accidentally email a real scraped prospect during testing.
+# The real recipient is preserved in the email's "X-Intended-Recipient" header
+# and the audit log so you can still see who it *would* have gone to.
+# Turn OFF (set OUTREACH_TEST_MODE=false) only when you are ready to go live.
+OUTREACH_TEST_MODE = os.environ.get('OUTREACH_TEST_MODE', 'true').lower() in ('1', 'true', 'yes', 'on')
+TEST_REDIRECT_EMAIL = os.environ.get('TEST_REDIRECT_EMAIL', os.environ.get('OUTREACH_EMAIL', ''))
+
 LANGFUSE_SECRET_KEY = os.environ.get('LANGFUSE_SECRET_KEY', '')
 LANGFUSE_PUBLIC_KEY = os.environ.get('LANGFUSE_PUBLIC_KEY', '')
 LANGFUSE_HOST = os.environ.get('LANGFUSE_HOST', 'https://cloud.langfuse.com')

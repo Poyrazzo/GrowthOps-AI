@@ -26,36 +26,52 @@ export default function CampaignDetail() {
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhase, setCurrentPhase] = useState<string>('scraping');
-  const [activities, setActivities] = useState<any[]>([
-    { id: 1, action: 'Campaign activated', time: 'Now', status: 'completed' },
-  ]);
+  const [activities, setActivities] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchCampaignData = async () => {
       try {
-        const campaignRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/campaigns/${campaignId}/`
-        );
+        const base = process.env.NEXT_PUBLIC_API_URL;
+        const [campaignRes, leadsRes, messagesRes, activitiesRes] = await Promise.all([
+          fetch(`${base}/campaigns/${campaignId}/`),
+          fetch(`${base}/leads/?campaign=${campaignId}`),
+          fetch(`${base}/messages/?campaign=${campaignId}`),
+          fetch(`${base}/activities/?campaign=${campaignId}`),
+        ]);
         const campaignData = await campaignRes.json();
+        const leads = await leadsRes.json();
+        const messages = await messagesRes.json();
+        const activityLog = await activitiesRes.json();
+
         setCampaign(campaignData);
 
-        // Fetch related metrics
-        const leadsRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/leads/?campaign=${campaignId}`
-        );
-        const leads = await leadsRes.json();
-
-        const messagesRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/messages/?campaign=${campaignId}`
-        );
-        const messages = await messagesRes.json();
+        const draftCount = messages.filter((m: any) => m.status === "needs_review").length;
+        const pendingCount = messages.filter((m: any) => m.status === "pending").length;
+        const sentCount = messages.filter((m: any) => m.status === "sent").length;
+        const repliedCount = leads.filter((l: any) => l.status === "replied").length;
 
         setMetrics({
           totalLeads: leads.length || 0,
-          draftMessages: messages.filter((m: any) => m.status === "needs_review").length || 0,
-          sentMessages: messages.filter((m: any) => m.status === "sent").length || 0,
-          repliedLeads: leads.filter((l: any) => l.status === "replied").length || 0,
+          draftMessages: draftCount,
+          sentMessages: sentCount,
+          repliedLeads: repliedCount,
         });
+
+        // Derive the dominant pipeline phase from real state
+        if (repliedCount > 0 || sentCount > 0) setCurrentPhase('tracking');
+        else if (pendingCount > 0) setCurrentPhase('sending');
+        else if (draftCount > 0) setCurrentPhase('approvals');
+        else if (leads.length > 0) setCurrentPhase('drafting');
+        else setCurrentPhase('scraping');
+
+        setActivities(
+          activityLog.map((a: any) => ({
+            id: a.id,
+            action: `${a.activity_type.replace(/_/g, ' ')}${a.lead_name ? ` — ${a.lead_name}` : ''}${a.description ? `: ${a.description}` : ''}`,
+            time: new Date(a.created_at).toLocaleString(),
+            status: 'completed',
+          }))
+        );
       } catch (error) {
         console.error("Error fetching campaign data:", error);
       } finally {
@@ -64,6 +80,9 @@ export default function CampaignDetail() {
     };
 
     fetchCampaignData();
+    // Live-ish status page: refresh every 10s
+    const interval = setInterval(fetchCampaignData, 10000);
+    return () => clearInterval(interval);
   }, [campaignId]);
 
   if (loading || !campaign) {
@@ -196,6 +215,11 @@ export default function CampaignDetail() {
       >
         <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
         <div className="space-y-3 max-h-64 overflow-y-auto">
+          {activities.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No activity yet. Activity appears here as soon as scraping, scoring, or drafting runs.
+            </p>
+          )}
           {activities.map((activity) => (
             <div
               key={activity.id}

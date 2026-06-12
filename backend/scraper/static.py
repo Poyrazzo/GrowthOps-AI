@@ -20,7 +20,7 @@ class StaticScraper:
         """Fetches raw HTML from the given URL."""
         if not url.startswith('http'):
             url = 'https://' + url
-            
+
         proxies = None
         if proxy_url:
             proxies = {"http": proxy_url, "https": proxy_url}
@@ -29,6 +29,21 @@ class StaticScraper:
             response = requests.get(url, headers=self.HEADERS, timeout=self.timeout, proxies=proxies)
             response.raise_for_status()
             return response.text
+        except requests.exceptions.SSLError:
+            # Many small-business sites have broken/locally-signed chains. We are
+            # only READING public pages, so retry once without verification
+            # rather than silently losing the source.
+            try:
+                import urllib3
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+                response = requests.get(url, headers=self.HEADERS, timeout=self.timeout,
+                                        proxies=proxies, verify=False)
+                response.raise_for_status()
+                print(f"Warning: fetched {url} without SSL verification (broken cert chain)")
+                return response.text
+            except requests.RequestException as e:
+                print(f"Error fetching {url} (SSL fallback also failed): {e}")
+                return None
         except requests.RequestException as e:
             print(f"Error fetching {url}: {e}")
             return None

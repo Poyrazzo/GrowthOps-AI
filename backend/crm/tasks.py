@@ -220,7 +220,9 @@ def score_lead_task(self, lead_id: str):
         lead_title=lead.title,
         company_vp=company_vp,
         campaign_persona=campaign_persona,
-        available_lead_magnets=magnets
+        available_lead_magnets=magnets,
+        is_generic_email=lead.is_generic_email,
+        company_name=lead.company.name if lead.company else None
     )
 
     if score_data:
@@ -278,7 +280,9 @@ def generate_draft_task(self, lead_id: str):
         company_vp=company_vp,
         campaign_vp=lead.campaign.value_proposition,
         message_angle=lead.recommended_message_angle,
-        lead_magnet=lead_magnet_desc
+        lead_magnet=lead_magnet_desc,
+        is_generic_email=lead.is_generic_email,
+        sender_name=lead.campaign.name
     )
 
     if draft_data and draft_data.get('subject') and draft_data.get('body'):

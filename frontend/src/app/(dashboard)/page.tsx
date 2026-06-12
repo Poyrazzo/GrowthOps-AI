@@ -47,24 +47,36 @@ export default function DashboardHome() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campaigns/`);
-        if (response.ok) {
-          const campaigns = await response.json();
-          const activeCampaigns = campaigns.filter((c: any) => c.status === 'active');
+        const base = process.env.NEXT_PUBLIC_API_URL;
+        const [campaignsRes, leadsRes, messagesRes, approvalsRes] = await Promise.all([
+          fetch(`${base}/campaigns/`),
+          fetch(`${base}/leads/`),
+          fetch(`${base}/messages/`),
+          fetch(`${base}/approvals/`),
+        ]);
+        const campaigns = await campaignsRes.json();
+        const leads = await leadsRes.json();
+        const messages = await messagesRes.json();
+        const approvals = await approvalsRes.json();
 
-          setStats([
-            { label: "Active Campaigns", value: activeCampaigns.length.toString(), icon: Users, change: "" },
-            { label: "Draft Messages", value: "—", icon: Send, change: "" },
-            { label: "Active Sources", value: "—", icon: Activity, change: "" },
-            { label: "Total Leads", value: "—", icon: MousePointerClick, change: "" },
-          ]);
-        }
+        const activeCampaigns = campaigns.filter((c: any) => c.status === "active").length;
+        const sentMessages = messages.filter((m: any) => m.status === "sent").length;
+        const pendingApprovals = approvals.filter((a: any) => a.status === "pending").length;
+
+        setStats([
+          { label: "Total Leads", value: leads.length.toString(), icon: Users, change: "" },
+          { label: "Emails Sent", value: sentMessages.toString(), icon: Send, change: "" },
+          { label: "Pending Approvals", value: pendingApprovals.toString(), icon: Activity, change: "" },
+          { label: "Active Campaigns", value: activeCampaigns.toString(), icon: MousePointerClick, change: "" },
+        ]);
       } catch (error) {
         console.log("Stats unavailable — system initializing");
       }
     };
 
     fetchStats();
+    const interval = setInterval(fetchStats, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const container: Variants = {

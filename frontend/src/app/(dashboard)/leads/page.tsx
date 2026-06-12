@@ -1,26 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, Variants } from "framer-motion";
-import { Search, Filter, Mail, ShieldAlert } from "lucide-react";
-import { fetchLeads, Lead } from "@/lib/api";
+import { Search, Filter, Mail, ShieldAlert, Trash2 } from "lucide-react";
+import { fetchLeads, deleteLead, Lead } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { LeadSlideover } from "@/components/ui/lead-slideover";
 
 export default function LeadsPage() {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   const { data: leads, isLoading, isError } = useQuery({
     queryKey: ["leads"],
-    queryFn: fetchLeads,
+    queryFn: () => fetchLeads(),
   });
 
-  const filteredLeads = leads?.filter(l => 
+  const deleteMutation = useMutation({
+    mutationFn: deleteLead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      setSelectedLead(null);
+    },
+  });
+
+  const handleDelete = (lead: Lead) => {
+    const name = `${lead.first_name || ""} ${lead.last_name || ""}`.trim() || lead.email;
+    if (confirm(`Delete lead "${name}"? This also removes their messages and approval entries.`)) {
+      deleteMutation.mutate(lead.id);
+    }
+  };
+
+  const filteredLeads = leads?.filter(l =>
     (l.first_name + " " + l.last_name).toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.title?.toLowerCase().includes(searchQuery.toLowerCase())
+    l.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    l.campaign_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const container: Variants = {
@@ -62,10 +79,12 @@ export default function LeadsPage() {
         {/* Table Header */}
         <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 bg-black/20 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           <div className="col-span-3">Prospect</div>
-          <div className="col-span-3">Title / Persona</div>
-          <div className="col-span-2 text-center">Score</div>
+          <div className="col-span-2">Title / Persona</div>
+          <div className="col-span-2">Campaign</div>
+          <div className="col-span-1 text-center">Score</div>
           <div className="col-span-2">Status</div>
-          <div className="col-span-2 text-right">Added</div>
+          <div className="col-span-1 text-right">Added</div>
+          <div className="col-span-1 text-right">Actions</div>
         </div>
 
         {/* Table Body */}
@@ -106,13 +125,22 @@ export default function LeadsPage() {
                   <p className="font-semibold text-foreground truncate">{lead.first_name} {lead.last_name}</p>
                   <p className="text-xs text-muted-foreground truncate">{lead.email}</p>
                 </div>
-                
-                <div className="col-span-3 truncate">
+
+                <div className="col-span-2 truncate">
                   <p className="text-sm text-foreground truncate">{lead.title || "Unknown Title"}</p>
                   <p className="text-xs text-muted-foreground truncate">{lead.persona || "Uncategorized"}</p>
                 </div>
-                
-                <div className="col-span-2 flex justify-center">
+
+                <div className="col-span-2 truncate">
+                  <p className="text-sm text-foreground truncate" title={lead.campaign_name || undefined}>
+                    {lead.campaign_name || "—"}
+                  </p>
+                  {lead.company_name && (
+                    <p className="text-xs text-muted-foreground truncate">{lead.company_name}</p>
+                  )}
+                </div>
+
+                <div className="col-span-1 flex justify-center">
                   <div className={cn(
                     "flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm border shadow-lg",
                     lead.lead_score >= 80 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]" :
@@ -135,8 +163,19 @@ export default function LeadsPage() {
                   </span>
                 </div>
 
-                <div className="col-span-2 text-right text-sm text-muted-foreground">
+                <div className="col-span-1 text-right text-sm text-muted-foreground">
                   {new Date(lead.created_at).toLocaleDateString()}
+                </div>
+
+                <div className="col-span-1 flex justify-end">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(lead); }}
+                    disabled={deleteMutation.isPending}
+                    title="Delete lead"
+                    className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </motion.div>
             ))}
@@ -144,7 +183,7 @@ export default function LeadsPage() {
         )}
       </div>
 
-      <LeadSlideover lead={selectedLead} onClose={() => setSelectedLead(null)} />
+      <LeadSlideover lead={selectedLead} onClose={() => setSelectedLead(null)} onDelete={handleDelete} />
     </div>
   );
 }

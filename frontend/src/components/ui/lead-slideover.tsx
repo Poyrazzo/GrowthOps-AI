@@ -1,15 +1,33 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ExternalLink, User, BrainCircuit, MessageSquareText } from "lucide-react";
-import { Lead } from "@/lib/api";
+import { X, ExternalLink, User, BrainCircuit, MessageSquareText, Trash2, Megaphone, Loader2 } from "lucide-react";
+import { Lead, queueLeadDraft } from "@/lib/api";
 
 interface LeadSlideoverProps {
   lead: Lead | null;
   onClose: () => void;
+  onDelete?: (lead: Lead) => void;
 }
 
-export function LeadSlideover({ lead, onClose }: LeadSlideoverProps) {
+export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
+  const [queueState, setQueueState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [queueMessage, setQueueMessage] = useState("");
+
+  const handleQueue = async () => {
+    if (!lead) return;
+    setQueueState('loading');
+    try {
+      const res = await queueLeadDraft(lead.id);
+      setQueueState('done');
+      setQueueMessage(res.detail);
+    } catch (err: any) {
+      setQueueState('error');
+      setQueueMessage(err.message || "Failed to queue drafting.");
+    }
+  };
+
   return (
     <AnimatePresence>
       {lead && (
@@ -69,6 +87,29 @@ export function LeadSlideover({ lead, onClose }: LeadSlideoverProps) {
                 </div>
               </div>
 
+              {/* Attribution: where this lead came from and which campaign owns it */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <Megaphone className="w-4 h-4" /> Attribution
+                </h3>
+                <div className="bg-black/20 rounded-lg p-4 border border-white/5 space-y-2 text-sm">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Campaign</span>
+                    <span className="text-foreground text-right truncate">{lead.campaign_name || "Not assigned"}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Company</span>
+                    <span className="text-foreground text-right truncate">{lead.company_name || "Unknown"}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Scraped from</span>
+                    <span className="text-foreground text-right truncate" title={lead.source_url || undefined}>
+                      {lead.source_url ? new URL(lead.source_url).hostname : "Manual entry"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* AI Intelligence */}
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -93,13 +134,29 @@ export function LeadSlideover({ lead, onClose }: LeadSlideoverProps) {
               </div>
             </div>
             
-            <div className="p-6 border-t border-white/10 bg-black/20">
-              <button 
-                disabled={lead.status !== 'uncontacted'}
+            <div className="p-6 border-t border-white/10 bg-black/20 space-y-3">
+              {queueMessage && (
+                <p className={`text-xs ${queueState === 'error' ? 'text-destructive' : 'text-emerald-400'}`}>
+                  {queueMessage}
+                </p>
+              )}
+              <button
+                onClick={handleQueue}
+                disabled={lead.status !== 'uncontacted' || queueState === 'loading' || queueState === 'done'}
                 className="w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(var(--primary),0.3)]"
               >
-                {lead.status === 'uncontacted' ? 'Queue for Outreach' : 'Already Processed'}
+                {queueState === 'loading' && <Loader2 className="w-4 h-4 animate-spin" />}
+                {queueState === 'done' ? 'Drafting Queued ✓' :
+                 lead.status === 'uncontacted' ? 'Queue for Outreach' : 'Already Processed'}
               </button>
+              {onDelete && (
+                <button
+                  onClick={() => onDelete(lead)}
+                  className="w-full py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 transition-all border border-destructive/30 text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete Lead
+                </button>
+              )}
             </div>
           </motion.div>
         </>

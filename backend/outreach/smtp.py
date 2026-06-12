@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.mail.backends.smtp import EmailBackend
 from django.db.models import Q
@@ -54,6 +55,16 @@ class SMTPSender:
 
             headers = {'Message-ID': custom_msg_id}
 
+            # TEST-MODE SAFETY: never let a real scraped prospect receive a test
+            # email. Redirect the actual delivery to TEST_REDIRECT_EMAIL while
+            # recording the intended recipient for traceability.
+            actual_recipient = recipient
+            test_mode = getattr(settings, 'OUTREACH_TEST_MODE', False)
+            redirect_to = getattr(settings, 'TEST_REDIRECT_EMAIL', '')
+            if test_mode and redirect_to:
+                headers['X-Intended-Recipient'] = recipient
+                actual_recipient = redirect_to
+
             # Thread follow-ups into the original conversation: reference the most
             # recent email we already sent this lead so clients render one thread.
             previous = Message.objects.filter(
@@ -63,11 +74,15 @@ class SMTPSender:
                 headers['In-Reply-To'] = previous.message_id
                 headers['References'] = previous.message_id
 
+            subject = self.message.subject
+            if test_mode and redirect_to:
+                subject = f"[TEST → {recipient}] {subject}"
+
             email = EmailMessage(
-                subject=self.message.subject,
+                subject=subject,
                 body=self.message.body,
                 from_email=self.account.email,
-                to=[recipient],
+                to=[actual_recipient],
                 connection=backend,
                 headers=headers,
             )
@@ -79,8 +94,14 @@ class SMTPSender:
             self.message.sent_at = timezone.now()
             self.message.save()
 
-            self._log_audit("Sent", f"Successfully sent to {recipient}")
-            log_activity(self.message.lead, 'email_sent', f"Sent: {self.message.subject}", campaign=self.message.campaign)
+            if test_mode and redirect_to and actual_recipient != recipient:
+                self._log_audit("Sent (TEST MODE)",
+                                f"Redirected to {actual_recipient}; intended recipient was {recipient}")
+                log_activity(self.message.lead, 'email_sent',
+                             f"[TEST→{redirect_to}] Sent: {self.message.subject}", campaign=self.message.campaign)
+            else:
+                self._log_audit("Sent", f"Successfully sent to {actual_recipient}")
+                log_activity(self.message.lead, 'email_sent', f"Sent: {self.message.subject}", campaign=self.message.campaign)
             return True
 
         except Exception as e:
