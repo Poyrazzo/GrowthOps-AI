@@ -71,7 +71,7 @@ export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
                 'bg-white/5 border-white/10 text-muted-foreground'
               }`}>
                 <div>
-                  <p className="text-sm uppercase tracking-wider font-semibold opacity-80">AI Lead Score</p>
+                  <p className="text-sm uppercase tracking-wider font-semibold opacity-80">Lead Score</p>
                   <p className="text-3xl font-black">
                     {isScorePending ? "Pending" : lead.lead_score}
                     {!isScorePending && <span className="text-lg opacity-50 font-medium">/100</span>}
@@ -121,10 +121,10 @@ export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
                 </div>
               </div>
 
-              {/* AI Intelligence */}
+              {/* Lead intelligence */}
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                  <BrainCircuit className="w-4 h-4" /> AI Intelligence Report
+                  <BrainCircuit className="w-4 h-4" /> Lead Intelligence Report
                 </h3>
                 <div className="bg-primary/5 rounded-lg p-4 border border-primary/20 space-y-4">
                   <div>

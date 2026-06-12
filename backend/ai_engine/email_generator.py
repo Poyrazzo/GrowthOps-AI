@@ -22,8 +22,8 @@ def generate_email_draft(lead_name: str, lead_title: str, company_name: str, com
     structured_llm = llm.with_structured_output(EmailDraft)
 
     if is_generic_email:
-        # A role inbox (info@, contact@) is read by an assistant/gatekeeper, not
-        # the decision-maker. Write a short note that asks to be forwarded.
+        # A role inbox (info@, contact@) is usually read by an intermediary.
+        # Write a short note that asks to be forwarded.
         audience_block = (
             "AUDIENCE: This email goes to a GENERIC company inbox (e.g. info@/contact@), "
             "read by a gatekeeper, not the decision-maker. Do NOT address a named person. "

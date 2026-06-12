@@ -15,7 +15,7 @@ const statusColors: Record<Campaign["status"], { bg: string; text: string; icon:
 
 const PHASES = [
   { id: 'scraping', label: 'Scraping', description: 'Extracting leads from sources' },
-  { id: 'drafting', label: 'Drafting', description: 'AI generating messages' },
+  { id: 'drafting', label: 'Drafting', description: 'Generating messages' },
   { id: 'approvals', label: 'Approvals', description: 'Awaiting your approval' },
   { id: 'sending', label: 'Sending', description: 'Dispatching emails' },
   { id: 'tracking', label: 'Tracking', description: 'Monitoring replies' },

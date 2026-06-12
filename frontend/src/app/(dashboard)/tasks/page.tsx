@@ -108,7 +108,7 @@ export default function TasksPage() {
 
                 {/* Instructions */}
                 <div className="flex-1 mb-6">
-                  <h4 className="text-xs uppercase tracking-wider font-semibold text-primary/80 mb-2">AI Instructions</h4>
+                  <h4 className="text-xs uppercase tracking-wider font-semibold text-primary/80 mb-2">Task Instructions</h4>
                   <div className="p-4 rounded-xl bg-black/40 border border-white/5">
                     <p className="text-sm text-foreground/90 leading-relaxed font-medium">
                       {task.instructions || "No specific instructions provided."}

@@ -110,7 +110,7 @@ function ReplyCard({ reply, lead }: { reply: Reply; lead: Lead | null }) {
         )}
       </div>
 
-      {/* AI summary bar */}
+      {/* Reply summary bar */}
       {reply.summary && (
         <div className="mx-5 mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm">
           <div className="flex items-start gap-2">

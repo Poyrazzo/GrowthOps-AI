@@ -39,7 +39,7 @@ export default function ApprovalsPage() {
           <ShieldCheck className="w-8 h-8 text-primary" />
           Approval Queue
         </h2>
-        <p className="text-muted-foreground mt-1">Audit and authorize AI-generated actions before they are executed.</p>
+        <p className="text-muted-foreground mt-1">Audit and authorize queued actions before they are executed.</p>
       </div>
 
       {isLoading ? (
@@ -57,7 +57,7 @@ export default function ApprovalsPage() {
         <div className="p-16 text-center text-muted-foreground bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
           <CheckSquare className="w-16 h-16 mx-auto mb-4 opacity-20 text-emerald-500" />
           <p className="text-xl font-semibold text-foreground">Queue is clear.</p>
-          <p className="text-sm mt-2">No pending AI actions require your review.</p>
+          <p className="text-sm mt-2">No pending actions require your review.</p>
         </div>
       ) : (
         <motion.div 
@@ -123,7 +123,7 @@ export default function ApprovalsPage() {
                     ) : (
                       <div className="p-4 bg-black/30 rounded-xl border border-white/5">
                         <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">
-                          AI Classification: {approval.context_data.category} ({approval.context_data.sentiment}
+                          Classification: {approval.context_data.category} ({approval.context_data.sentiment}
                           {approval.context_data.confidence != null && `, ${Math.round(approval.context_data.confidence * 100)}% confident`})
                         </p>
                         {approval.context_data.summary && (

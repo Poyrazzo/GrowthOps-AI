@@ -2,8 +2,6 @@
 
 This document serves as the single source of truth for the current state of the Growth Automation & AI Ops System. 
 
-**Rule:** We will write and update the current system's state inside this document in any case as the system evolves.
-
 ## Architecture Status
 - **Docker Compose:** Fully initialized with `postgres` (15), `redis` (7-alpine), `django`, `celery_worker`, `celery_beat`, `playwright_worker`, and `frontend` services.
 - **Backend:** Django and Django REST Framework initialized in the `backend/` directory. 
@@ -38,10 +36,10 @@ This document serves as the single source of truth for the current state of the 
     - `(dashboard)/leads/page.tsx`: An animated Data Table listing all AI-enriched leads. Features search filtering, dynamic glass-row hover effects, and distinct, color-coded badges for Lead Status and Score thresholds. 
     - `components/ui/lead-slideover.tsx`: Instead of navigating to a separate page, clicking a lead opens a frosted-glass sliding panel (`x: "100%" -> 0`) from the right side of the screen. This panel cleanly presents the AI's intelligence report (`score_reason` and `recommended_message_angle`).
   - **Approval Queue (Step 6.4):**
-    - `(dashboard)/approvals/page.tsx`: A dedicated audit interface displaying all `pending` items from the `ApprovalQueue` API. Uses Framer Motion's staggered grid layout. Operators can click "Approve" (Emerald glow) or "Reject" (Destructive glow) to dispatch or block AI-generated drafts. Actions are tied to TanStack's `useMutation` for zero-reload optimistic UI updates.
+    - `(dashboard)/approvals/page.tsx`: A dedicated audit interface displaying all `pending` items from the `ApprovalQueue` API. Uses Framer Motion's staggered grid layout. Operators can click "Approve" (Emerald glow) or "Reject" (Destructive glow) to dispatch or block drafts. Actions are tied to TanStack's `useMutation` for zero-reload optimistic UI updates.
   - **LinkedIn Manual Tasks (Step 6.5):**
     - `components/layout/Sidebar.tsx`: Added `/tasks` route.
-    - `(dashboard)/tasks/page.tsx`: A grid of pending manual LinkedIn social-selling tasks. The UI extracts and highlights the AI-generated instructions. It uses TanStack Query to immediately dismiss completed/failed cards from the queue with smooth spring physics.
+    - `(dashboard)/tasks/page.tsx`: A grid of pending manual LinkedIn social-selling tasks. The UI extracts and highlights the task instructions. It uses TanStack Query to immediately dismiss completed/failed cards from the queue with smooth spring physics.
   - **Analytics and Reporting (Step 6.6):**
     - `(dashboard)/page.tsx`: The primary dashboard index now features a premium, edge-to-edge `recharts` AreaChart depicting "Outreach Velocity". The chart utilizes SVG `<defs>` to inject deep electric purple, cyan, and emerald gradients into the chart fill, maintaining the dark "Deep Space" aesthetic. It integrates `framer-motion` for smooth rendering. (Note: Currently powered by mock time-series data until backend aggregation endpoints are developed).
   - **Phase 6 Audit Fixes:**

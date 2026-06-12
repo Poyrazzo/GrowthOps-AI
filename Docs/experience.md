@@ -2,13 +2,11 @@
 
 This document serves as our project diary and knowledge base.
 
-**Rule:** We will write everything we thought, developed, implemented, bugs we encountered and fixed, and everything else we experienced while building the Growth Automation & AI Ops System inside this document.
-
 ## Implementation of Phase 1 (Steps 1.1 to 1.5)
 - **Database & Redis:** Set up via Docker Compose. We mapped Postgres to host port 15432 and Redis to 16379 to avoid potential conflicts with local instances running on the developer's laptop.
 - **Backend Setup:** Initialized a Django project named `core` inside the `backend` directory. We faced an initial permission issue when Docker created the files as root, but we solved this by running `chown` inside a standalone Docker container (`--no-deps`).
 - **Celery Integration:** Configured `backend/core/celery.py` and updated `__init__.py` to use Redis as the broker. Added `celery_worker` and `celery_beat` as separate services in Docker Compose.
-- **Frontend Setup:** Initialized Next.js in the `frontend` folder using `npx create-next-app` non-interactively. Set up a Dockerfile for the frontend and added it to Docker Compose exposing port 3000.
+- **Frontend Setup:** Initialized Next.js in the `frontend` folder. Set up a Dockerfile for the frontend and added it to Docker Compose exposing port 3000.
 - **Frontend Tools:** Integrated `shadcn/ui` via its init command. Installed `@tanstack/react-query` and created a `providers.tsx` component to wrap the global layout.
 - **Bugs fixed:** 
   - Host port collisions: 5432 and 8000 were already in use on the host machine. We dynamically shifted to custom ports in `docker-compose.yml` (e.g., 18000 for Django, 15432 for Postgres).
@@ -72,7 +70,7 @@ This document serves as our project diary and knowledge base.
 
 ## Implementation of Phase 6 (Step 6.5)
 - **LinkedIn Task Interface:** Extended `api.ts` to interface with `LinkedInTaskViewSet`. Added `/tasks` to the Next.js `Sidebar.tsx`.
-- **Card Design:** Built `app/(dashboard)/tasks/page.tsx`. Displays AI-generated social selling tasks in frosted glass cards. Added an "AI Instructions" block prominently displaying the exact strategy the operator must execute manually on LinkedIn.
+- **Card Design:** Built `app/(dashboard)/tasks/page.tsx`. Displays social selling tasks in frosted glass cards. Added a task instructions block prominently displaying the exact strategy the operator must execute manually on LinkedIn.
 - **Action Bindings:** Attached `Mark Complete` and `Mark Failed` to TanStack `useMutation`, triggering an instantaneous grid re-layout on click.
 - **Bug Fix:** Encountered a Next.js build error `Export Linkedin doesn't exist in target module` originating from `lucide-react`. Hotfixed by substituting the icon with `Briefcase`/`Users`.
 

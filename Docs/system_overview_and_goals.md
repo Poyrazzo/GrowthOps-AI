@@ -63,7 +63,7 @@ The system is designed around a modular architecture to separate data collection
 *   **AI:** Fine-tuned LLMs or robust prompt chains with strict JSON output parsing.
 
 ### 5. Risk Management & Compliance
-*   **Platform Policies:** The system strictly avoids automated bot actions on platforms that prohibit them (e.g., LinkedIn). Instead, it acts as an assistant, queuing manual tasks for human operators.
+*   **Platform Policies:** The system strictly avoids automated bot actions on platforms that prohibit them (e.g., LinkedIn). Instead, it queues manual tasks for human operators.
 *   **Email Deliverability:** Enforces SPF, DKIM, and DMARC compliance. Implement strict suppression lists for bounces and unsubscribes.
 *   **Data Quality & AI Hallucinations:** AI outputs are strictly constrained to JSON formats. Any AI output with a confidence score below a defined threshold (e.g., 85%) is automatically routed to the Human Approval Queue.
 *   **Auditability:** Every action, from data scraping to email sending and status changes, is logged in an `activities` table for full transparency.
