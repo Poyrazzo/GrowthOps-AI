@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Clock, AlertCircle, Activity, Target, Mail, Eye, Pencil, X, Loader2 } from "lucide-react";
+import { CheckCircle, Clock, AlertCircle, Activity, Target, Mail, Eye, Pencil, X, Loader2, type LucideIcon } from "lucide-react";
+import type { ActivityEntry, Campaign, Lead } from "@/lib/api";
 
-const statusColors: { [key: string]: { bg: string; text: string; icon: any } } = {
+const statusColors: Record<Campaign["status"], { bg: string; text: string; icon: LucideIcon }> = {
   draft: { bg: "bg-yellow-500/10", text: "text-yellow-400", icon: Clock },
   active: { bg: "bg-green-500/10", text: "text-green-400", icon: CheckCircle },
   paused: { bg: "bg-red-500/10", text: "text-red-400", icon: AlertCircle },
+  completed: { bg: "bg-blue-500/10", text: "text-blue-400", icon: CheckCircle },
 };
 
 const PHASES = [
@@ -24,9 +26,9 @@ function EditCampaignModal({
   onClose,
   onSave,
 }: {
-  campaign: any;
+  campaign: Campaign;
   onClose: () => void;
-  onSave: (updated: any) => void;
+  onSave: (updated: Campaign) => void;
 }) {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -60,6 +62,7 @@ function EditCampaignModal({
   return (
     <AnimatePresence>
       <motion.div
+        key="edit-campaign-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -67,6 +70,7 @@ function EditCampaignModal({
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
       />
       <motion.div
+        key="edit-campaign-panel"
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -159,11 +163,21 @@ function EditCampaignModal({
 export default function CampaignDetail() {
   const params = useParams();
   const campaignId = params.id as string;
-  const [campaign, setCampaign] = useState<any>(null);
-  const [metrics, setMetrics] = useState<any>(null);
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [metrics, setMetrics] = useState<{
+    totalLeads: number;
+    draftMessages: number;
+    sentMessages: number;
+    repliedLeads: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhase, setCurrentPhase] = useState<string>('scraping');
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<Array<{
+    id: string;
+    action: string;
+    time: string;
+    status: 'completed' | 'running' | 'pending';
+  }>>([]);
   const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
@@ -176,17 +190,17 @@ export default function CampaignDetail() {
           fetch(`${base}/messages/?campaign=${campaignId}`),
           fetch(`${base}/activities/?campaign=${campaignId}`),
         ]);
-        const campaignData = await campaignRes.json();
-        const leads = await leadsRes.json();
-        const messages = await messagesRes.json();
-        const activityLog = await activitiesRes.json();
+        const campaignData: Campaign = await campaignRes.json();
+        const leads: Lead[] = await leadsRes.json();
+        const messages: Array<{ status: string }> = await messagesRes.json();
+        const activityLog: ActivityEntry[] = await activitiesRes.json();
 
         setCampaign(campaignData);
 
-        const draftCount = messages.filter((m: any) => m.status === "needs_review").length;
-        const pendingCount = messages.filter((m: any) => m.status === "pending").length;
-        const sentCount = messages.filter((m: any) => m.status === "sent").length;
-        const repliedCount = leads.filter((l: any) => l.status === "replied").length;
+        const draftCount = messages.filter((m) => m.status === "needs_review").length;
+        const pendingCount = messages.filter((m) => m.status === "pending").length;
+        const sentCount = messages.filter((m) => m.status === "sent").length;
+        const repliedCount = leads.filter((l) => l.status === "replied").length;
 
         setMetrics({
           totalLeads: leads.length || 0,
@@ -202,7 +216,7 @@ export default function CampaignDetail() {
         else setCurrentPhase('scraping');
 
         setActivities(
-          activityLog.map((a: any) => ({
+          activityLog.map((a) => ({
             id: a.id,
             action: `${a.activity_type.replace(/_/g, ' ')}${a.lead_name ? ` — ${a.lead_name}` : ''}${a.description ? `: ${a.description}` : ''}`,
             time: new Date(a.created_at).toLocaleString(),

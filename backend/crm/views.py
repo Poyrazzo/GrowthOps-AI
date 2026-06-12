@@ -2,6 +2,7 @@ import logging
 import os
 from pathlib import Path
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
@@ -133,6 +134,11 @@ class LeadSourceViewSet(viewsets.ModelViewSet):
                 {"detail": "LinkedIn sources are human-in-the-loop only and cannot be auto-scraped."},
                 status=400
             )
+        if source.campaign and source.campaign.status != 'active':
+            return Response(
+                {"detail": "This source's campaign is not active, so scraping is stopped."},
+                status=400
+            )
 
         from .tasks import run_static_scrape, run_dynamic_scrape
         campaign_id = str(source.campaign_id) if source.campaign_id else None
@@ -259,6 +265,8 @@ class ApprovalQueueViewSet(viewsets.ModelViewSet):
             )
             if instance.item_type == 'message_draft':
                 Message.objects.filter(id=instance.item_id).update(status='pending')
+                from crm.tasks import dispatch_emails_task
+                transaction.on_commit(lambda: dispatch_emails_task.delay())
         elif instance.status == 'rejected':
             AuditLog.objects.create(
                 action="Human Review: Rejected",

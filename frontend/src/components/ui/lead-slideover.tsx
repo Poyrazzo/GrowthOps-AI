@@ -15,6 +15,7 @@ export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
   const [queueState, setQueueState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [queueMessage, setQueueMessage] = useState("");
   const displayName = lead ? `${lead.first_name || ""} ${lead.last_name || ""}`.trim() || "Unnamed Prospect" : "";
+  const isScorePending = lead ? !lead.score_reason : false;
 
   const handleQueue = async () => {
     if (!lead) return;
@@ -64,13 +65,17 @@ export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Score Banner */}
               <div className={`p-4 rounded-xl border flex items-center justify-between ${
+                isScorePending ? 'bg-blue-500/10 border-blue-500/20 text-blue-300' :
                 lead.lead_score >= 80 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
                 lead.lead_score >= 50 ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
                 'bg-white/5 border-white/10 text-muted-foreground'
               }`}>
                 <div>
                   <p className="text-sm uppercase tracking-wider font-semibold opacity-80">AI Lead Score</p>
-                  <p className="text-3xl font-black">{lead.lead_score}<span className="text-lg opacity-50 font-medium">/100</span></p>
+                  <p className="text-3xl font-black">
+                    {isScorePending ? "Pending" : lead.lead_score}
+                    {!isScorePending && <span className="text-lg opacity-50 font-medium">/100</span>}
+                  </p>
                 </div>
                 <BrainCircuit className="w-10 h-10 opacity-50" />
               </div>
@@ -125,7 +130,7 @@ export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
                   <div>
                     <p className="text-xs text-primary/70 font-semibold mb-1">SCORING LOGIC</p>
                     <p className="text-sm text-foreground/90 leading-relaxed">
-                      {lead.score_reason || "No reasoning provided by AI."}
+                      {lead.score_reason || "Scoring is queued or still running."}
                     </p>
                   </div>
                   <div className="pt-4 border-t border-primary/10">

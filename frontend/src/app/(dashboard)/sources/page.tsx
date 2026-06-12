@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, Variants } from "framer-motion";
-import { LayoutList, Search, ShieldAlert, Globe, FileCode2, BookOpen, Users, Megaphone, PlayCircle, Loader2, CheckCircle2, XCircle } from "lucide-react";
-import { fetchLeadSources, triggerScrape } from "@/lib/api";
+import { LayoutList, Search, ShieldAlert, Globe, FileCode2, BookOpen, Users, Megaphone, PlayCircle, Loader2, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { deleteSource, fetchLeadSources, triggerScrape } from "@/lib/api";
 import { SourceModal } from "@/components/ui/source-modal";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ export default function SourcesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [scrapeStates, setScrapeStates] = useState<Record<string, ScrapeState>>({});
+  const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null);
   // Read ?campaign= once on mount (set when arriving via "View Sources" on a campaign)
   const [campaignFilter] = useState<string | null>(() =>
     typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("campaign") : null
@@ -35,6 +36,21 @@ export default function SourcesPage() {
     } catch {
       setScrapeStates(s => ({ ...s, [sourceId]: 'error' }));
       setTimeout(() => setScrapeStates(s => ({ ...s, [sourceId]: 'idle' })), 4000);
+    }
+  };
+
+  const handleDeleteSource = async (sourceId: string, sourceUrl: string) => {
+    const confirmed = window.confirm(`Delete this source?\n\n${sourceUrl}\n\nExisting leads will stay, but this source will no longer be scraped.`);
+    if (!confirmed) return;
+
+    setDeletingSourceId(sourceId);
+    try {
+      await deleteSource(sourceId);
+      queryClient.invalidateQueries({ queryKey: ["lead_sources"] });
+    } catch {
+      window.alert("Could not delete this source. Please try again.");
+    } finally {
+      setDeletingSourceId(null);
     }
   };
 
@@ -130,14 +146,28 @@ export default function SourcesPage() {
             >
               <div className="h-1 w-full bg-gradient-to-r from-primary to-emerald-400" />
               <div className="p-6 flex-1 flex flex-col">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                     {getSourceIcon(source.source_type)}
                   </div>
-                  <div className="truncate">
+                  <div className="min-w-0 flex-1 truncate">
                     <h3 className="font-bold text-foreground capitalize">{source.source_type.replace('_', ' ')} Source</h3>
                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{source.sector}</p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteSource(source.id, source.url)}
+                    disabled={deletingSourceId === source.id}
+                    className="shrink-0 p-2 rounded-lg border border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200 transition-colors disabled:opacity-50"
+                    title="Delete source"
+                    aria-label={`Delete source ${source.url}`}
+                  >
+                    {deletingSourceId === source.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
 
                 {/* Which campaign owns this source */}
@@ -179,7 +209,7 @@ export default function SourcesPage() {
                   return (
                     <button
                       onClick={() => handleScrapeNow(source.id)}
-                      disabled={state === 'loading'}
+                      disabled={state === 'loading' || deletingSourceId === source.id}
                       className={cn(
                         "mt-4 w-full py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 transition-all border disabled:opacity-50",
                         state === 'success'

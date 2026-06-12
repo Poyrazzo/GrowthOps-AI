@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Any
+from scraper.lead_quality import looks_like_clear_non_person_name
 
 # Mailbox prefixes that indicate a generic/role inbox rather than a person (SRS 3.6).
 # Includes Turkish role inboxes since campaigns frequently target TR companies.
@@ -97,6 +98,17 @@ class DataCleaner:
         mask = self.df['email'].notna() | self.df['linkedin_url'].notna() | self.df['profile_url'].notna()
         self.df = self.df[mask]
 
+    def _filter_non_person_names(self):
+        """Drops obvious page labels that were accidentally parsed as human names."""
+        def is_non_person(row):
+            name = ' '.join(
+                part for part in [row.get('first_name'), row.get('last_name')]
+                if isinstance(part, str) and part.strip()
+            )
+            return looks_like_clear_non_person_name(name)
+
+        self.df = self.df[~self.df.apply(is_non_person, axis=1)]
+
     def _deduplicate(self):
         """Removes duplicates based on email or linkedin_url.
 
@@ -119,6 +131,7 @@ class DataCleaner:
         self._clean_names()
         self._flag_generic_emails()
         self._filter_invalid()
+        self._filter_non_person_names()
         self._deduplicate()
 
         # Convert back to list of dicts, replacing NaN/NaT with None

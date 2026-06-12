@@ -1,6 +1,8 @@
 from langchain_core.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from ai_engine.llm import get_llm, get_langfuse_handler
+from scraper.lead_quality import looks_like_clear_non_person_name
+
 
 class LeadScore(BaseModel):
     score: int = Field(description="An integer from 0 to 100 for how well this lead matches the target persona and campaign.")
@@ -14,6 +16,15 @@ class LeadScore(BaseModel):
 
 def score_lead(lead_title: str, company_vp: str, campaign_persona: str, available_lead_magnets: list = None,
                is_generic_email: bool = False, company_name: str = None, lead_name: str = None) -> dict:
+    if looks_like_clear_non_person_name(lead_name):
+        return {
+            "score": 0,
+            "reasoning": f"'{lead_name}' is clearly not a human lead name.",
+            "persona": "Non-Person / Bad Data",
+            "recommended_message_angle": "",
+            "recommended_lead_magnet": "",
+        }
+
     llm = get_llm()
     structured_llm = llm.with_structured_output(LeadScore)
 
@@ -36,15 +47,20 @@ def score_lead(lead_title: str, company_vp: str, campaign_persona: str, availabl
             "generic inbox is a reasonable score (around 55-75). Use the persona label 'Company Gateway Inbox'.\n"
         )
     else:
-        name_note = ""
+        name_note = (
+            "\nIMPORTANT: Missing or partial lead names are common in scraped data. "
+            "Do NOT score a lead 0 merely because the name is Unknown or incomplete. "
+            "Use the job title, company, profile URL context, and target persona to judge fit. "
+            "Reserve a 0 score only for confirmed non-person records or unusable bad data.\n"
+        )
         if lead_name:
             name_note = (
                 f"\nIMPORTANT: The lead's name is '{lead_name}'. "
-                "If this does NOT look like a real human name (e.g. it is an institution name, "
+                "If this clearly does NOT look like a real human name (e.g. it is an institution name, "
                 "a product name, a city name, an acronym, or a generic English noun like "
                 "'Teacher Workshops' or 'Want Take'), give a score of 0 and set persona to "
-                "'Non-Person / Bad Data'. Real human names have typical first-name + last-name "
-                "patterns from any culture.\n"
+                "'Non-Person / Bad Data'. If it could plausibly be a real name from any culture, "
+                "judge fit from the role and company instead of zeroing it.\n"
             )
         contact_context = (
             "CONTACT TYPE: This is an individual person's address. Score on how well their role fits "

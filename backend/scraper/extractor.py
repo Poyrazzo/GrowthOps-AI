@@ -15,6 +15,7 @@ import html as html_lib
 import urllib.parse
 from typing import Dict, List, Any, Optional
 from bs4 import BeautifulSoup, Tag
+from scraper.lead_quality import looks_like_clear_non_person_name
 
 # ---------------------------------------------------------------------------
 # Regexes & constants
@@ -189,6 +190,7 @@ def guess_name_from_email(email: str) -> Dict[str, Optional[str]]:
         not parts
         or any(p in _ROLE_LOCALPART_WORDS for p in parts)
         or compact_local.endswith(('sube', 'şube', 'branch', 'office'))
+        or looks_like_clear_non_person_name(' '.join(parts))
     ):
         return {'first_name': None, 'last_name': None}
     if len(parts) == 1:
@@ -204,6 +206,8 @@ def _name_from_text(text: str) -> Dict[str, Optional[str]]:
         return {'first_name': None, 'last_name': None}
     text = text.strip()
     if '@' in text or len(text) > 50:
+        return {'first_name': None, 'last_name': None}
+    if looks_like_clear_non_person_name(text):
         return {'first_name': None, 'last_name': None}
     tokens = [t for t in re.split(r'\s+', text) if t.isalpha() and len(t) > 1]
     # Reject headings with any non-person word; _normalize_token handles Turkish chars

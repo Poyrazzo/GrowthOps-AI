@@ -20,7 +20,7 @@ from crm.models import (
 )
 from crm.utils import send_notification_webhook, log_activity, FREE_EMAIL_PROVIDERS
 from ai_engine.company_profiler import extract_company_info
-from ai_engine.lead_profiler import score_lead
+from ai_engine.lead_profiler import looks_like_clear_non_person_name, score_lead
 from ai_engine.email_generator import generate_email_draft
 from ai_engine.linkedin_generator import generate_connection_request, generate_dm_draft
 from ai_engine.reply_classifier import classify_reply
@@ -28,6 +28,78 @@ from outreach.imap import IMAPReader
 from outreach.sequence import dispatch_pending_emails, process_followups
 
 logger = logging.getLogger(__name__)
+
+
+_ZERO_SCORE_BAD_DATA_MARKERS = (
+    'non-person',
+    'not a person',
+    'bad data',
+    'not human',
+    'generic noun',
+    'institution name',
+    'product name',
+    'unusable',
+)
+
+
+def _normalize_lead_score(lead: Lead, score_data: dict) -> tuple[int, str]:
+    """Keep true junk at 0, but do not let uncertain scraped leads collapse to 0/100."""
+    raw_score = score_data.get('score', 0)
+    try:
+        score = int(raw_score)
+    except (TypeError, ValueError):
+        score = 0
+
+    score = max(0, min(100, score))
+    reason = score_data.get('reasoning', '') or ''
+    persona = score_data.get('persona', '') or ''
+    combined = f"{reason} {persona}".lower()
+    lead_name = ' '.join(filter(None, [lead.first_name, lead.last_name])) or None
+
+    clear_bad_data = (
+        looks_like_clear_non_person_name(lead_name)
+        or any(marker in combined for marker in _ZERO_SCORE_BAD_DATA_MARKERS)
+        or not (lead.email or lead.linkedin_url or lead.profile_url)
+    )
+
+    if score == 0 and not clear_bad_data:
+        score = 35
+        reason = (
+            f"{reason} " if reason else ""
+        ) + "Adjusted from 0 because the lead is contactable but not confirmed bad data; keep for manual review."
+
+    return score, reason
+
+
+def _resolve_pipeline_campaign(campaign_id: str = None, source: LeadSource = None):
+    if campaign_id:
+        return Campaign.objects.filter(id=campaign_id).first()
+    if source and source.campaign_id:
+        return source.campaign
+    return None
+
+
+def _campaign_allows_pipeline_work(campaign, campaign_id: str = None, task_name: str = "task") -> bool:
+    if campaign:
+        if campaign.status != 'active':
+            logger.info(
+                "%s skipped: campaign=%s status=%s is not active",
+                task_name, campaign.id, campaign.status,
+            )
+            return False
+        return True
+
+    if campaign_id:
+        logger.info("%s skipped: campaign=%s no longer exists", task_name, campaign_id)
+        return False
+
+    return True
+
+
+def _refresh_campaign_allows_pipeline_work(campaign, campaign_id: str = None, task_name: str = "task") -> bool:
+    if campaign:
+        campaign.refresh_from_db(fields=['status'])
+    return _campaign_allows_pipeline_work(campaign, campaign_id, task_name)
 
 
 def _search_discovered_contacts(page_company: Company, page_domain: str, campaign: Campaign) -> list:
@@ -147,8 +219,11 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
     if page_domain.startswith('www.'):
         page_domain = page_domain[4:]
 
-    source = LeadSource.objects.filter(id=source_id).first() if source_id else None
+    source = LeadSource.objects.select_related('campaign').filter(id=source_id).first() if source_id else None
     source_type = source.source_type if source else None
+    campaign = _resolve_pipeline_campaign(campaign_id, source)
+    if not _campaign_allows_pipeline_work(campaign, campaign_id, "_process_and_save_scrape_result"):
+        return {"success": True, "processed": 0, "saved": 0, "skipped": "Campaign is not active."}
 
     # Directory/listing pages are not companies our leads work for, so we never
     # attach leads to them or enrich them as if they were the lead's employer.
@@ -159,8 +234,6 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
         if linkedin_company and not page_company.linkedin_url:
             page_company.linkedin_url = linkedin_company
             page_company.save()
-
-    campaign = Campaign.objects.filter(id=campaign_id).first() if campaign_id else None
 
     # Prefer the richer 'contacts' (email/linkedin + extracted names/titles)
     # when the scraper provides them; fall back to bare emails for older paths.
@@ -219,13 +292,23 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
             logger.info("Skipped %d generic/low-confidence email-only leads for %s", skipped, url)
 
     saved_count = 0
-    leads_to_score = []
+    leads_to_score = set()
 
     for lead_data in cleaned_leads:
         email = lead_data.get('email')
         linkedin_url = lead_data.get('linkedin_url')
         profile_url = lead_data.get('profile_url')
         if not email and not linkedin_url and not profile_url:
+            continue
+        lead_name = ' '.join(
+            part for part in [lead_data.get('first_name'), lead_data.get('last_name')]
+            if part
+        )
+        if looks_like_clear_non_person_name(lead_name):
+            logger.info(
+                "Skipped non-person scraped lead name=%r url=%s campaign=%s source=%s",
+                lead_name, url, campaign_id, source_id,
+            )
             continue
 
         company = _resolve_company(email, page_company, page_domain)
@@ -273,10 +356,6 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
                     args=[str(lead.id)],
                     countdown=15,  # let company enrichment run first so domain is set
                 )
-            # Leads not tied to the page's own company won't be reached by the
-            # page-company enrichment fan-out below, so score them directly.
-            if not page_company or lead.company_id != page_company.id:
-                leads_to_score.append(str(lead.id))
         else:
             updated = False
             if email and not lead.email:
@@ -317,6 +396,9 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
                         and getattr(settings, 'EMAIL_ENRICHMENT_ENABLED', True)):
                     enrich_lead_email_task.apply_async(args=[str(lead.id)], countdown=15)
 
+        if lead and not lead.score_reason:
+            leads_to_score.add(str(lead.id))
+
     if source:
         source.last_scraped_at = timezone.now()
         source.save(update_fields=['last_scraped_at'])
@@ -342,7 +424,11 @@ def run_static_scrape(self, url: str, campaign_id: str = None, proxy_url: str = 
     contacts, the page is likely JS-rendered — automatically retry with the
     Playwright (dynamic) scraper before giving up."""
     logger.info("TASK run_static_scrape START url=%s campaign=%s source=%s", url, campaign_id, source_id)
-    source = LeadSource.objects.filter(id=source_id).first() if source_id else None
+    source = LeadSource.objects.select_related('campaign').filter(id=source_id).first() if source_id else None
+    campaign = _resolve_pipeline_campaign(campaign_id, source)
+    if not _campaign_allows_pipeline_work(campaign, campaign_id, "run_static_scrape"):
+        return {"success": True, "processed": 0, "saved": 0, "skipped": "Campaign is not active."}
+
     is_directory = source and source.source_type == 'directory'
     scraper = StaticScraper()
     result = scraper.scrape_website(url, proxy_url=proxy_url, is_directory=is_directory)
@@ -353,6 +439,8 @@ def run_static_scrape(self, url: str, campaign_id: str = None, proxy_url: str = 
         not result.get('social_links', {}).get('linkedin_profiles')
     )
     if no_contacts:
+        if not _refresh_campaign_allows_pipeline_work(campaign, campaign_id, "run_static_scrape dynamic handoff"):
+            return {"success": True, "processed": 0, "saved": 0, "skipped": "Campaign is not active."}
         logger.info("TASK run_static_scrape no contacts found, escalating to dynamic scraper: %s", url)
         # Hand off to the JS-capable worker; that task saves its own results.
         run_dynamic_scrape.delay(url, campaign_id=campaign_id, source_id=source_id, proxy_url=proxy_url)
@@ -365,6 +453,11 @@ def run_static_scrape(self, url: str, campaign_id: str = None, proxy_url: str = 
 def run_dynamic_scrape(self, url: str, campaign_id: str = None, adspower_profile_id: str = None, proxy_url: str = None, source_id: str = None):
     """Executes a dynamic scrape explicitly on the isolated playwright_worker container."""
     logger.info("TASK run_dynamic_scrape START url=%s campaign=%s source=%s", url, campaign_id, source_id)
+    source = LeadSource.objects.select_related('campaign').filter(id=source_id).first() if source_id else None
+    campaign = _resolve_pipeline_campaign(campaign_id, source)
+    if not _campaign_allows_pipeline_work(campaign, campaign_id, "run_dynamic_scrape"):
+        return {"success": True, "processed": 0, "saved": 0, "skipped": "Campaign is not active."}
+
     scraper = DynamicScraper()
     result = scraper.scrape_website(url, adspower_profile_id=adspower_profile_id, proxy_url=proxy_url)
     return _process_and_save_scrape_result(result, campaign_id, source_id)
@@ -461,8 +554,10 @@ def run_linkedin_source_scrape(self, source_id: str = None, campaign_id: str = N
     if not adspower_profile_id:
         return {'skipped': 'ADSPOWER_PROFILE_ID not set'}
 
-    source = LeadSource.objects.filter(id=source_id).first() if source_id else None
-    campaign = Campaign.objects.filter(id=campaign_id).first() if campaign_id else None
+    source = LeadSource.objects.select_related('campaign').filter(id=source_id).first() if source_id else None
+    campaign = _resolve_pipeline_campaign(campaign_id, source)
+    if not _campaign_allows_pipeline_work(campaign, campaign_id, "run_linkedin_source_scrape"):
+        return {'skipped': 'Campaign is not active.'}
 
     # Resolve keywords: explicit kwarg > source URL > empty
     if not keywords and source:
@@ -486,6 +581,9 @@ def run_linkedin_source_scrape(self, source_id: str = None, campaign_id: str = N
         enrich_profiles=False,  # fast pass — collect cards; full profiles enriched separately
     )
 
+    if not _refresh_campaign_allows_pipeline_work(campaign, campaign_id, "run_linkedin_source_scrape save"):
+        return {'skipped': 'Campaign is not active.', 'saved': 0}
+
     if not people:
         logger.info("TASK run_linkedin_source_scrape no people found for keywords=%r", keywords)
         if source:
@@ -500,6 +598,13 @@ def run_linkedin_source_scrape(self, source_id: str = None, campaign_id: str = N
         linkedin_url = lead_data.get('linkedin_url')
         profile_url = lead_data.get('profile_url') or linkedin_url
         if not linkedin_url and not profile_url:
+            continue
+        lead_name = ' '.join(
+            part for part in [lead_data.get('first_name'), lead_data.get('last_name')]
+            if part
+        )
+        if looks_like_clear_non_person_name(lead_name):
+            logger.info("Skipped non-person LinkedIn lead name=%r campaign=%s", lead_name, campaign_id)
             continue
 
         lead = Lead.objects.filter(linkedin_url=linkedin_url).first() if linkedin_url else None
@@ -693,6 +798,9 @@ def enrich_lead_email_task(self, lead_id: str):
         return "Lead already has email"
     if not (lead.first_name and lead.last_name):
         return "Lead has no full name — cannot search or infer email"
+    lead_name = ' '.join(filter(None, [lead.first_name, lead.last_name]))
+    if looks_like_clear_non_person_name(lead_name):
+        return "Lead name is not a person — skip email enrichment"
 
     # Resolve the company domain
     domain = None
@@ -794,8 +902,7 @@ def score_lead_task(self, lead_id: str):
     )
 
     if score_data:
-        lead.lead_score = score_data.get('score', 0)
-        lead.score_reason = score_data.get('reasoning', '')
+        lead.lead_score, lead.score_reason = _normalize_lead_score(lead, score_data)
         lead.persona = score_data.get('persona', '') or lead.persona
         lead.recommended_message_angle = score_data.get('recommended_message_angle', '')
 
@@ -827,6 +934,13 @@ def generate_draft_task(self, lead_id: str):
     if not lead or not lead.campaign:
         logger.warning("TASK generate_draft_task lead/campaign not found: %s", lead_id)
         return "Lead or campaign not found"
+
+    if lead.campaign.status != 'active':
+        logger.info(
+            "TASK generate_draft_task skipped lead=%s campaign=%s status=%s",
+            lead_id, lead.campaign_id, lead.campaign.status,
+        )
+        return "Campaign is not active"
 
     if not lead.email:
         return "Lead has no email address"
@@ -889,6 +1003,9 @@ def generate_linkedin_task_task(self, lead_id: str):
     if not lead or not lead.campaign:
         return "Lead or campaign not found"
 
+    if lead.campaign.status != 'active':
+        return "Campaign is not active"
+
     if not lead.linkedin_url:
         return "Lead has no LinkedIn profile URL"
 
@@ -924,6 +1041,9 @@ def generate_linkedin_dm_task(self, lead_id: str):
     lead = Lead.objects.filter(id=lead_id).first()
     if not lead or not lead.campaign:
         return "Lead or campaign not found"
+
+    if lead.campaign.status != 'active':
+        return "Campaign is not active"
 
     if LinkedInTask.objects.filter(lead=lead, task_type='message', status='pending').exists():
         return "Pending DM task already exists for this lead"

@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, Variants } from "framer-motion";
 import { ShieldCheck, XCircle, CheckCircle2, ShieldAlert, FileText, CheckSquare } from "lucide-react";
-import { fetchApprovals, updateApprovalStatus, ApprovalItem } from "@/lib/api";
+import { fetchApprovals, updateApprovalStatus } from "@/lib/api";
 
 export default function ApprovalsPage() {
   const queryClient = useQueryClient();

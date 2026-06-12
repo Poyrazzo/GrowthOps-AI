@@ -117,6 +117,7 @@ export default function LeadsPage() {
               (() => {
                 const displayName = `${lead.first_name || ""} ${lead.last_name || ""}`.trim() || "Unnamed Prospect";
                 const contactUrl = lead.linkedin_url || lead.profile_url;
+                const isScorePending = !lead.score_reason;
                 let contactHost = "";
                 if (contactUrl) {
                   try {
@@ -159,11 +160,14 @@ export default function LeadsPage() {
                 <div className="col-span-1 flex justify-center">
                   <div className={cn(
                     "flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm border shadow-lg",
+                    isScorePending ? "bg-blue-500/10 text-blue-300 border-blue-500/30" :
                     lead.lead_score >= 80 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]" :
                     lead.lead_score >= 50 ? "bg-amber-500/20 text-amber-400 border-amber-500/30" :
                     "bg-white/5 text-muted-foreground border-white/10"
-                  )}>
-                    {lead.lead_score}
+                  )}
+                  title={isScorePending ? "Scoring pending" : `Score ${lead.lead_score}/100`}
+                  >
+                    {isScorePending ? "..." : lead.lead_score}
                   </div>
                 </div>
 
