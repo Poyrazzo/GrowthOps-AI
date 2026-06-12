@@ -1,0 +1,540 @@
+<!DOCTYPE html><html class="dark" lang="tr" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>GrowthOps AI | İş Akışı Paneli</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#0d1c2d",
+                    "primary-fixed-dim": "#adc6ff",
+                    "background": "#051424",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "error-container": "#93000a",
+                    "primary-container": "#4d8eff",
+                    "on-primary-container": "#00285d",
+                    "outline-variant": "#424754",
+                    "inverse-surface": "#d4e4fa",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-primary-fixed-variant": "#004395",
+                    "surface": "#051424",
+                    "on-tertiary-container": "#3e2400",
+                    "tertiary-fixed": "#ffddb8",
+                    "surface-dim": "#051424",
+                    "on-tertiary": "#472a00",
+                    "on-surface": "#d4e4fa",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary": "#003824",
+                    "tertiary-container": "#ca8100",
+                    "surface-tint": "#adc6ff",
+                    "secondary": "#4edea3",
+                    "inverse-on-surface": "#233143",
+                    "on-surface-variant": "#c2c6d6",
+                    "outline": "#8c909f",
+                    "on-secondary-fixed-variant": "#005236",
+                    "on-secondary-container": "#00311f",
+                    "error": "#ffb4ab",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "inverse-primary": "#005ac2",
+                    "on-primary-fixed": "#001a42",
+                    "secondary-fixed": "#6ffbbe",
+                    "surface-container-lowest": "#010f1f",
+                    "secondary-container": "#00a572",
+                    "surface-container-highest": "#273647",
+                    "surface-bright": "#2c3a4c",
+                    "primary-fixed": "#d8e2ff",
+                    "primary": "#adc6ff",
+                    "surface-container-high": "#1c2b3c",
+                    "on-tertiary-fixed": "#2a1700",
+                    "on-primary": "#002e6a",
+                    "surface-container": "#122131",
+                    "on-error": "#690005",
+                    "tertiary": "#ffb95f",
+                    "on-secondary-fixed": "#002113",
+                    "on-background": "#d4e4fa",
+                    "surface-variant": "#273647"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "sm": "8px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "gutter": "16px",
+                    "xl": "32px",
+                    "margin": "24px",
+                    "base": "4px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "mono-data": ["JetBrains Mono"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-caps": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "mono-data": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #051424;
+            color: #d4e4fa;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        .data-connector {
+            width: 2px;
+            height: 40px;
+            background: rgba(59, 130, 246, 0.2);
+            position: relative;
+            margin-left: 24px;
+        }
+
+        .data-dot {
+            width: 4px;
+            height: 4px;
+            background: #adc6ff;
+            border-radius: 50%;
+            position: absolute;
+            left: -1px;
+            animation: move-down 1.5s linear infinite;
+        }
+
+        @keyframes move-down {
+            0% { top: 0; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .scroll-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="antialiased">
+<!-- Procedural Background -->
+
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md dark:bg-surface/80 border-b border-outline-variant/30 shadow-sm flex justify-between items-center px-gutter h-14 w-full">
+<div class="flex items-center gap-2 cursor-pointer active:scale-95 duration-200">
+<span class="material-symbols-outlined text-primary">hub</span>
+<span class="text-headline-sm font-headline-md tracking-tight text-primary-fixed-dim">GrowthOps AI</span>
+</div>
+<div class="flex items-center">
+<span class="text-label-caps font-label-caps px-2 py-1 bg-secondary-container/20 text-secondary border border-secondary/30 rounded-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-secondary rounded-full status-pulse"></span>
+                Üretim
+            </span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-20 pb-40 px-4 max-w-md mx-auto relative z-10">
+<!-- Pipeline steps container -->
+<div class="flex flex-col items-start w-full">
+<!-- Step 1 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+<span class="material-symbols-outlined">assignment</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 01</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-secondary-container/40 text-secondary-fixed rounded uppercase">AKTİF</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Kampanya Oluşturuldu</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Hedef parametrelerin ve erişim kapsamının başlatılması.</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 2 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+<span class="material-symbols-outlined">link</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 02</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary-container/20 text-primary-fixed-dim rounded uppercase">KAYNAKLAR EKLENDİ</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Kaynaklar Eklendi</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Hangi kaynaklarda arama yapılcaksa eklenir</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 3 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+<span class="material-symbols-outlined status-pulse">sync</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 03</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-secondary-container/20 text-secondary-fixed rounded uppercase">ÇALIŞAN AKTİF</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Kazıma Başladı</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Kaynaklardan ham veri toplanır</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 4 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+<span class="material-symbols-outlined">list_alt</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 04</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-surface-container-highest text-on-surface-variant rounded uppercase">ÇIKARILDI</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Ham Kişiler Çıkarıldı</h3>
+<div class="mt-2 font-mono-data text-[10px] text-primary/70 bg-black/20 p-2 rounded border border-white/5 overflow-hidden whitespace-nowrap">
+                            &gt; [ID_821] işleniyor ayşe.yılmaz@tech...<br>
+                            &gt; [ID_822] işleniyor mustafa03@ai...
+                        </div>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 5 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+<span class="material-symbols-outlined">filter_list</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 05</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary-container/20 text-primary-fixed-dim rounded uppercase">NORMALİZE EDİLDİ</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Temizleme ve Tekilleştirme</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Küresel hariç tutma listeleri ve kara listelerle çapraz referanslama yapılır.</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 6 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4 border-primary/30">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary border border-primary/40 shadow-[0_0_10px_rgba(173,198,255,0.2)]">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 06</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary text-on-primary rounded uppercase">YZ PUANLAMA</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Aday Zenginleştirme</h3>
+<div class="flex items-center gap-2 mt-2">
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 85%"></div>
+</div>
+<span class="font-mono-data text-[10px] text-primary shrink-0">85/100</span>
+</div>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 7 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+<span class="material-symbols-outlined">verified_user</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 07</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-secondary-container/40 text-secondary-fixed rounded uppercase">KALİFİYE</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Kalifikasyon Eşiği</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Adaylar puanlarına göre üretim kuyruğuna aktarılır.</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 8 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+<span class="material-symbols-outlined">edit_note</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 08</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary-container/20 text-primary-fixed-dim rounded uppercase">TASLAK HAZIR</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Yapay Zeka Taslak Oluşturma</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Adaylar için hiper-kişiselleştirilmiş mesajlar sentez edilir</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 9 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex flex-col gap-4 border-tertiary/40 ring-1 ring-tertiary/20">
+<div class="flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary border border-tertiary/20">
+<span class="material-symbols-outlined">person_search</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 09</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-tertiary-container/30 text-tertiary rounded uppercase">ONAY BEKLİYOR</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">İnsan Onay Kuyruğu</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Gönderliecek mailler için denetçi müdahalesi gerektirir.</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 py-2 bg-secondary/80 hover:bg-secondary text-on-secondary font-bold text-label-caps rounded transition-all active:scale-95 shadow-lg shadow-secondary/10">ONAYLA</button>
+<button class="flex-1 py-2 border border-outline-variant hover:bg-white/5 text-on-surface-variant font-bold text-label-caps rounded transition-all active:scale-95">REDDET</button>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 10 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+<span class="material-symbols-outlined">send</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 10</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary-container/20 text-primary-fixed-dim rounded uppercase">GÖNDERİLİYOR...</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Güvenli Gönderim</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Email gönderiminde sınırlamaar dahilinde hesaplama yapılır</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 11 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+<span class="material-symbols-outlined">inbox</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 11</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-secondary-container/40 text-secondary-fixed rounded uppercase">YANIT KAYDEDİLDİ</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Yanıt İşleme</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Geri dönüş yapılan maillerin içeriği belirlenir</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 12 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4 border-secondary/30">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+<span class="material-symbols-outlined">sell</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 12</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-secondary text-on-secondary rounded uppercase">BAŞARILI</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">YZ Sınıflandırma</h3>
+<p class="text-body-sm text-on-surface-variant mt-1 font-mono-data">Niyet: TOPLANTI TALEBİ (98.4%)</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 13 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+<span class="material-symbols-outlined">webhook</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 13</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary-container/20 text-primary-fixed-dim rounded uppercase">TETİKLENDİ</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Otomatik Eylemler</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">CRM senkronizasyonu için n8n İş Akışı&nbsp;</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 14 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+<span class="material-symbols-outlined">history</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 14</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-surface-container-highest text-on-surface-variant rounded uppercase">3. GÜN PLANLANDI</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Takip Mantığı</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Yanıt vermeyen diziler için bekleme durumu aktif.</p>
+</div>
+</div>
+<div class="data-connector"><div class="data-dot"></div></div>
+</div>
+<!-- Step 15 -->
+<div class="w-full scroll-reveal visible">
+<div class="glass-card p-4 rounded-xl flex items-start gap-4 border-primary/40 ring-1 ring-primary/20">
+<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-[#0077B5]/10 flex items-center justify-center text-[#0077B5] border border-[#0077B5]/20">
+<svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"></path></svg>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ADIM 15</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-primary-container/20 text-primary-fixed-dim rounded uppercase">MANUEL GÖREV</span>
+</div>
+<h3 class="text-body-md font-bold text-on-surface">Manuel LinkedIn</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Not ile Bağlantı İsteği Gönder.</p>
+<button class="mt-3 w-full py-2 bg-primary/20 hover:bg-primary/30 text-primary font-bold text-label-caps border border-primary/30 rounded transition-all active:scale-95">GÖREVİ ÇALIŞTIR</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Stats & Actions -->
+<footer class="fixed bottom-0 w-full z-50 bg-surface-container-low/70 backdrop-blur-lg border-t border-outline-variant/30 shadow-[0_-4px_12px_rgba(0,0,0,0.5)] rounded-t-xl px-4 py-4">
+<div class="glass-card p-3 rounded-lg mb-3 flex justify-between items-center bg-surface-container-highest/30">
+<div class="flex flex-col items-center">
+<span class="text-label-caps text-on-surface-variant">ADAYLAR</span>
+<span class="text-body-md font-bold text-primary">1,240</span>
+</div>
+<div class="h-8 w-px bg-outline-variant/30"></div>
+<div class="flex flex-col items-center">
+<span class="text-label-caps text-on-surface-variant">GÖNDERİLEN</span>
+<span class="text-body-md font-bold text-on-surface">890</span>
+</div>
+<div class="h-8 w-px bg-outline-variant/30"></div>
+<div class="flex flex-col items-center">
+<span class="text-label-caps text-on-surface-variant">YANITLAR</span>
+<span class="text-body-md font-bold text-secondary">124</span>
+</div>
+<div class="h-8 w-px bg-outline-variant/30"></div>
+<div class="flex flex-col items-center">
+<span class="text-label-caps text-on-surface-variant">POZ.</span>
+<span class="text-body-md font-bold text-tertiary">42</span>
+</div>
+</div>
+<div class="flex gap-4">
+<button class="flex-1 py-3 bg-surface-container-highest/50 hover:bg-surface-container-highest text-on-surface font-bold text-label-caps border border-outline-variant/50 rounded flex items-center justify-center gap-2 transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">history_edu</span>
+                DENETİM GÜNLÜĞÜ
+            </button>
+<button class="w-12 h-12 flex items-center justify-center bg-primary text-on-primary rounded-full shadow-lg shadow-primary/20 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</footer>
+<!-- Mobile Bottom Navigation Bar (Hybrid) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-low/70 backdrop-blur-lg border-t border-outline-variant/30 shadow-[0_-4px_12px_rgba(0,0,0,0.5)] flex justify-around items-center py-2 px-4 hidden">
+<div class="flex flex-col items-center justify-center text-secondary font-bold active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined">route</span>
+<span class="text-label-caps font-label-caps">Orkestratör</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-fixed-dim active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="text-label-caps font-label-caps">Analiz</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-fixed-dim active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined">link</span>
+<span class="text-label-caps font-label-caps">Bağlantılar</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-fixed-dim active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-caps font-label-caps">Ayarlar</span>
+</div>
+</nav>
+<script>
+        // Scroll reveal logic
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+        // Pulsing Interaction Micro-Effects
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.96)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+
+
+</body></html>

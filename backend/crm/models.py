@@ -80,6 +80,7 @@ class Lead(models.Model):
     last_name = models.CharField(max_length=150, blank=True, null=True)
     title = models.CharField(max_length=255, blank=True, null=True)
     linkedin_url = models.URLField(blank=True, null=True)
+    profile_url = models.URLField(blank=True, null=True)
 
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, blank=True, related_name='leads')
     source = models.ForeignKey(LeadSource, on_delete=models.SET_NULL, null=True, blank=True, related_name='leads')
@@ -109,6 +110,11 @@ class Lead(models.Model):
                 fields=['linkedin_url'],
                 condition=models.Q(linkedin_url__isnull=False),
                 name='unique_lead_linkedin'
+            ),
+            models.UniqueConstraint(
+                fields=['profile_url'],
+                condition=models.Q(profile_url__isnull=False) & ~models.Q(profile_url=''),
+                name='unique_lead_profile_url'
             )
         ]
 

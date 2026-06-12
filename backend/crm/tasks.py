@@ -1,11 +1,18 @@
 import logging
 import urllib.parse
+from bs4 import BeautifulSoup
 from celery import shared_task
 from django.conf import settings
 from django.utils import timezone
 from scraper.static import StaticScraper
 from scraper.dynamic import DynamicScraper
 from scraper.cleaner import DataCleaner
+from scraper.extractor import extract_contacts, extract_social_links
+from scraper.search import (
+    discover_person_pages,
+    is_linkedin_profile_url,
+    parse_person_from_search_result,
+)
 from crm.models import (
     Lead, Campaign, Company, Message, EmailAccount, Reply,
     SuppressionList, ApprovalQueue, LeadSource, LeadMagnet, LinkedInTask
@@ -20,6 +27,85 @@ from outreach.imap import IMAPReader
 from outreach.sequence import dispatch_pending_emails, process_followups
 
 logger = logging.getLogger(__name__)
+
+
+def _search_discovered_contacts(page_company: Company, page_domain: str, campaign: Campaign) -> list:
+    """Use search to find public person/profile pages, then scrape those pages."""
+    if not page_company or not getattr(settings, 'SEARCH_DISCOVERY_ENABLED', True):
+        return []
+
+    search_results = discover_person_pages(
+        company_name=page_company.name,
+        company_domain=page_domain,
+        target_persona=campaign.target_persona if campaign else None,
+        limit=getattr(settings, 'SEARCH_DISCOVERY_RESULT_LIMIT', 10),
+    )
+    if not search_results:
+        return []
+
+    scraper = StaticScraper(timeout=10)
+    discovered = []
+    for result in search_results:
+        profile_url = result.get('url')
+        if not profile_url:
+            continue
+
+        parsed_person = parse_person_from_search_result(result)
+        if is_linkedin_profile_url(profile_url):
+            discovered.append({
+                'email': None,
+                'linkedin_url': profile_url,
+                'profile_url': profile_url,
+                'first_name': parsed_person.get('first_name'),
+                'last_name': parsed_person.get('last_name'),
+                'title': parsed_person.get('title'),
+            })
+            continue
+
+        html = scraper.fetch_html(profile_url)
+        if not html:
+            if parsed_person.get('first_name') or parsed_person.get('last_name') or parsed_person.get('title'):
+                discovered.append({
+                    'email': None,
+                    'linkedin_url': None,
+                    'profile_url': profile_url,
+                    'first_name': parsed_person.get('first_name'),
+                    'last_name': parsed_person.get('last_name'),
+                    'title': parsed_person.get('title'),
+                })
+            continue
+
+        soup = BeautifulSoup(html, 'html.parser')
+        contacts = extract_contacts(soup, html)
+        if contacts:
+            for contact in contacts:
+                contact['profile_url'] = contact.get('profile_url') or profile_url
+                discovered.append(contact)
+        else:
+            discovered.append({
+                'email': None,
+                'linkedin_url': None,
+                'profile_url': profile_url,
+                'first_name': parsed_person.get('first_name'),
+                'last_name': parsed_person.get('last_name'),
+                'title': parsed_person.get('title'),
+            })
+
+        for linkedin_url in extract_social_links(soup).get('linkedin_profiles', []):
+            discovered.append({
+                'email': None,
+                'linkedin_url': linkedin_url,
+                'profile_url': profile_url,
+                'first_name': parsed_person.get('first_name'),
+                'last_name': parsed_person.get('last_name'),
+                'title': parsed_person.get('title'),
+            })
+
+    logger.info(
+        "SEARCH DISCOVERY company=%s results=%d contacts=%d",
+        page_company.name, len(search_results), len(discovered)
+    )
+    return discovered
 
 
 def _resolve_company(email: str, page_company: Company, page_domain: str):
@@ -69,32 +155,65 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
             page_company.linkedin_url = linkedin_company
             page_company.save()
 
-    # Prefer the richer 'contacts' (email + extracted names) when the scraper
-    # provides them; fall back to bare emails for older code paths.
+    campaign = Campaign.objects.filter(id=campaign_id).first() if campaign_id else None
+
+    # Prefer the richer 'contacts' (email/linkedin + extracted names/titles)
+    # when the scraper provides them; fall back to bare emails for older paths.
     contacts = result.get('contacts')
     if contacts:
         raw_leads = [
             {'email': c.get('email'),
+             'linkedin_url': c.get('linkedin_url'),
+             'profile_url': c.get('profile_url'),
              'first_name': c.get('first_name'),
-             'last_name': c.get('last_name')}
+             'last_name': c.get('last_name'),
+             'title': c.get('title')}
             for c in contacts
         ]
     else:
         raw_leads = [{'email': email} for email in result.get('emails', [])]
     for profile_url in result.get('social_links', {}).get('linkedin_profiles', []):
-        raw_leads.append({'email': None, 'linkedin_url': profile_url})
+        raw_leads.append({'email': None, 'linkedin_url': profile_url, 'profile_url': profile_url})
+
+    raw_leads.extend(_search_discovered_contacts(page_company, page_domain, campaign))
 
     cleaner = DataCleaner(raw_leads)
     cleaned_leads = cleaner.process()
+    if not getattr(settings, 'SAVE_GENERIC_EMAIL_LEADS', False):
+        before_count = len(cleaned_leads)
+
+        def _looks_like_email_only_human(lead):
+            return bool(
+                lead.get('email')
+                and not lead.get('linkedin_url')
+                and not lead.get('profile_url')
+                and (lead.get('last_name') or lead.get('title'))
+            )
+
+        def _looks_like_profile_human(lead):
+            return bool(
+                lead.get('profile_url')
+                and (lead.get('first_name') or lead.get('last_name') or lead.get('title'))
+            )
+
+        cleaned_leads = [
+            lead for lead in cleaned_leads
+            if lead.get('linkedin_url')
+            or _looks_like_profile_human(lead)
+            or (not lead.get('is_generic_email') and _looks_like_email_only_human(lead))
+        ]
+        skipped = before_count - len(cleaned_leads)
+        if skipped:
+            logger.info("Skipped %d generic/low-confidence email-only leads for %s", skipped, url)
 
     saved_count = 0
-    campaign = Campaign.objects.filter(id=campaign_id).first() if campaign_id else None
     leads_to_score = []
 
     for lead_data in cleaned_leads:
         email = lead_data.get('email')
         linkedin_url = lead_data.get('linkedin_url')
-        if not email and not linkedin_url:
+        profile_url = lead_data.get('profile_url')
+        if not email and not linkedin_url and not profile_url:
             continue
 
         company = _resolve_company(email, page_company, page_domain)
@@ -104,11 +223,14 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
             lead = Lead.objects.filter(email=email).first()
         if not lead and linkedin_url:
             lead = Lead.objects.filter(linkedin_url=linkedin_url).first()
+        if not lead and profile_url:
+            lead = Lead.objects.filter(profile_url=profile_url).first()
 
         if not lead:
             lead = Lead.objects.create(
                 email=email,
                 linkedin_url=linkedin_url,
+                profile_url=profile_url,
                 first_name=lead_data.get('first_name'),
                 last_name=lead_data.get('last_name'),
                 title=lead_data.get('title'),
@@ -128,11 +250,35 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
                 leads_to_score.append(str(lead.id))
         else:
             updated = False
+            if email and not lead.email:
+                lead.email = email
+                updated = True
             if linkedin_url and not lead.linkedin_url:
                 lead.linkedin_url = linkedin_url
                 updated = True
+            if profile_url and not lead.profile_url:
+                lead.profile_url = profile_url
+                updated = True
+            if lead_data.get('first_name') and not lead.first_name:
+                lead.first_name = lead_data.get('first_name')
+                updated = True
+            if lead_data.get('last_name') and not lead.last_name:
+                lead.last_name = lead_data.get('last_name')
+                updated = True
+            if lead_data.get('title') and not lead.title:
+                lead.title = lead_data.get('title')
+                updated = True
             if company and not lead.company:
                 lead.company = company
+                updated = True
+            if source and not lead.source:
+                lead.source = source
+                updated = True
+            if campaign and not lead.campaign:
+                lead.campaign = campaign
+                updated = True
+            if lead_data.get('is_generic_email') != lead.is_generic_email:
+                lead.is_generic_email = bool(lead_data.get('is_generic_email'))
                 updated = True
             if updated:
                 lead.save()
@@ -167,7 +313,11 @@ def run_static_scrape(self, url: str, campaign_id: str = None, proxy_url: str = 
     scraper = StaticScraper()
     result = scraper.scrape_website(url, proxy_url=proxy_url, is_directory=is_directory)
 
-    no_contacts = not result.get('emails') and not result.get('social_links', {}).get('linkedin_profiles')
+    no_contacts = (
+        not result.get('contacts') and
+        not result.get('emails') and
+        not result.get('social_links', {}).get('linkedin_profiles')
+    )
     if no_contacts:
         logger.info("TASK run_static_scrape no contacts found, escalating to dynamic scraper: %s", url)
         # Hand off to the JS-capable worker; that task saves its own results.

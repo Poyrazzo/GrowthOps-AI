@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, Variants } from "framer-motion";
-import { Search, Filter, Mail, ShieldAlert, Trash2 } from "lucide-react";
+import { Search, Filter, Mail, ShieldAlert, Trash2, ExternalLink } from "lucide-react";
 import { fetchLeads, deleteLead, Lead } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { LeadSlideover } from "@/components/ui/lead-slideover";
@@ -27,7 +27,7 @@ export default function LeadsPage() {
   });
 
   const handleDelete = (lead: Lead) => {
-    const name = `${lead.first_name || ""} ${lead.last_name || ""}`.trim() || lead.email;
+    const name = `${lead.first_name || ""} ${lead.last_name || ""}`.trim() || lead.email || lead.profile_url || lead.linkedin_url;
     if (confirm(`Delete lead "${name}"? This also removes their messages and approval entries.`)) {
       deleteMutation.mutate(lead.id);
     }
@@ -36,6 +36,8 @@ export default function LeadsPage() {
   const filteredLeads = leads?.filter(l =>
     (l.first_name + " " + l.last_name).toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    l.profile_url?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    l.linkedin_url?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.campaign_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -112,6 +114,18 @@ export default function LeadsPage() {
             className="divide-y divide-white/5"
           >
             {filteredLeads?.map((lead) => (
+              (() => {
+                const displayName = `${lead.first_name || ""} ${lead.last_name || ""}`.trim() || "Unnamed Prospect";
+                const contactUrl = lead.linkedin_url || lead.profile_url;
+                let contactHost = "";
+                if (contactUrl) {
+                  try {
+                    contactHost = new URL(contactUrl).hostname.replace(/^www\./, "");
+                  } catch {
+                    contactHost = contactUrl;
+                  }
+                }
+                return (
               <motion.div 
                 key={lead.id}
                 variants={item}
@@ -122,8 +136,10 @@ export default function LeadsPage() {
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary scale-y-0 group-hover:scale-y-100 transition-transform origin-left" />
                 
                 <div className="col-span-3 truncate pl-2">
-                  <p className="font-semibold text-foreground truncate">{lead.first_name} {lead.last_name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{lead.email}</p>
+                  <p className="font-semibold text-foreground truncate">{displayName}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {lead.email || contactHost || "No contact handle"}
+                  </p>
                 </div>
 
                 <div className="col-span-2 truncate">
@@ -168,6 +184,18 @@ export default function LeadsPage() {
                 </div>
 
                 <div className="col-span-1 flex justify-end">
+                  {contactUrl && (
+                    <a
+                      href={contactUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Open profile"
+                      className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(lead); }}
                     disabled={deleteMutation.isPending}
@@ -178,6 +206,8 @@ export default function LeadsPage() {
                   </button>
                 </div>
               </motion.div>
+                );
+              })()
             ))}
           </motion.div>
         )}

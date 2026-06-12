@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright, TimeoutError
 from typing import Dict, Any, Optional
 from .static import StaticScraper
-from .extractor import extract_contacts, find_contact_links, extract_social_links
+from .extractor import extract_contacts, find_contact_links, extract_social_links, common_person_page_links
 from .adspower import AdsPowerManager
 
 logger = logging.getLogger(__name__)
@@ -77,22 +77,37 @@ class DynamicScraper:
         result['metadata'] = static_parser.extract_metadata(soup)
         result['body_text'] = static_parser.extract_visible_text(soup)
 
-        contacts_by_email: Dict[str, Any] = {}
+        contacts_by_key: Dict[str, Any] = {}
         socials = extract_social_links(soup)
 
         def _merge(contacts):
             for c in contacts:
-                cur = contacts_by_email.get(c['email'])
+                email = c.get('email')
+                linkedin_url = c.get('linkedin_url')
+                if not email and not linkedin_url:
+                    continue
+                key = f"email:{email}" if email else f"linkedin:{linkedin_url.lower().rstrip('/')}"
+                cur = contacts_by_key.get(key)
                 if cur is None:
-                    contacts_by_email[c['email']] = c
+                    contacts_by_key[key] = c
                 else:
-                    cur['first_name'] = cur['first_name'] or c['first_name']
-                    cur['last_name'] = cur['last_name'] or c['last_name']
+                    cur['linkedin_url'] = cur.get('linkedin_url') or c.get('linkedin_url')
+                    cur['first_name'] = cur.get('first_name') or c.get('first_name')
+                    cur['last_name'] = cur.get('last_name') or c.get('last_name')
+                    cur['title'] = cur.get('title') or c.get('title')
 
         _merge(extract_contacts(soup, html))
 
         # Render contact/about sub-pages too (JS sites often hide emails there).
+        candidate_links = []
         for link in find_contact_links(soup, url, limit=3):
+            if link not in candidate_links:
+                candidate_links.append(link)
+        for link in common_person_page_links(url, limit=12):
+            if link.rstrip('/') != url.rstrip('/') and link not in candidate_links:
+                candidate_links.append(link)
+
+        for link in candidate_links[:15]:
             logger.debug("DynamicScraper crawling sub-page: %s", link)
             sub_html = self.fetch_html(link, adspower_profile_id, proxy_url)
             if not sub_html:
@@ -102,9 +117,9 @@ class DynamicScraper:
             for p in extract_social_links(sub_soup).get('linkedin_profiles', []):
                 socials['linkedin_profiles'].append(p)
 
-        contacts = list(contacts_by_email.values())
+        contacts = list(contacts_by_key.values())
         result['contacts'] = contacts
-        result['emails'] = [c['email'] for c in contacts]
+        result['emails'] = [c['email'] for c in contacts if c.get('email')]
         result['social_links'] = socials
         result['success'] = True
         logger.info("DynamicScraper done %s — %d contacts found", url, len(contacts))

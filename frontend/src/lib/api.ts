@@ -41,6 +41,7 @@ export interface Lead {
   last_name: string | null;
   title: string | null;
   linkedin_url: string | null;
+  profile_url: string | null;
   company: string | null;
   company_name: string | null;
   campaign: string | null;
@@ -168,7 +169,7 @@ export interface LeadSource {
   url: string;
   source_type: 'static' | 'dynamic' | 'linkedin' | 'directory';
   sector: string;
-  expected_data_fields: Record<string, any>;
+  expected_data_fields: Record<string, unknown>;
   access_rules: string;
   priority_score: number;
   campaign: string | null;

@@ -5,7 +5,10 @@ import urllib3
 from bs4 import BeautifulSoup
 from typing import Dict, Any, Optional, List
 
-from .extractor import extract_contacts, find_contact_links, find_listing_links, extract_social_links
+from .extractor import (
+    extract_contacts, find_contact_links, find_listing_links,
+    extract_social_links, common_person_page_links,
+)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -24,7 +27,8 @@ class StaticScraper:
     }
 
     # How many contact/team sub-pages to follow per site.
-    MAX_SUBPAGES = 6
+    MAX_SUBPAGES = 10
+    MAX_PERSON_PATH_GUESSES = 40
     # For directory sources: how many individual listing pages to crawl into.
     MAX_LISTING_PAGES = 20
 
@@ -97,26 +101,38 @@ class StaticScraper:
         result['metadata'] = self.extract_metadata(soup)
         result['body_text'] = self.extract_visible_text(soup)
 
-        contacts_by_email: Dict[str, Dict[str, Any]] = {}
+        contacts_by_key: Dict[str, Dict[str, Any]] = {}
         socials = extract_social_links(soup)
 
         def _merge(contacts):
             for c in contacts:
                 email = c.get('email')
-                if not email:
+                linkedin_url = c.get('linkedin_url')
+                if not email and not linkedin_url:
                     continue
-                cur = contacts_by_email.get(email)
+                key = f"email:{email}" if email else f"linkedin:{linkedin_url.lower().rstrip('/')}"
+                cur = contacts_by_key.get(key)
                 if cur is None:
-                    contacts_by_email[email] = c
+                    contacts_by_key[key] = c
                 else:
-                    cur['first_name'] = cur['first_name'] or c.get('first_name')
-                    cur['last_name'] = cur['last_name'] or c.get('last_name')
+                    cur['linkedin_url'] = cur.get('linkedin_url') or c.get('linkedin_url')
+                    cur['first_name'] = cur.get('first_name') or c.get('first_name')
+                    cur['last_name'] = cur.get('last_name') or c.get('last_name')
                     cur['title'] = cur.get('title') or c.get('title')
 
         _merge(extract_contacts(soup, html))
 
-        # Crawl contact/about/team sub-pages for richer contacts.
+        # Crawl contact/about/team sub-pages for richer contacts. Also try a few
+        # common staff paths even when the site forgot to link them.
+        candidate_links = []
         for link in find_contact_links(soup, url, limit=self.MAX_SUBPAGES):
+            if link not in candidate_links:
+                candidate_links.append(link)
+        for link in common_person_page_links(url, limit=self.MAX_PERSON_PATH_GUESSES):
+            if link.rstrip('/') != url.rstrip('/') and link not in candidate_links:
+                candidate_links.append(link)
+
+        for link in candidate_links[: self.MAX_SUBPAGES + self.MAX_PERSON_PATH_GUESSES]:
             logger.debug("StaticScraper crawling sub-page: %s", link)
             sub_html = self.fetch_html(link, proxy_url=proxy_url)
             if not sub_html:
@@ -147,9 +163,9 @@ class StaticScraper:
                         s_soup = BeautifulSoup(s_html, 'html.parser')
                         _merge(extract_contacts(s_soup, s_html))
 
-        contacts = list(contacts_by_email.values())
+        contacts = list(contacts_by_key.values())
         result['contacts'] = contacts
-        result['emails'] = [c['email'] for c in contacts]
+        result['emails'] = [c['email'] for c in contacts if c.get('email')]
         result['social_links'] = socials
         result['success'] = True
         logger.info("StaticScraper done %s — %d contacts found", url, len(contacts))

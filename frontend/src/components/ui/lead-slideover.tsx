@@ -14,6 +14,7 @@ interface LeadSlideoverProps {
 export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
   const [queueState, setQueueState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [queueMessage, setQueueMessage] = useState("");
+  const displayName = lead ? `${lead.first_name || ""} ${lead.last_name || ""}`.trim() || "Unnamed Prospect" : "";
 
   const handleQueue = async () => {
     if (!lead) return;
@@ -22,9 +23,9 @@ export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
       const res = await queueLeadDraft(lead.id);
       setQueueState('done');
       setQueueMessage(res.detail);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setQueueState('error');
-      setQueueMessage(err.message || "Failed to queue drafting.");
+      setQueueMessage(err instanceof Error ? err.message : "Failed to queue drafting.");
     }
   };
 
@@ -49,10 +50,10 @@ export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
             <div className="p-6 border-b border-white/10 flex items-start justify-between bg-black/20">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">
-                  {lead.first_name} {lead.last_name}
+                  {displayName}
                 </h2>
                 <p className="text-muted-foreground mt-1 flex items-center gap-2">
-                  <User className="w-4 h-4" /> {lead.title}
+                  <User className="w-4 h-4" /> {lead.title || "Unknown Title"}
                 </p>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors text-muted-foreground hover:text-foreground">
@@ -82,6 +83,11 @@ export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
                   {lead.linkedin_url && (
                     <a href={lead.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 flex items-center gap-2 text-sm transition-colors">
                       View LinkedIn Profile <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  {lead.profile_url && lead.profile_url !== lead.linkedin_url && (
+                    <a href={lead.profile_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 flex items-center gap-2 text-sm transition-colors">
+                      View Source Profile <ExternalLink className="w-3 h-3" />
                     </a>
                   )}
                 </div>
@@ -127,7 +133,7 @@ export function LeadSlideover({ lead, onClose, onDelete }: LeadSlideoverProps) {
                       <MessageSquareText className="w-3 h-3" /> RECOMMENDED ANGLE
                     </p>
                     <p className="text-sm text-foreground/90 leading-relaxed italic">
-                      "{lead.recommended_message_angle || "Generic approach recommended."}"
+                      &quot;{lead.recommended_message_angle || "Generic approach recommended."}&quot;
                     </p>
                   </div>
                 </div>

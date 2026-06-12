@@ -29,6 +29,15 @@ _JUNK_LOCALPARTS = {
     'example', 'test', 'youremail', 'your-email', 'email', 'name',
     'username', 'user', 'demo', 'sample', 'firstname', 'lastname', 'someone',
 }
+
+_ROLE_LOCALPART_WORDS = {
+    'info', 'contact', 'sales', 'support', 'hello', 'admin', 'office',
+    'mail', 'help', 'team', 'hr', 'jobs', 'careers', 'marketing',
+    'press', 'billing', 'iletisim', 'bilgi', 'destek', 'kurumsal',
+    'ik', 'kayit', 'basvuru', 'musteri', 'merhaba',
+    'sube', 'şube', 'branch', 'branches', 'office', 'campus',
+    'noreply', 'no-reply', 'webmaster', 'postmaster',
+}
 _JUNK_DOMAINS = {
     'example.com', 'example.org', 'domain.com', 'yourdomain.com', 'email.com',
     'sentry.io', 'wixpress.com', 'sentry.wixpress.com', 'godaddy.com',
@@ -38,14 +47,24 @@ _JUNK_SUBSTRINGS = ('@sentry', 'sentry.', '.wixpress', '@2x', '@3x')
 
 # Link text/href fragments that signal a contact/about/team page worth crawling.
 _CONTACT_HINTS = (
-    'contact', 'iletisim', 'about', 'hakkimizda', 'hakkinda',
-    'team', 'ekip', 'ekibimiz', 'kadro', 'kadromuz',
-    'staff', 'people', 'reach', 'get-in-touch', 'bize-ulasin',
-    'kurumsal', 'company', 'imprint', 'impressum',
-    'faculty', 'instructor', 'ogretmen', 'egitmen', 'egitmenler',
-    'trainer', 'teacher', 'consultant', 'uzman',
-    'management', 'yonetim', 'leadership', 'director',
-    'who-we-are', 'kim-biz', 'hizmet', 'services',
+    'contact', 'contacts', 'iletisim', 'iletişim', 'bize-ulasin', 'bize-ulaşın',
+    'reach', 'get-in-touch', 'imprint', 'impressum',
+    'about', 'about-us', 'hakkimizda', 'hakkımızda', 'hakkinda', 'hakkında',
+    'who-we-are', 'kim-biz', 'kurumsal', 'company',
+    'team', 'our-team', 'ekip', 'ekibimiz', 'kadro', 'kadromuz',
+    'staff', 'people', 'personel', 'personeller', 'calisan', 'çalışan',
+    'faculty', 'academic', 'akademik', 'akademik-kadro', 'akademik-personel',
+    'instructor', 'instructors', 'teacher', 'teachers', 'trainer', 'trainers',
+    'ogretmen', 'öğretmen', 'ogretmenler', 'öğretmenler',
+    'egitmen', 'eğitmen', 'egitmenler', 'eğitmenler',
+    'consultant', 'consultants', 'uzman', 'uzmanlar', 'danisman', 'danışman',
+    'management', 'yonetim', 'yönetim', 'leadership', 'director',
+    'board', 'advisory', 'kurucu', 'kurucular',
+    'career', 'careers', 'kariyer', 'insan-kaynaklari', 'insan-kaynakları',
+    'hr', 'human-resources', 'talent', 'recruitment',
+    'member', 'members', 'uye', 'üye', 'uyeler', 'üyeler',
+    'profile', 'profiles', 'profil', 'profiller',
+    'hizmet', 'services',
 )
 
 # Turkish + English job title keywords used when inferring titles from surrounding text.
@@ -118,12 +137,12 @@ def guess_name_from_email(email: str) -> Dict[str, Optional[str]]:
     local = re.sub(r'\d+$', '', local)
     parts = re.split(r'[._\-]+', local)
     parts = [p for p in parts if p]
-    role_words = {
-        'info', 'contact', 'sales', 'support', 'hello', 'admin', 'office',
-        'mail', 'help', 'team', 'hr', 'jobs', 'careers', 'marketing',
-        'press', 'billing', 'iletisim', 'bilgi', 'destek', 'kurumsal',
-    }
-    if not parts or any(p in role_words for p in parts):
+    compact_local = ''.join(parts)
+    if (
+        not parts
+        or any(p in _ROLE_LOCALPART_WORDS for p in parts)
+        or compact_local.endswith(('sube', 'şube', 'branch', 'office'))
+    ):
         return {'first_name': None, 'last_name': None}
     if len(parts) == 1:
         if len(parts[0]) <= 2:
@@ -228,7 +247,8 @@ def _parse_staff_cards(soup: BeautifulSoup) -> List[Dict[str, Any]]:
             filtered.append(card)
 
     for card in filtered:
-        # Find email inside card
+        # Find contact methods inside card. Some staff cards expose only a
+        # LinkedIn profile, which is still a human lead for LinkedIn outreach.
         email = None
         a_mail = card.find('a', href=re.compile(r'^mailto:', re.I))
         if a_mail:
@@ -238,7 +258,14 @@ def _parse_staff_cards(soup: BeautifulSoup) -> List[Dict[str, Any]]:
             matches = EMAIL_RE.findall(_deobfuscate(text))
             if matches:
                 email = matches[0].lower()
-        if not email or _is_junk_email(email):
+        if email and _is_junk_email(email):
+            continue
+
+        linkedin_url = None
+        a_linkedin = card.find('a', href=re.compile(r'linkedin\.com/in/', re.I))
+        if a_linkedin:
+            linkedin_url = a_linkedin['href'].strip()
+        if not email and not linkedin_url:
             continue
 
         # Name: prefer heading tags inside the card
@@ -267,6 +294,7 @@ def _parse_staff_cards(soup: BeautifulSoup) -> List[Dict[str, Any]]:
         names = _name_from_text(name_text)
         results.append({
             'email': email,
+            'linkedin_url': linkedin_url,
             'first_name': names['first_name'],
             'last_name': names['last_name'],
             'title': title_text,
@@ -280,7 +308,9 @@ def _parse_staff_cards(soup: BeautifulSoup) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 def extract_contacts(soup: BeautifulSoup, raw_html: str) -> List[Dict[str, Any]]:
-    """Return a deduped list of {email, first_name, last_name, title} dicts.
+    """Return a deduped list of contact dicts.
+
+    A contact may have an email, a LinkedIn profile URL, or both.
 
     Priority (highest → lowest):
       1. schema.org Person blocks
@@ -288,22 +318,29 @@ def extract_contacts(soup: BeautifulSoup, raw_html: str) -> List[Dict[str, Any]]
       3. mailto: links (anchor text carries name)
       4. Regex over de-obfuscated HTML / visible text
     """
-    by_email: Dict[str, Dict[str, Any]] = {}
+    by_key: Dict[str, Dict[str, Any]] = {}
 
-    def _add(email: str, first=None, last=None, title=None):
-        email = email.strip().strip('.').lower()
-        if not email or _is_junk_email(email):
+    def _add(email: str = None, first=None, last=None, title=None, linkedin_url: str = None):
+        email = email.strip().strip('.').lower() if email else None
+        linkedin_url = linkedin_url.strip() if linkedin_url else None
+        if email and _is_junk_email(email):
             return
-        existing = by_email.get(email)
+        if not email and not linkedin_url:
+            return
+        key = f"email:{email}" if email else f"linkedin:{linkedin_url.lower().rstrip('/')}"
+        existing = by_key.get(key)
         if existing is None:
-            guess = guess_name_from_email(email)
-            by_email[email] = {
+            guess = guess_name_from_email(email) if email else {'first_name': None, 'last_name': None}
+            by_key[key] = {
                 'email': email,
+                'linkedin_url': linkedin_url,
                 'first_name': first or guess['first_name'],
                 'last_name': last or guess['last_name'],
                 'title': title,
             }
         else:
+            if linkedin_url and not existing.get('linkedin_url'):
+                existing['linkedin_url'] = linkedin_url
             if first and not existing['first_name']:
                 existing['first_name'] = first
             if last and not existing['last_name']:
@@ -313,11 +350,11 @@ def extract_contacts(soup: BeautifulSoup, raw_html: str) -> List[Dict[str, Any]]
 
     # 1) schema.org structured data — most reliable
     for p in _parse_schema_persons(soup):
-        _add(p['email'], p.get('first_name'), p.get('last_name'), p.get('title'))
+        _add(p.get('email'), p.get('first_name'), p.get('last_name'), p.get('title'), p.get('linkedin_url'))
 
     # 2) Staff/team card heuristic
     for p in _parse_staff_cards(soup):
-        _add(p['email'], p.get('first_name'), p.get('last_name'), p.get('title'))
+        _add(p.get('email'), p.get('first_name'), p.get('last_name'), p.get('title'), p.get('linkedin_url'))
 
     # 3) mailto: links — good quality, often carry name
     for a in soup.find_all('a', href=True):
@@ -339,7 +376,38 @@ def extract_contacts(soup: BeautifulSoup, raw_html: str) -> List[Dict[str, Any]]
         for match in EMAIL_RE.findall(source_text):
             _add(match)
 
-    return list(by_email.values())
+    return list(by_key.values())
+
+
+def common_person_page_links(base_url: str, limit: int = 8) -> List[str]:
+    """Generate likely staff/person pages even when the site does not link them.
+
+    Many Turkish education sites expose human pages at predictable paths but
+    omit them from the public nav, especially on branch/contact pages.
+    """
+    paths = (
+        '/ekibimiz', '/ekip', '/kadromuz', '/egitmenlerimiz',
+        '/eğitmenlerimiz', '/ogretmenlerimiz', '/öğretmenlerimiz',
+        '/akademik-kadro', '/akademik-personel', '/akademik-kadromuz',
+        '/akademik-staff', '/akademik', '/faculty', '/faculty-members',
+        '/ogretim-elemanlari', '/öğretim-elemanları', '/ogretim-uyeleri',
+        '/öğretim-üyeleri', '/akademisyenler', '/hocalarimiz',
+        '/hocalarımız', '/personel', '/calisanlar', '/çalışanlar',
+        '/yonetim', '/yönetim', '/yonetim-kurulu', '/yönetim-kurulu',
+        '/liderlik', '/kurucular', '/danismanlar', '/danışmanlar',
+        '/uzmanlar', '/insan-kaynaklari', '/insan-kaynakları',
+        '/kariyer', '/uyeler', '/üyeler', '/uye-listesi', '/üye-listesi',
+        '/profiller', '/profil', '/hakkimizda', '/hakkımızda',
+        '/hakkinda', '/hakkında', '/kurumsal',
+        '/team', '/our-team', '/staff', '/our-staff', '/teachers',
+        '/trainers', '/instructors', '/people', '/profiles', '/members',
+        '/leadership', '/management', '/board', '/advisors',
+        '/consultants', '/experts', '/about', '/about-us', '/who-we-are',
+        '/human-resources', '/careers', '/talent',
+    )
+    parsed = urllib.parse.urlparse(base_url if base_url.startswith('http') else f'https://{base_url}')
+    root = f"{parsed.scheme}://{parsed.netloc}"
+    return [urllib.parse.urljoin(root, path) for path in paths[:limit]]
 
 
 def find_contact_links(soup: BeautifulSoup, base_url: str, limit: int = 6) -> List[str]:
@@ -380,10 +448,17 @@ def find_listing_links(soup: BeautifulSoup, base_url: str, limit: int = 30) -> L
     and are on the same host.
     """
     _LISTING_HINTS = (
-        '/profil', '/ilan', '/listing', '/detail', '/view',
-        '/hoca', '/kurs', '/okul', '/egitmen', '/egitim',
+        '/profil', '/profile', '/profiller', '/profiles',
+        '/ilan', '/job', '/jobs', '/is-ilani', '/iş-ilanı',
+        '/listing', '/listings', '/detail', '/details', '/view',
+        '/member', '/members', '/uye', '/üye', '/uyeler', '/üyeler',
+        '/person', '/people', '/staff', '/faculty', '/academic',
+        '/hoca', '/ogretmen', '/öğretmen', '/egitmen', '/eğitmen',
+        '/akademisyen', '/danisman', '/danışman', '/uzman',
+        '/kurs', '/okul', '/egitim', '/eğitim',
         '/school', '/trainer', '/teacher', '/tutor', '/instructor',
-        '/firma', '/company', '/provider',
+        '/mentor', '/coach', '/consultant', '/expert',
+        '/firma', '/company', '/provider', '/kurum', '/universite', '/üniversite',
     )
 
     base = urllib.parse.urlparse(base_url)

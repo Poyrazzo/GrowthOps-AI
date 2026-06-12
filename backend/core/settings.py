@@ -133,7 +133,6 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery Configuration Options
-import os
 CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_TIMEZONE = "UTC"
 CELERY_RESULT_BACKEND = 'django-db'
@@ -154,6 +153,14 @@ LEAD_SCORE_THRESHOLD = int(os.environ.get('LEAD_SCORE_THRESHOLD', 70))
 REPLY_CONFIDENCE_THRESHOLD = float(os.environ.get('REPLY_CONFIDENCE_THRESHOLD', 0.85))
 # A LeadSource is automatically re-scraped only after this many hours have passed.
 SCRAPE_REFRESH_HOURS = int(os.environ.get('SCRAPE_REFRESH_HOURS', 24))
+# Human-lead discovery. Generic/company inboxes can still be captured by the
+# scraper, but the product should prioritize real people.
+SAVE_GENERIC_EMAIL_LEADS = os.environ.get('SAVE_GENERIC_EMAIL_LEADS', 'false').lower() in ('1', 'true', 'yes', 'on')
+SEARCH_DISCOVERY_ENABLED = os.environ.get('SEARCH_DISCOVERY_ENABLED', 'true').lower() in ('1', 'true', 'yes', 'on')
+SEARCH_PROVIDER = os.environ.get('SEARCH_PROVIDER', 'duckduckgo')
+SEARCH_API_KEY = os.environ.get('SEARCH_API_KEY', '')
+SEARCH_BASE_URL = os.environ.get('SEARCH_BASE_URL', '')
+SEARCH_DISCOVERY_RESULT_LIMIT = int(os.environ.get('SEARCH_DISCOVERY_RESULT_LIMIT', 10))
 
 # --- TEST-MODE SAFETY ---------------------------------------------------
 # While OUTREACH_TEST_MODE is on, EVERY outgoing email is redirected to
@@ -175,7 +182,7 @@ LANGFUSE_HOST = os.environ.get('LANGFUSE_HOST', 'https://cloud.langfuse.com')
 # at  backend/logs/growthops.log  — readable with:
 #   tail -f backend/logs/growthops.log
 # or via the /api/crm/logs/ streaming endpoint.
-LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR = Path(os.environ.get('LOG_DIR', BASE_DIR / 'logs'))
 LOG_DIR.mkdir(exist_ok=True)
 
 LOGGING = {

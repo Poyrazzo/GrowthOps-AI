@@ -13,6 +13,7 @@ GENERIC_EMAIL_PREFIXES = {
     # Turkish
     'bilgi', 'iletisim', 'destek', 'kurumsal', 'satis', 'kayit',
     'ik', 'ikbasvuru', 'basvuru', 'musteri', 'merhaba',
+    'sube', 'şube', 'branch', 'branches', 'campus',
 }
 
 class DataCleaner:
@@ -26,7 +27,7 @@ class DataCleaner:
         self.df = pd.DataFrame(raw_data_list)
 
         # Ensure standard columns exist even if empty
-        expected_columns = ['email', 'linkedin_url', 'first_name', 'last_name', 'url', 'title']
+        expected_columns = ['email', 'linkedin_url', 'profile_url', 'first_name', 'last_name', 'url', 'title']
         for col in expected_columns:
             if col not in self.df.columns:
                 self.df[col] = None
@@ -55,7 +56,7 @@ class DataCleaner:
                 text = 'https://' + text
             return text.rstrip('/')
 
-        for col in ['url', 'linkedin_url']:
+        for col in ['url', 'linkedin_url', 'profile_url']:
             self.df[col] = self.df[col].map(clean_url)
 
     def _clean_names(self):
@@ -75,15 +76,23 @@ class DataCleaner:
         def is_generic(email):
             if not email or '@' not in email:
                 return False
-            local_part = email.split('@')[0]
-            return local_part in GENERIC_EMAIL_PREFIXES
+            local_part = email.split('@')[0].lower()
+            parts = [p for p in local_part.replace('ş', 's').split('.') if p]
+            parts = [piece for part in parts for piece in part.split('-') if piece]
+            normalized_prefixes = {p.replace('ş', 's') for p in GENERIC_EMAIL_PREFIXES}
+            compact_local = ''.join(parts)
+            return (
+                local_part in normalized_prefixes
+                or any(part in normalized_prefixes for part in parts)
+                or compact_local.endswith(('sube', 'branch', 'office'))
+            )
 
         self.df['is_generic_email'] = self.df['email'].map(is_generic)
 
     def _filter_invalid(self):
         """Drops leads that have NEITHER an email NOR a linkedin_url."""
         # We need at least one contact method
-        mask = self.df['email'].notna() | self.df['linkedin_url'].notna()
+        mask = self.df['email'].notna() | self.df['linkedin_url'].notna() | self.df['profile_url'].notna()
         self.df = self.df[mask]
 
     def _deduplicate(self):
@@ -93,7 +102,7 @@ class DataCleaner:
         other (pandas drop_duplicates considers NaN/None values equal, which used to
         collapse every email-only or linkedin-only batch into a single lead).
         """
-        for col in ['email', 'linkedin_url']:
+        for col in ['email', 'linkedin_url', 'profile_url']:
             has_key = self.df[self.df[col].notna()].drop_duplicates(subset=[col], keep='first')
             no_key = self.df[self.df[col].isna()]
             self.df = pd.concat([has_key, no_key])
