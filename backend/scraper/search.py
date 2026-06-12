@@ -256,6 +256,78 @@ def build_person_search_queries(
     return queries
 
 
+_EMAIL_RE = re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}')
+
+_GENERIC_LOCALPARTS = frozenset({
+    'info', 'contact', 'admin', 'hello', 'support', 'noreply', 'no-reply',
+    'mail', 'webmaster', 'postmaster', 'example', 'test', 'you', 'press',
+    'marketing', 'billing', 'jobs', 'hr', 'careers', 'sales', 'help',
+    'iletisim', 'bilgi', 'destek', 'merhaba', 'office', 'team', 'news',
+})
+
+
+def _is_personal_email(email: str, domain: str) -> bool:
+    """True only if the email belongs to the target domain and looks like a personal address."""
+    e = email.lower()
+    if not e.endswith(f'@{domain}'):
+        return False
+    local = e.split('@')[0]
+    if local in _GENERIC_LOCALPARTS:
+        return False
+    if len(local) < 2:
+        return False
+    return True
+
+
+def search_person_email(first_name: str, last_name: str, domain: str) -> Optional[str]:
+    """Find a named person's email address using the configured search API (Serper/DDG).
+
+    Runs 2–3 targeted queries and scans both snippets and on-domain result pages.
+    Uses the existing SEARCH_API_KEY — no additional account or quota needed beyond
+    what is already configured.  Returns the first plausible personal email found,
+    or None if nothing is found.
+    """
+    if not first_name or not last_name or not domain:
+        return None
+
+    name = f'{first_name} {last_name}'
+    queries = [
+        f'"{name}" "@{domain}"',             # narrowest — looks for the exact email string
+        f'"{name}" "{domain}" email',        # broader keyword match
+        f'"{name}" site:{domain}',           # all pages on the company site
+    ]
+
+    for query in queries:
+        results = search_web(query, limit=5)
+        for result in results:
+            # Fast path: scan the snippet text
+            text = (result.get('snippet') or '') + ' ' + (result.get('title') or '')
+            for m in _EMAIL_RE.finditer(text):
+                email = m.group(0).lower().strip('.')
+                if _is_personal_email(email, domain):
+                    logger.info("search_person_email: found %s in snippet for %s", email, name)
+                    return email
+
+            # Slower path: fetch the page only when it's on the company domain
+            url = result.get('url', '')
+            if domain in url:
+                try:
+                    import requests as _req
+                    r = _req.get(url, headers={
+                        'User-Agent': 'Mozilla/5.0 (compatible; GrowthOpsBot/1.0)',
+                    }, timeout=8, verify=False)
+                    if r.ok:
+                        for m in _EMAIL_RE.finditer(r.text):
+                            email = m.group(0).lower().strip('.')
+                            if _is_personal_email(email, domain):
+                                logger.info("search_person_email: found %s on %s for %s", email, url, name)
+                                return email
+                except Exception:
+                    pass
+
+    return None
+
+
 def discover_person_pages(
     company_name: Optional[str],
     company_domain: Optional[str],

@@ -214,6 +214,15 @@ class EmailAccountViewSet(viewsets.ModelViewSet):
         poll_all_inboxes_task.delay()
         return Response({"detail": "IMAP polling triggered. Any new replies will be processed within seconds."}, status=202)
 
+    @action(detail=False, methods=['post'])
+    def dispatch_now(self, request):
+        """Immediately dispatch all pending (approved) emails without waiting for the 10-min beat."""
+        from outreach.sequence import dispatch_pending_emails
+        from celery import shared_task
+        from crm.tasks import dispatch_emails_task
+        dispatch_emails_task.delay()
+        return Response({"detail": "Email dispatch triggered. Pending emails will be sent within seconds."}, status=202)
+
 class LeadMagnetViewSet(viewsets.ModelViewSet):
     queryset = LeadMagnet.objects.all().order_by('-created_at')
     serializer_class = LeadMagnetSerializer

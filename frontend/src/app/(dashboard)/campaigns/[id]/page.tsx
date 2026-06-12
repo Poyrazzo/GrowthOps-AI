@@ -467,6 +467,23 @@ export default function CampaignDetail() {
               onClick={async () => {
                 try {
                   const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/email-accounts/dispatch_now/`,
+                    { method: "POST" }
+                  );
+                  const data = await res.json();
+                  alert(data.detail);
+                } catch {
+                  alert("Failed to trigger dispatch. Is the celery worker running?");
+                }
+              }}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-lg transition"
+            >
+              🚀 Şimdi Gönder
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL}/email-accounts/poll_now/`,
                     { method: "POST" }
                   );

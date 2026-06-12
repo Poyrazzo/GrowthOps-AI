@@ -167,6 +167,12 @@ ADSPOWER_API_URL = os.environ.get('ADSPOWER_API_URL', 'http://host.docker.intern
 ADSPOWER_PROFILE_ID = os.environ.get('ADSPOWER_PROFILE_ID', '')
 LINKEDIN_ENRICHMENT_ENABLED = os.environ.get('LINKEDIN_ENRICHMENT_ENABLED', 'false').lower() in ('1', 'true', 'yes', 'on')
 
+# Hunter.io — email enrichment & pattern inference
+# Free tier: 25 email-finder lookups / month. Leave blank to use pattern-only inference.
+HUNTER_API_KEY = os.environ.get('HUNTER_API_KEY', '')
+# When true, leads saved with a name+domain but no email auto-queue enrich_lead_email_task.
+EMAIL_ENRICHMENT_ENABLED = os.environ.get('EMAIL_ENRICHMENT_ENABLED', 'true').lower() in ('1', 'true', 'yes', 'on')
+
 # --- TEST-MODE SAFETY ---------------------------------------------------
 # While OUTREACH_TEST_MODE is on, EVERY outgoing email is redirected to
 # TEST_REDIRECT_EMAIL no matter which lead it was drafted for. This makes it

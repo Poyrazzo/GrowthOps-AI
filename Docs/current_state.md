@@ -97,3 +97,68 @@ Remaining known gaps (unchanged, deliberately out of scope): external API keys n
 
 ## Go-Live Runbook (2026-06-11)
 A complete end-to-end deployment checklist now exists at `Docs/go-live runbook.md`. It covers: external accounts/API keys (OpenAI required; Langfuse/AdsPower/proxies/Slack optional), outreach domain + mailbox setup with SPF/DKIM/DMARC and warm-up limits, `.env` configuration, the SECRET_KEY-before-passwords caveat, stack bring-up, n8n workflow import/activation, seed-data steps (EmailAccounts, LeadMagnets, Campaign, LeadSources), the pre-launch verification sequence (E2E tests, manual scrape, approval + reply loop tests), the daily operator routine, and the security hardening checklist required before any non-local exposure.
+
+## Scraping Engine Overhaul — BFS Crawler + Lead Quality Fixes (2026-06-12)
+
+### Serper API fixes
+- Removed all `site:` operators from Serper queries — free tier blocks them (returns 400).
+- Capped `num` param to `min(limit, 10)` — free tier rejects values > 10.
+- Queries now use natural language: `"Company" Persona linkedin.com/in`, `"Company" Persona email iletisim`, `"Company" kariyer.net`.
+- `SEARCH_DISCOVERY_RESULT_LIMIT` env var set to `10`.
+
+### Full-site BFS crawler (`backend/scraper/static.py`)
+- Complete rewrite: replaced old "guess a few paths + contact link" strategy with a full **Breadth-First Search** site crawler.
+- `_crawl_site(start_url)` maintains a **priority queue** (team/contact/staff pages first) and a normal queue; visits up to `MAX_CRAWL_PAGES = 80` pages per source.
+- Pre-seeds 30 guessed Turkish/English staff paths (`/ekibimiz`, `/egitmenlerimiz`, `/team`, etc.) into the BFS so they are always attempted.
+- Follows ALL internal same-domain `<a href>` links discovered on each page.
+- `scrape_website()` calls `_crawl_site()` and processes contacts from every page.
+- `_PRIORITY_PATH_HINTS` tuple controls which paths jump to the front of the queue.
+
+### Non-person lead filtering (`backend/scraper/extractor.py`)
+- Added `_NON_PERSON_WORDS` frozenset (~45 words: "workshop", "training", "school", "english", "want", "take", etc.).
+- `_name_from_text()` now rejects any 2-3 word heading that contains a non-person word — prevents "Teacher Workshops", "Want Take", "Ialf Serpong" from being saved as leads.
+- Added raw HTML regex scan for `linkedin.com/in/` URLs (step 5 in `extract_contacts`) — catches LinkedIn profile URLs embedded in JavaScript, data-attributes, or plain text that are NOT inside `<a>` tags.
+- Added `_parse_staff_table()` — extracts staff from HTML `<table>` elements with name/title/email column detection; handles both header-row and header-less tables.
+- Added `_parse_staff_list()` — extracts staff from `<ul>/<ol>` elements whose CSS class/id matches people/team/staff hints.
+- Both new extractors are wired into `extract_contacts()` as steps 2b and 2c.
+
+### LLM lead scoring improvement (`backend/ai_engine/lead_profiler.py`)
+- `score_lead()` now accepts `lead_name` parameter.
+- When a name is provided the LLM prompt explicitly instructs the model: if the name doesn't look like a real human name, give score = 0 and persona = "Non-Person / Bad Data".
+- `score_lead_task` in `tasks.py` passes `lead_name = first_name + last_name` to `score_lead()`.
+
+### Bogus lead elimination (`backend/crm/tasks.py`)
+- `_search_discovered_contacts`: inaccessible non-LinkedIn pages are no longer saved as fake leads (only genuine `linkedin.com/in/` URLs are kept from inaccessible pages).
+- Accessible pages: only save a profile-URL-only lead if at least a first or last name was parsed (prevents Turkish page titles like "İngilizce İlanları" being saved as a person).
+
+### Email enrichment pipeline (NEW)
+- **`backend/scraper/hunter.py`** — new module:
+  - `find_email(first, last, domain, api_key)` — Hunter.io email-finder API call.
+  - `domain_search(domain, api_key)` — Hunter.io domain-search (indexes all known emails for a domain).
+  - `detect_email_pattern(emails)` — analyses known emails to infer naming convention (first.last, flast, etc.).
+  - `infer_email(first, last, domain, api_key)` — full lookup pipeline: Hunter.io → pattern detection → fallback `firstname.lastname@domain`.
+- **`enrich_lead_email_task`** (Celery task, default queue) — runs automatically for every new lead that has a name + company domain but no email.  Tries Hunter.io then pattern inference.  If email found: updates the lead, logs activity, and queues `generate_draft_task` if lead score ≥ threshold and campaign is active.
+- Wired into `_process_and_save_scrape_result`: new leads with name+domain but no email auto-queue the task (countdown=15s after creation).
+- Wired into the "existing lead updated" branch: if a lead gains a name from enrichment but still lacks an email, enrichment is re-queued.
+- New env vars: `HUNTER_API_KEY=` (optional — pattern inference runs without it), `EMAIL_ENRICHMENT_ENABLED=true`.
+
+### Campaign edit feature (`frontend/src/app/(dashboard)/campaigns/[id]/page.tsx`)
+- `EditCampaignModal` component added inline — edits Target Persona, Target Sector, Target Country, Value Proposition via `PATCH /api/crm/campaigns/{id}/`.
+- Pencil icon button in header; Target Persona and Sector info cards also clickable.
+
+### "Mail Okumayı Simüle Et" testing button
+- **Backend**: `POST /api/crm/email-accounts/poll_now/` — immediately triggers `poll_all_inboxes_task` without waiting for the 5-minute Celery Beat cycle. Added as `@action(detail=False, methods=['post'])` on `EmailAccountViewSet`.
+- **Frontend**: "📨 Mail Okumayı Simüle Et" indigo button added to the Campaign Actions bar (active campaigns only).
+
+### IMAP reply system (existing — reminder)
+- `poll_all_inboxes_task` runs every 5 min via Celery Beat.
+- Matches replies by `In-Reply-To`/`References` thread headers, then by sender address.
+- Matched reply → `classify_reply_task` → OpenAI LLM classifies as positive/negative/out_of_office/unsubscribe/bounce.
+- Positive → webhook notification; unsubscribe/bounce → lead auto-suppressed.
+
+## Current Status (2026-06-12)
+- All phases 1–7 fully implemented and end-to-end verified.
+- BFS crawler operational; scrapes up to 80 pages per source site.
+- Email enrichment pipeline active: named leads without email are automatically enriched via Hunter.io (if key set) or `firstname.lastname@domain` pattern inference.
+- `OUTREACH_TEST_MODE=true` — all outgoing emails redirect to `burc.psikoloji@gmail.com`.
+- To fully unlock the pipeline: set `HUNTER_API_KEY=<your-key>` in `.env` and restart workers.

@@ -31,8 +31,17 @@ _JUNK_LOCALPARTS = {
     'you', 'hello', 'hi', 'hey', 'me', 'placeholder',
 }
 
+def _normalize_token(t: str) -> str:
+    """Normalize Turkish and other diacritical chars to ASCII for blocklist lookup.
+    Ensures 'İngilizce' → 'ingilizce', 'Öğretmen' → 'ogretmen', etc.
+    """
+    _TR = str.maketrans('İıĞğŞşÇçÖöÜü', 'IiGgSsCcOoUu')
+    return t.translate(_TR).lower()
+
+
 # Words that appear in headings but are NEVER part of a real person's name.
-# Prevents "Teacher Workshops", "Want Take", "Ialf Serpong" etc. being saved as leads.
+# Checked against the normalized (ASCII-lowercased) form of each token.
+# Prevents "Teacher Workshops", "İngilizce İlanları", "Öne Çıkan" etc.
 _NON_PERSON_WORDS = frozenset({
     # UI / call-to-action verbs
     'want', 'take', 'learn', 'get', 'join', 'start', 'find', 'book',
@@ -53,6 +62,19 @@ _NON_PERSON_WORDS = frozenset({
     # Generic business words
     'solution', 'solutions', 'service', 'services', 'system', 'systems',
     'group', 'network', 'community', 'club', 'society', 'department',
+    # Turkish non-person words (normalized to ASCII via _normalize_token)
+    'ingilizce', 'turkce', 'dil', 'diller',          # language words
+    'ilan', 'ilani', 'ilanlar', 'ilanlari',           # job listing / ad
+    'one', 'cikan', 'cikanilanlar',                   # öne çıkan = featured
+    'rehber', 'rehberi',                              # guide
+    'yasam', 'yasami',                                # life/living
+    'kayit', 'kayitlari',                             # registration
+    'hizmet', 'hizmetleri',                           # services
+    'urun', 'urunler',                                # product(s)
+    'yeni', 'populer', 'onerilen',                    # new, popular, recommended
+    'egitim', 'ogretim', 'kurs', 'kurslar',           # education/training (Turkish)
+    'okul', 'okullar',                                # school(s)
+    'native',                                         # brand suffix
 })
 
 _ROLE_LOCALPART_WORDS = {
@@ -184,8 +206,8 @@ def _name_from_text(text: str) -> Dict[str, Optional[str]]:
     if '@' in text or len(text) > 50:
         return {'first_name': None, 'last_name': None}
     tokens = [t for t in re.split(r'\s+', text) if t.isalpha() and len(t) > 1]
-    # Reject headings that contain any known non-person word (e.g. "Teacher Workshops", "Want Take")
-    if any(t.lower() in _NON_PERSON_WORDS for t in tokens):
+    # Reject headings with any non-person word; _normalize_token handles Turkish chars
+    if any(_normalize_token(t) in _NON_PERSON_WORDS for t in tokens):
         return {'first_name': None, 'last_name': None}
     if len(tokens) == 2:
         return {'first_name': tokens[0].title(), 'last_name': tokens[1].title()}
@@ -345,6 +367,162 @@ def _parse_staff_cards(soup: BeautifulSoup, source_url: str = '') -> List[Dict[s
     return results
 
 
+def _parse_staff_table(soup: BeautifulSoup, source_url: str = '') -> List[Dict[str, Any]]:
+    """Extract staff from HTML <table> elements whose header row contains
+    name / title / email column hints.  Also handles tables with no explicit
+    header by scanning column content for email patterns."""
+    results = []
+
+    _NAME_COL_WORDS  = ('name', 'isim', 'ad soyad', 'ad', 'personel', 'staff', 'kişi')
+    _TITLE_COL_WORDS = ('title', 'unvan', 'görev', 'pozisyon', 'position', 'role', 'jabatan')
+    _EMAIL_COL_WORDS = ('email', 'e-mail', 'mail', 'e-posta', 'iletisim', 'contact')
+
+    for table in soup.find_all('table'):
+        # --- Detect column indices from header row ---
+        header_row = table.find('tr')
+        if not header_row:
+            continue
+        header_cells = header_row.find_all(['th', 'td'])
+        col = {}
+        for i, cell in enumerate(header_cells):
+            text = cell.get_text(strip=True).lower()
+            if not col.get('name')  and any(w in text for w in _NAME_COL_WORDS):
+                col['name'] = i
+            if not col.get('title') and any(w in text for w in _TITLE_COL_WORDS):
+                col['title'] = i
+            if not col.get('email') and any(w in text for w in _EMAIL_COL_WORDS):
+                col['email'] = i
+
+        # Skip tables that look like data grids, not staff lists
+        if not col and len(header_cells) > 6:
+            continue
+
+        tbody = table.find('tbody') or table
+        for row in tbody.find_all('tr'):
+            cells = row.find_all(['td', 'th'])
+            if len(cells) < 2:
+                continue
+
+            name_text = cells[col['name']].get_text(strip=True) if 'name' in col and col['name'] < len(cells) else ''
+            title_text = cells[col['title']].get_text(strip=True) if 'title' in col and col['title'] < len(cells) else None
+
+            # Look for email in dedicated column or any cell
+            email = None
+            if 'email' in col and col['email'] < len(cells):
+                cell = cells[col['email']]
+                a = cell.find('a', href=re.compile(r'^mailto:', re.I))
+                email = a['href'][7:].split('?')[0].strip().lower() if a else None
+                if not email:
+                    m = EMAIL_RE.search(cell.get_text())
+                    email = m.group(0).lower() if m else None
+            if not email:
+                for cell in cells:
+                    a = cell.find('a', href=re.compile(r'^mailto:', re.I))
+                    if a:
+                        email = a['href'][7:].split('?')[0].strip().lower()
+                        break
+                    m = EMAIL_RE.search(cell.get_text())
+                    if m:
+                        email = m.group(0).lower()
+                        break
+            if email and _is_junk_email(email):
+                email = None
+
+            linkedin_url = None
+            for cell in cells:
+                a = cell.find('a', href=re.compile(r'linkedin\.com/in/', re.I))
+                if a:
+                    linkedin_url = a['href'].strip()
+                    break
+
+            names = _name_from_text(name_text) if name_text else {'first_name': None, 'last_name': None}
+            has_name = bool(names['first_name'] or names['last_name'])
+
+            if not email and not linkedin_url and not has_name:
+                continue
+
+            results.append({
+                'email': email,
+                'linkedin_url': linkedin_url,
+                'profile_url': source_url if (not email and not linkedin_url and has_name) else None,
+                'first_name': names.get('first_name'),
+                'last_name': names.get('last_name'),
+                'title': title_text or None,
+            })
+
+    return results
+
+
+def _parse_staff_list(soup: BeautifulSoup, source_url: str = '') -> List[Dict[str, Any]]:
+    """Extract staff from <ul>/<ol> elements whose CSS class or id hints at
+    a people/team/staff list.  Each <li> is treated as one person."""
+    results = []
+
+    _LIST_HINTS = (
+        'team', 'staff', 'members', 'people', 'faculty', 'speakers',
+        'ekip', 'kadro', 'personel', 'egitmen', 'ogretmen', 'trainers',
+        'teachers', 'instructors', 'consultants', 'experts', 'profiles',
+    )
+
+    for ul in soup.find_all(['ul', 'ol']):
+        cls = ' '.join(ul.get('class', [])).lower()
+        id_ = (ul.get('id') or '').lower()
+        if not any(h in cls or h in id_ for h in _LIST_HINTS):
+            continue
+
+        for li in ul.find_all('li'):
+            # Email
+            email = None
+            a = li.find('a', href=re.compile(r'^mailto:', re.I))
+            if a:
+                email = a['href'][7:].split('?')[0].strip().lower()
+            if not email:
+                m = EMAIL_RE.search(li.get_text())
+                if m:
+                    email = m.group(0).lower()
+            if email and _is_junk_email(email):
+                email = None
+
+            # LinkedIn
+            linkedin_url = None
+            a = li.find('a', href=re.compile(r'linkedin\.com/in/', re.I))
+            if a:
+                linkedin_url = a['href'].strip()
+
+            # Name: prefer heading/strong tags
+            name_text = ''
+            for tag in ('h2', 'h3', 'h4', 'strong', 'b', 'span'):
+                el = li.find(tag)
+                if el:
+                    name_text = el.get_text(strip=True)
+                    break
+
+            names = _name_from_text(name_text) if name_text else {'first_name': None, 'last_name': None}
+            has_name = bool(names['first_name'] or names['last_name'])
+
+            if not email and not linkedin_url and not has_name:
+                continue
+
+            # Title
+            title_text = None
+            for el in li.find_all(['p', 'span', 'small', 'div']):
+                text = el.get_text(strip=True)
+                if 2 < len(text) < 100 and any(kw in text.lower() for kw in _TITLE_KEYWORDS):
+                    title_text = text
+                    break
+
+            results.append({
+                'email': email,
+                'linkedin_url': linkedin_url,
+                'profile_url': source_url if (not email and not linkedin_url and has_name) else None,
+                'first_name': names.get('first_name'),
+                'last_name': names.get('last_name'),
+                'title': title_text,
+            })
+
+    return results
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -409,8 +587,18 @@ def extract_contacts(soup: BeautifulSoup, raw_html: str, source_url: str = '') -
         _add(p.get('email'), p.get('first_name'), p.get('last_name'),
              p.get('title'), p.get('linkedin_url'))
 
-    # 2) Staff/team card heuristic — now returns name-only cards with profile_url set
+    # 2) Staff/team card heuristic — returns name-only cards with profile_url set
     for p in _parse_staff_cards(soup, source_url=source_url):
+        _add(p.get('email'), p.get('first_name'), p.get('last_name'),
+             p.get('title'), p.get('linkedin_url'), p.get('profile_url'))
+
+    # 2b) Staff table extraction (Name / Title / Email columns)
+    for p in _parse_staff_table(soup, source_url=source_url):
+        _add(p.get('email'), p.get('first_name'), p.get('last_name'),
+             p.get('title'), p.get('linkedin_url'), p.get('profile_url'))
+
+    # 2c) Staff list extraction (<ul>/<ol> with people-class hints)
+    for p in _parse_staff_list(soup, source_url=source_url):
         _add(p.get('email'), p.get('first_name'), p.get('last_name'),
              p.get('title'), p.get('linkedin_url'), p.get('profile_url'))
 

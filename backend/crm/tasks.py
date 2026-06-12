@@ -254,9 +254,18 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
                 if getattr(settings, 'LINKEDIN_ENRICHMENT_ENABLED', False):
                     enrich_linkedin_lead_task.apply_async(
                         args=[str(lead.id)],
-                        countdown=5,  # small delay so the lead row is committed
+                        countdown=5,
                         queue='playwright',
                     )
+            # Queue email enrichment for named leads without an email address.
+            # Uses Hunter.io (if key configured) then falls back to pattern inference.
+            if (not lead.email
+                    and (lead.first_name or lead.last_name)
+                    and getattr(settings, 'EMAIL_ENRICHMENT_ENABLED', True)):
+                enrich_lead_email_task.apply_async(
+                    args=[str(lead.id)],
+                    countdown=15,  # let company enrichment run first so domain is set
+                )
             # Leads not tied to the page's own company won't be reached by the
             # page-company enrichment fan-out below, so score them directly.
             if not page_company or lead.company_id != page_company.id:
@@ -295,6 +304,11 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
                 updated = True
             if updated:
                 lead.save()
+                # If the lead now has a name but still no email, try email enrichment
+                if (not lead.email
+                        and (lead.first_name or lead.last_name)
+                        and getattr(settings, 'EMAIL_ENRICHMENT_ENABLED', True)):
+                    enrich_lead_email_task.apply_async(args=[str(lead.id)], countdown=15)
 
     if source:
         source.last_scraped_at = timezone.now()
@@ -645,6 +659,106 @@ def enrich_company_task(self, company_id: str, body_text: str):
         score_lead_task.delay(str(lead.id))
 
     return f"Enriched company {company.name}"
+
+@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=2)
+def enrich_lead_email_task(self, lead_id: str):
+    """Find a real email address for a named lead that has no email yet.
+
+    Lookup order (no additional API accounts required beyond what is already
+    configured — we reuse the Serper search API that powers lead discovery):
+
+      1. Serper-based email search — runs targeted Google searches for the
+         person's name + company domain and scans snippets + on-domain pages.
+         Free Serper tier gives 2,500 searches/month; paid plans are unlimited.
+      2. Hunter.io email-finder — optional, requires HUNTER_API_KEY in .env.
+         Free tier is only 25/month so not the primary strategy.
+      3. Pattern inference — firstname.lastname@domain fallback.  Never wrong
+         for companies that use the first.last convention (the majority).
+         Guessed addresses that bounce are auto-suppressed by the IMAP handler.
+
+    When an email is found the lead is updated, an activity is logged, and
+    generate_draft_task is queued if the lead score is already above threshold.
+    """
+    lead = Lead.objects.filter(id=lead_id).first()
+    if not lead:
+        return "Lead not found"
+    if lead.email:
+        return "Lead already has email"
+    if not (lead.first_name and lead.last_name):
+        return "Lead has no full name — cannot search or infer email"
+
+    # Resolve the company domain
+    domain = None
+    if lead.company and lead.company.domain:
+        domain = lead.company.domain.lower().lstrip('www.')
+    if not domain and lead.profile_url:
+        from urllib.parse import urlparse
+        parsed = urlparse(lead.profile_url)
+        if parsed.netloc and 'linkedin' not in parsed.netloc:
+            domain = parsed.netloc.lstrip('www.')
+    if not domain:
+        return "No company domain — cannot enrich email"
+
+    if domain in FREE_EMAIL_PROVIDERS:
+        return f"Free email provider ({domain}) — skip"
+
+    email = None
+    method = None
+
+    # --- Step 1: Serper-based search (reuses existing API key, no extra cost) ---
+    try:
+        from scraper.search import search_person_email as _serper_find
+        email = _serper_find(lead.first_name, lead.last_name, domain)
+        if email:
+            method = "serper-search"
+    except Exception as exc:
+        logger.warning("enrich_lead_email_task serper search error: %s", exc)
+
+    # --- Step 2: Hunter.io (optional, requires HUNTER_API_KEY) ---
+    if not email:
+        hunter_key = getattr(settings, 'HUNTER_API_KEY', '') or None
+        if hunter_key:
+            try:
+                from scraper.hunter import find_email as hunter_find
+                result = hunter_find(lead.first_name, lead.last_name, domain, hunter_key)
+                if result and result.get('email'):
+                    email = result['email']
+                    method = "hunter-io"
+            except Exception as exc:
+                logger.warning("enrich_lead_email_task hunter error: %s", exc)
+
+    # --- Step 3: Pattern inference (always runs as last fallback) ---
+    if not email:
+        try:
+            from scraper.hunter import infer_email
+            email = infer_email(lead.first_name, lead.last_name, domain, api_key=None)
+            if email:
+                method = "pattern-inference"
+        except Exception as exc:
+            logger.warning("enrich_lead_email_task inference error: %s", exc)
+
+    if not email:
+        return "Could not find or infer email"
+
+    # Prevent collision with an existing lead
+    if Lead.objects.filter(email=email).exclude(id=lead.id).exists():
+        logger.info("enrich_lead_email: %s already belongs to another lead", email)
+        return f"Email {email} already exists on another lead"
+
+    lead.email = email
+    lead.save(update_fields=['email'])
+    log_activity(lead, 'email_enriched', f"Email found via {method}: {email}")
+    logger.info("TASK enrich_lead_email DONE lead=%s email=%s method=%s", lead_id, email, method)
+
+    # If score is already above threshold and campaign is active, queue draft now
+    campaign = lead.campaign
+    if (lead.lead_score and lead.lead_score >= settings.LEAD_SCORE_THRESHOLD
+            and campaign and campaign.status == 'active'
+            and campaign.outreach_channel != 'linkedin'):
+        generate_draft_task.delay(str(lead.id))
+
+    return f"Email enriched via {method}: {email}"
+
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
 def score_lead_task(self, lead_id: str):

@@ -174,3 +174,99 @@ All findings from the Full-System Independent Audit were fixed in one sprint. Ev
 ### Operational note (2026-06-11)
 - Celery workers do NOT hot-reload code the way Django's `runserver` does, even with the `./backend:/app` volume mount. After changing `crm/tasks.py` (or any task module), you must `docker compose restart celery_worker celery_beat playwright_worker` or new/renamed tasks (e.g., `trigger_scheduled_scrapes_task`) will not be registered and beat will fire into the void. Verified by checking the worker boot log lists all tasks after restart.
 - GreenMail's REST API in the current `greenmail/standalone:latest` image has no `/api/mail` endpoint; per-user messages live at `GET /api/user/{login}/messages` and full cleanup is `POST /api/service/reset`. `test_e2e_email.py` uses these now.
+
+## Scraping Engine Overhaul & Email Enrichment Sprint (2026-06-12)
+
+### Problem identified
+After the first full scrape run, 93 leads were found but almost all were LinkedIn-only profiles with no email address. The Approval Queue was empty because `generate_draft_task` returns early if `not lead.email`. The pipeline was structurally complete but couldn't actually deliver outreach because it had no email addresses to send to.
+
+### Root causes
+1. **Serper 400 errors** — `site:` operator and `num > 10` are blocked on the free Serper tier. All queries were failing silently, returning zero search results.
+2. **BFS was shallow** — the old scraper guessed 5 paths then stopped. Staff pages are often at `/egitmenlerimiz`, `/ekibimiz` etc. which were not always being found.
+3. **Non-person data saved as leads** — "Teacher Workshops", "Want Take", "Ialf Serpong" were being extracted as `{first_name, last_name}` pairs because `_name_from_text()` naively split any 2-word heading. The LLM then scored them 80-85 because the title was "Academic Director" — the LLM never saw the bogus name.
+4. **LinkedIn leads have no email** — LinkedIn hides email addresses behind a login wall; AdsPower enrichment (which reads LinkedIn contact info via a real browser) wasn't running.
+5. **No email enrichment layer** — no mechanism existed to find emails for named-but-email-less leads.
+
+### Fixes implemented
+
+#### `backend/scraper/static.py` — Full BFS crawler
+- Rewrote `scrape_website` to use BFS via `_crawl_site()` — visits ALL internally linked pages up to `MAX_CRAWL_PAGES`.
+- `MAX_CRAWL_PAGES` increased 40 → 80 for deeper coverage.
+- Priority queue ensures team/contact/staff pages are visited before generic pages.
+- Pre-seeds 30 guessed Turkish/English staff paths into the BFS so they're always attempted even if not linked from nav.
+
+#### `backend/scraper/extractor.py` — Richer contact extraction
+- Added `_NON_PERSON_WORDS` frozenset (~45 words). `_name_from_text()` now rejects headings containing these words — eliminates "Teacher Workshops", "Want Take", "Ialf Serpong" style false positives at the source.
+- Added raw HTML LinkedIn URL regex scan (step 5 in `extract_contacts`) — catches LinkedIn profile URLs in JavaScript, data-attributes, or plain text that aren't inside `<a>` tags.
+- Added `_parse_staff_table()` — extracts staff from `<table>` elements with header column detection (Name / Title / Email columns). Handles tables with and without explicit headers.
+- Added `_parse_staff_list()` — extracts staff from `<ul>/<ol>` elements whose CSS class/id matches team/staff/people hints.
+- Both functions wired as steps 2b and 2c in `extract_contacts()`.
+
+#### `backend/ai_engine/lead_profiler.py` — Name-aware LLM scoring
+- Added `lead_name` parameter to `score_lead()`.
+- LLM prompt now instructs: if the name doesn't look like a real human name → score = 0, persona = "Non-Person / Bad Data".
+- `score_lead_task` passes `lead_name` from the DB lead.
+
+#### `backend/crm/tasks.py` — Lead quality filters
+- Fixed `_search_discovered_contacts`: inaccessible non-LinkedIn pages no longer saved as leads (only genuine `linkedin.com/in/` URLs kept from inaccessible pages).
+- For accessible pages: only save a profile-URL-only lead when at least a first or last name was successfully parsed.
+
+#### `backend/scraper/hunter.py` — NEW email enrichment module
+- `find_email()` — Hunter.io email-finder API (direct name + domain lookup).
+- `domain_search()` — Hunter.io domain-search to index all known emails at a domain.
+- `detect_email_pattern()` — analyses known emails to infer the naming convention (first.last, flast, firstl, first, last).
+- `infer_email()` — full pipeline: Hunter.io direct lookup → pattern detection via domain-search → fallback `firstname.lastname@domain`.
+- Gracefully handles missing API key (pattern-only mode with no HTTP calls to Hunter).
+
+#### `backend/crm/tasks.py` — `enrich_lead_email_task` (NEW)
+- New Celery task (default queue) automatically queued for every new lead that has a name + company domain but no email.
+- Also queued when an existing lead gains a name through BFS enrichment.
+- When email is found: updates `lead.email`, logs `email_enriched` activity, and queues `generate_draft_task` if score ≥ threshold + campaign active.
+- This closes the loop: BFS finds staff names → enrichment finds emails → LLM drafts outreach → appears in Approval Queue.
+
+#### `backend/core/settings.py` / `.env`
+- New `HUNTER_API_KEY` setting (env-overridable, empty = pattern-only mode).
+- New `EMAIL_ENRICHMENT_ENABLED` setting (default true).
+- `SEARCH_DISCOVERY_RESULT_LIMIT` was already set to 10.
+
+#### Frontend — Campaign edit feature
+- `EditCampaignModal` added to campaign detail page: edits Target Persona, Target Sector, Target Country, Value Proposition via PATCH API.
+- Pencil icon in header + clickable info cards.
+
+#### Frontend / Backend — "Mail Okumayı Simüle Et" button
+- `POST /api/crm/email-accounts/poll_now/` — triggers `poll_all_inboxes_task` immediately (no waiting for 5-min beat cycle).
+- Indigo "📨 Mail Okumayı Simüle Et" button on campaign detail page (active campaigns).
+
+### Architecture insight: the email enrichment loop
+
+```
+BFS crawl finds staff (name + title, no email)
+    ↓  (new lead saved)
+enrich_lead_email_task (Celery, countdown 15s)
+    ↓  (Hunter.io or firstname.lastname@domain)
+lead.email set
+    ↓  (if score ≥ 70 and campaign active)
+generate_draft_task → ApprovalQueue
+    ↓  (operator approves)
+dispatch_emails_task → SMTP send
+    ↓  (5 min later)
+poll_all_inboxes_task → reply matched → classify_reply_task
+    ↓  (positive reply)
+send_notification_webhook → n8n → Slack/Discord alert
+```
+
+### Lesson: always restart Celery workers after task changes
+Adding `enrich_lead_email_task` or any new `@shared_task` requires:
+```
+docker compose restart celery_worker celery_beat
+```
+Without restart the new task won't be registered and `.delay()` calls go nowhere.
+
+### Hunter.io setup (to fully unlock email enrichment)
+1. Register free at https://hunter.io
+2. Copy API key from dashboard
+3. Add `HUNTER_API_KEY=<key>` to `.env`
+4. Restart workers
+Free tier gives 25 email-finder calls/month. For production, upgrade to Starter (500/month) or Growth (2500/month).
+
+Without a key, the system falls back to `firstname.lastname@domain` pattern inference — this works for most corporate domains but produces unverified addresses (some will bounce). The bounce handler (`classify_reply_task`) auto-suppresses bounced leads, so undeliverable guesses self-clean.
