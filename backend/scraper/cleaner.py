@@ -14,6 +14,8 @@ GENERIC_EMAIL_PREFIXES = {
     'bilgi', 'iletisim', 'destek', 'kurumsal', 'satis', 'kayit',
     'ik', 'ikbasvuru', 'basvuru', 'musteri', 'merhaba',
     'sube', 'şube', 'branch', 'branches', 'campus',
+    # Placeholder/forwarding service emails
+    'you', 'example', 'test', 'placeholder',
 }
 
 class DataCleaner:

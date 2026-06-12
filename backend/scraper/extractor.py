@@ -28,6 +28,7 @@ _ASSET_SUFFIXES = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg',
 _JUNK_LOCALPARTS = {
     'example', 'test', 'youremail', 'your-email', 'email', 'name',
     'username', 'user', 'demo', 'sample', 'firstname', 'lastname', 'someone',
+    'you', 'hello', 'hi', 'hey', 'me', 'placeholder',
 }
 
 _ROLE_LOCALPART_WORDS = {
@@ -230,8 +231,13 @@ def _parse_schema_persons(soup: BeautifulSoup) -> List[Dict[str, Any]]:
     return results
 
 
-def _parse_staff_cards(soup: BeautifulSoup) -> List[Dict[str, Any]]:
-    """Find staff/team card containers and extract name+title+email from each."""
+def _parse_staff_cards(soup: BeautifulSoup, source_url: str = '') -> List[Dict[str, Any]]:
+    """Find staff/team card containers and extract name+title+email from each.
+
+    Cards with a name+title but no email or LinkedIn are still returned — the
+    source_url is stored as profile_url so the lead can be identified and later
+    enriched via LinkedIn search or AdsPower.
+    """
     results = []
 
     def _looks_like_card(tag: Tag) -> bool:
@@ -247,8 +253,6 @@ def _parse_staff_cards(soup: BeautifulSoup) -> List[Dict[str, Any]]:
             filtered.append(card)
 
     for card in filtered:
-        # Find contact methods inside card. Some staff cards expose only a
-        # LinkedIn profile, which is still a human lead for LinkedIn outreach.
         email = None
         a_mail = card.find('a', href=re.compile(r'^mailto:', re.I))
         if a_mail:
@@ -259,14 +263,12 @@ def _parse_staff_cards(soup: BeautifulSoup) -> List[Dict[str, Any]]:
             if matches:
                 email = matches[0].lower()
         if email and _is_junk_email(email):
-            continue
+            email = None
 
         linkedin_url = None
         a_linkedin = card.find('a', href=re.compile(r'linkedin\.com/in/', re.I))
         if a_linkedin:
             linkedin_url = a_linkedin['href'].strip()
-        if not email and not linkedin_url:
-            continue
 
         # Name: prefer heading tags inside the card
         name_text = ''
@@ -275,6 +277,13 @@ def _parse_staff_cards(soup: BeautifulSoup) -> List[Dict[str, Any]]:
             if h:
                 name_text = h.get_text(strip=True)
                 break
+
+        names = _name_from_text(name_text)
+        has_name = bool(names['first_name'] or names['last_name'])
+
+        # Skip cards with no contact method AND no extractable name — nothing to save
+        if not email and not linkedin_url and not has_name:
+            continue
 
         # Title: look for a <p>, <span>, or <div> after the name heading that
         # contains a title keyword, or has a role-suggesting class
@@ -291,10 +300,16 @@ def _parse_staff_cards(soup: BeautifulSoup) -> List[Dict[str, Any]]:
                 title_text = text
                 break
 
-        names = _name_from_text(name_text)
+        # For name+title-only cards (no email, no LinkedIn), set profile_url to
+        # the source page so the lead has at least one contact anchor.
+        profile_url = None
+        if not email and not linkedin_url:
+            profile_url = source_url or None
+
         results.append({
             'email': email,
             'linkedin_url': linkedin_url,
+            'profile_url': profile_url,
             'first_name': names['first_name'],
             'last_name': names['last_name'],
             'title': title_text,
@@ -307,10 +322,11 @@ def _parse_staff_cards(soup: BeautifulSoup) -> List[Dict[str, Any]]:
 # Public API
 # ---------------------------------------------------------------------------
 
-def extract_contacts(soup: BeautifulSoup, raw_html: str) -> List[Dict[str, Any]]:
+def extract_contacts(soup: BeautifulSoup, raw_html: str, source_url: str = '') -> List[Dict[str, Any]]:
     """Return a deduped list of contact dicts.
 
-    A contact may have an email, a LinkedIn profile URL, or both.
+    source_url — the URL being scraped; used as profile_url fallback for staff
+    cards that have a name+title but no email or LinkedIn link.
 
     Priority (highest → lowest):
       1. schema.org Person blocks
@@ -320,20 +336,31 @@ def extract_contacts(soup: BeautifulSoup, raw_html: str) -> List[Dict[str, Any]]
     """
     by_key: Dict[str, Dict[str, Any]] = {}
 
-    def _add(email: str = None, first=None, last=None, title=None, linkedin_url: str = None):
+    def _add(email=None, first=None, last=None, title=None,
+             linkedin_url=None, profile_url=None):
         email = email.strip().strip('.').lower() if email else None
         linkedin_url = linkedin_url.strip() if linkedin_url else None
         if email and _is_junk_email(email):
             return
-        if not email and not linkedin_url:
-            return
-        key = f"email:{email}" if email else f"linkedin:{linkedin_url.lower().rstrip('/')}"
+
+        # Determine dedup key
+        if email:
+            key = f"email:{email}"
+        elif linkedin_url:
+            key = f"linkedin:{linkedin_url.lower().rstrip('/')}"
+        elif profile_url and (first or last):
+            # Name-only lead anchored by source page — key by name to keep individuals separate
+            key = f"name:{(first or '')}_{(last or '')}@{profile_url.rstrip('/')}"
+        else:
+            return  # no contact method at all — skip
+
         existing = by_key.get(key)
         if existing is None:
             guess = guess_name_from_email(email) if email else {'first_name': None, 'last_name': None}
             by_key[key] = {
                 'email': email,
                 'linkedin_url': linkedin_url,
+                'profile_url': profile_url,
                 'first_name': first or guess['first_name'],
                 'last_name': last or guess['last_name'],
                 'title': title,
@@ -341,20 +368,24 @@ def extract_contacts(soup: BeautifulSoup, raw_html: str) -> List[Dict[str, Any]]
         else:
             if linkedin_url and not existing.get('linkedin_url'):
                 existing['linkedin_url'] = linkedin_url
-            if first and not existing['first_name']:
+            if profile_url and not existing.get('profile_url'):
+                existing['profile_url'] = profile_url
+            if first and not existing.get('first_name'):
                 existing['first_name'] = first
-            if last and not existing['last_name']:
+            if last and not existing.get('last_name'):
                 existing['last_name'] = last
-            if title and not existing['title']:
+            if title and not existing.get('title'):
                 existing['title'] = title
 
     # 1) schema.org structured data — most reliable
     for p in _parse_schema_persons(soup):
-        _add(p.get('email'), p.get('first_name'), p.get('last_name'), p.get('title'), p.get('linkedin_url'))
+        _add(p.get('email'), p.get('first_name'), p.get('last_name'),
+             p.get('title'), p.get('linkedin_url'))
 
-    # 2) Staff/team card heuristic
-    for p in _parse_staff_cards(soup):
-        _add(p.get('email'), p.get('first_name'), p.get('last_name'), p.get('title'), p.get('linkedin_url'))
+    # 2) Staff/team card heuristic — now returns name-only cards with profile_url set
+    for p in _parse_staff_cards(soup, source_url=source_url):
+        _add(p.get('email'), p.get('first_name'), p.get('last_name'),
+             p.get('title'), p.get('linkedin_url'), p.get('profile_url'))
 
     # 3) mailto: links — good quality, often carry name
     for a in soup.find_all('a', href=True):

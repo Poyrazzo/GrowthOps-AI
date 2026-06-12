@@ -65,10 +65,13 @@ def _search_discovered_contacts(page_company: Company, page_domain: str, campaig
 
         html = scraper.fetch_html(profile_url)
         if not html:
-            if parsed_person.get('first_name') or parsed_person.get('last_name') or parsed_person.get('title'):
+            # For inaccessible pages, only save genuine LinkedIn /in/ profiles —
+            # we can't verify other pages so we skip them to avoid saving page
+            # titles (e.g. "İngilizce İlanları") as fake person names.
+            if 'linkedin.com/in/' in profile_url:
                 discovered.append({
                     'email': None,
-                    'linkedin_url': None,
+                    'linkedin_url': profile_url,
                     'profile_url': profile_url,
                     'first_name': parsed_person.get('first_name'),
                     'last_name': parsed_person.get('last_name'),
@@ -82,7 +85,8 @@ def _search_discovered_contacts(page_company: Company, page_domain: str, campaig
             for contact in contacts:
                 contact['profile_url'] = contact.get('profile_url') or profile_url
                 discovered.append(contact)
-        else:
+        elif parsed_person.get('first_name') or parsed_person.get('last_name'):
+            # Only save a profile URL lead if we could at least parse a name from the result
             discovered.append({
                 'email': None,
                 'linkedin_url': None,
@@ -418,15 +422,15 @@ def enrich_linkedin_lead_task(self, lead_id: str):
 
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=2, queue='playwright')
-def run_linkedin_source_scrape(self, source_id: str, campaign_id: str = None):
-    """Scrape a LinkedIn people-search source via AdsPower.
+def run_linkedin_source_scrape(self, source_id: str = None, campaign_id: str = None, keywords: str = None):
+    """Search LinkedIn People for a query and save results as leads.
 
-    The LeadSource.url should be a LinkedIn search URL:
-      https://www.linkedin.com/search/results/people/?keywords=english+trainer+istanbul
-    or just a keyword string that will be used as the search query.
+    Called two ways:
+      1. From beat task — keywords derived from campaign.target_persona, no source_id.
+      2. From a manual LinkedIn source in DB — source_id provided, keywords extracted from source.url.
 
-    Results are saved as leads with linkedin_url set. The enrich_linkedin_lead_task
-    is then queued for each new lead if LINKEDIN_ENRICHMENT_ENABLED=true.
+    No LinkedIn entries in LeadSource are required — queries are auto-generated from
+    campaign.target_persona when LINKEDIN_ENRICHMENT_ENABLED=true.
     """
     if not getattr(settings, 'LINKEDIN_ENRICHMENT_ENABLED', False):
         return {'skipped': 'LINKEDIN_ENRICHMENT_ENABLED is false'}
@@ -436,16 +440,20 @@ def run_linkedin_source_scrape(self, source_id: str, campaign_id: str = None):
     if not adspower_profile_id:
         return {'skipped': 'ADSPOWER_PROFILE_ID not set'}
 
-    source = LeadSource.objects.filter(id=source_id).first()
+    source = LeadSource.objects.filter(id=source_id).first() if source_id else None
     campaign = Campaign.objects.filter(id=campaign_id).first() if campaign_id else None
 
-    url = source.url if source else ''
-    # If URL is a linkedin search URL, extract keywords; otherwise treat url as keyword string
-    if 'linkedin.com/search' in url:
-        parsed = urllib.parse.urlparse(url)
-        keywords = urllib.parse.parse_qs(parsed.query).get('keywords', [url])[0]
-    else:
-        keywords = url
+    # Resolve keywords: explicit kwarg > source URL > empty
+    if not keywords and source:
+        url = source.url or ''
+        if 'linkedin.com/search' in url:
+            parsed = urllib.parse.urlparse(url)
+            keywords = urllib.parse.parse_qs(parsed.query).get('keywords', [url])[0]
+        else:
+            keywords = url
+
+    if not keywords:
+        return {'skipped': 'no keywords provided'}
 
     logger.info("TASK run_linkedin_source_scrape START keywords=%r campaign=%s", keywords, campaign_id)
 
@@ -537,11 +545,40 @@ def run_linkedin_source_scrape(self, source_id: str, campaign_id: str = None):
     return {'success': True, 'saved': saved_count, 'found': len(people)}
 
 
+def _linkedin_queries_for_campaign(campaign) -> list:
+    """Auto-generate LinkedIn People search query strings from campaign.target_persona.
+
+    No need to add LinkedIn sources manually — the system derives what to search
+    for from the campaign's target_persona field.
+    """
+    persona = getattr(campaign, 'target_persona', '') or ''
+    # Split comma-separated personas and build one query per persona
+    personas = [p.strip() for p in persona.split(',') if p.strip()]
+    if not personas:
+        personas = ['english teacher trainer istanbul']
+
+    queries = []
+    geo_suffixes = ['istanbul', 'turkey', 'turkiye']
+    for p in personas:
+        # Base persona query
+        queries.append(p)
+        # Same persona + primary geo
+        queries.append(f"{p} {geo_suffixes[0]}")
+    # Add a few sector-specific catch-alls that work for any English-ed campaign
+    queries.extend([
+        'dil okulu muduru istanbul',
+        'ingilizce dil kursu kurucu',
+        'corporate english training manager turkey',
+    ])
+    return queries
+
+
 @shared_task
 def trigger_scheduled_scrapes_task():
     """Beat task: walks active campaigns and enqueues scrapes for their due LeadSources."""
     today = timezone.now().date()
     refresh_cutoff = timezone.now() - timezone.timedelta(hours=settings.SCRAPE_REFRESH_HOURS)
+    linkedin_enabled = getattr(settings, 'LINKEDIN_ENRICHMENT_ENABLED', False)
 
     campaigns = Campaign.objects.filter(status='active')
     triggered = 0
@@ -554,36 +591,34 @@ def trigger_scheduled_scrapes_task():
             logger.debug("Campaign %s ended, skipping", campaign.name)
             continue
 
-        all_sources = campaign.sources.order_by('-priority_score')
-        logger.info("Campaign %s has %d sources total", campaign.name, all_sources.count())
+        # ── Regular web sources (static / directory / dynamic) ──────────────
+        all_sources = campaign.sources.exclude(source_type='linkedin').order_by('-priority_score')
+        logger.info("Campaign %s has %d web sources", campaign.name, all_sources.count())
 
         for source in all_sources:
             if source.last_scraped_at and source.last_scraped_at > refresh_cutoff:
                 logger.debug("Source %s recently scraped, skipping", source.url)
                 continue
-            # Stamp immediately so overlapping beat runs don't double-trigger
             source.last_scraped_at = timezone.now()
             source.save(update_fields=['last_scraped_at'])
 
-            if source.source_type == 'linkedin':
-                if getattr(settings, 'LINKEDIN_ENRICHMENT_ENABLED', False):
-                    run_linkedin_source_scrape.apply_async(
-                        args=[str(source.id)],
-                        kwargs={'campaign_id': str(campaign.id)},
-                        queue='playwright',
-                    )
-                    triggered += 1
-                    logger.info("QUEUED linkedin scrape for %s (campaign: %s)", source.url, campaign.name)
-                else:
-                    logger.debug("Skipping LinkedIn source %s — LINKEDIN_ENRICHMENT_ENABLED=false", source.url)
-            elif source.source_type == 'dynamic':
+            if source.source_type == 'dynamic':
                 run_dynamic_scrape.delay(source.url, campaign_id=str(campaign.id), source_id=str(source.id))
-                triggered += 1
-                logger.info("QUEUED dynamic scrape for %s (campaign: %s)", source.url, campaign.name)
             else:
                 run_static_scrape.delay(source.url, campaign_id=str(campaign.id), source_id=str(source.id))
+            triggered += 1
+            logger.info("QUEUED scrape for %s (campaign: %s)", source.url, campaign.name)
+
+        # ── LinkedIn auto-search from campaign.target_persona ────────────────
+        # No LinkedIn sources needed in DB — queries are derived automatically.
+        if linkedin_enabled:
+            for query in _linkedin_queries_for_campaign(campaign):
+                run_linkedin_source_scrape.apply_async(
+                    kwargs={'source_id': None, 'campaign_id': str(campaign.id), 'keywords': query},
+                    queue='playwright',
+                )
                 triggered += 1
-                logger.info("QUEUED static scrape for %s (campaign: %s)", source.url, campaign.name)
+                logger.info("QUEUED linkedin search %r (campaign: %s)", query, campaign.name)
 
     logger.info("BEAT trigger_scheduled_scrapes_task: triggered %d scrapes", triggered)
     return f"Triggered {triggered} scrapes"

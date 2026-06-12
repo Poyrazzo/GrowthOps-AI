@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
-import { CheckCircle, Clock, AlertCircle, Activity, Target, Mail, Eye } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle, Clock, AlertCircle, Activity, Target, Mail, Eye, Pencil, X, Loader2 } from "lucide-react";
 
 const statusColors: { [key: string]: { bg: string; text: string; icon: any } } = {
   draft: { bg: "bg-yellow-500/10", text: "text-yellow-400", icon: Clock },
@@ -19,6 +19,143 @@ const PHASES = [
   { id: 'tracking', label: 'Tracking', description: 'Monitoring replies' },
 ];
 
+function EditCampaignModal({
+  campaign,
+  onClose,
+  onSave,
+}: {
+  campaign: any;
+  onClose: () => void;
+  onSave: (updated: any) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    target_persona: campaign.target_persona || "",
+    target_sector: campaign.target_sector || "",
+    target_country: campaign.target_country || "",
+    value_proposition: campaign.value_proposition || "",
+  });
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/campaigns/${campaign.id}/`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        }
+      );
+      if (res.ok) {
+        const updated = await res.json();
+        onSave(updated);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-card/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-6 z-50"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-foreground">Edit Campaign</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/5 rounded-full transition-colors text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSave} className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-muted-foreground">Target Persona</label>
+            <textarea
+              rows={3}
+              value={form.target_persona}
+              onChange={(e) => setForm({ ...form, target_persona: e.target.value })}
+              className="w-full bg-black/20 border border-white/10 rounded-lg p-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              placeholder="e.g. English Language Teachers, HR Managers, Training Directors"
+            />
+            <p className="text-xs text-muted-foreground">
+              Separate multiple personas with commas. The scraper and LinkedIn search use this to find the right people.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-muted-foreground">Target Sector</label>
+              <input
+                type="text"
+                value={form.target_sector}
+                onChange={(e) => setForm({ ...form, target_sector: e.target.value })}
+                className="w-full bg-black/20 border border-white/10 rounded-lg p-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="e.g. Education, Language Schools"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-muted-foreground">Target Country</label>
+              <input
+                type="text"
+                value={form.target_country}
+                onChange={(e) => setForm({ ...form, target_country: e.target.value })}
+                className="w-full bg-black/20 border border-white/10 rounded-lg p-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="e.g. Turkey"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-muted-foreground">Value Proposition</label>
+            <textarea
+              rows={3}
+              value={form.value_proposition}
+              onChange={(e) => setForm({ ...form, value_proposition: e.target.value })}
+              className="w-full bg-black/20 border border-white/10 rounded-lg p-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              placeholder="We help English teachers improve their students' speaking..."
+            />
+          </div>
+
+          <div className="pt-2 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 export default function CampaignDetail() {
   const params = useParams();
   const campaignId = params.id as string;
@@ -27,6 +164,7 @@ export default function CampaignDetail() {
   const [loading, setLoading] = useState(true);
   const [currentPhase, setCurrentPhase] = useState<string>('scraping');
   const [activities, setActivities] = useState<any[]>([]);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     const fetchCampaignData = async () => {
@@ -57,7 +195,6 @@ export default function CampaignDetail() {
           repliedLeads: repliedCount,
         });
 
-        // Derive the dominant pipeline phase from real state
         if (repliedCount > 0 || sentCount > 0) setCurrentPhase('tracking');
         else if (pendingCount > 0) setCurrentPhase('sending');
         else if (draftCount > 0) setCurrentPhase('approvals');
@@ -80,7 +217,6 @@ export default function CampaignDetail() {
     };
 
     fetchCampaignData();
-    // Live-ish status page: refresh every 10s
     const interval = setInterval(fetchCampaignData, 10000);
     return () => clearInterval(interval);
   }, [campaignId]);
@@ -98,6 +234,17 @@ export default function CampaignDetail() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
+      {editOpen && (
+        <EditCampaignModal
+          campaign={campaign}
+          onClose={() => setEditOpen(false)}
+          onSave={(updated) => {
+            setCampaign(updated);
+            setEditOpen(false);
+          }}
+        />
+      )}
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -105,24 +252,47 @@ export default function CampaignDetail() {
         className="space-y-4"
       >
         <div className="flex items-start justify-between">
-          <div>
+          <div className="flex-1">
             <h1 className="text-4xl font-bold text-white mb-2">{campaign.name}</h1>
             <p className="text-muted-foreground">{campaign.value_proposition}</p>
           </div>
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${statusInfo.bg}`}>
-            <StatusIcon className={`w-4 h-4 ${statusInfo.text}`} />
-            <span className={`font-semibold capitalize ${statusInfo.text}`}>{campaign.status}</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setEditOpen(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm text-muted-foreground hover:text-white transition-colors"
+            >
+              <Pencil className="w-4 h-4" />
+              Edit
+            </button>
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${statusInfo.bg}`}>
+              <StatusIcon className={`w-4 h-4 ${statusInfo.text}`} />
+              <span className={`font-semibold capitalize ${statusInfo.text}`}>{campaign.status}</span>
+            </div>
           </div>
         </div>
 
         {/* Campaign Info Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Target Persona</p>
-            <p className="text-lg font-semibold text-white mt-1">{campaign.target_persona}</p>
+          <div
+            className="bg-card/40 backdrop-blur-md border border-white/5 rounded-lg p-4 cursor-pointer hover:border-white/20 transition-colors group"
+            onClick={() => setEditOpen(true)}
+            title="Click to edit"
+          >
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
+              Target Persona
+              <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+            </p>
+            <p className="text-sm font-semibold text-white mt-1 line-clamp-3">{campaign.target_persona}</p>
           </div>
-          <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Sector</p>
+          <div
+            className="bg-card/40 backdrop-blur-md border border-white/5 rounded-lg p-4 cursor-pointer hover:border-white/20 transition-colors group"
+            onClick={() => setEditOpen(true)}
+            title="Click to edit"
+          >
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
+              Sector
+              <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+            </p>
             <p className="text-lg font-semibold text-white mt-1">{campaign.target_sector}</p>
           </div>
           <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-lg p-4">
@@ -360,14 +530,11 @@ export default function CampaignDetail() {
                   try {
                     const response = await fetch(
                       `${process.env.NEXT_PUBLIC_API_URL}/campaigns/${campaignId}/restart/`,
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                      }
+                      { method: "POST", headers: { "Content-Type": "application/json" } }
                     );
                     if (response.ok) {
                       setCampaign({ ...campaign, status: "active" });
-                      alert("Campaign restarted! Leads reset and drafting re-triggered.");
+                      alert("Campaign restarted!");
                     }
                   } catch (error) {
                     console.error("Error restarting campaign:", error);
@@ -388,14 +555,11 @@ export default function CampaignDetail() {
                 try {
                   const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL}/campaigns/${campaignId}/restart/`,
-                    {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                    }
+                    { method: "POST", headers: { "Content-Type": "application/json" } }
                   );
                   if (response.ok) {
                     setCampaign({ ...campaign, status: "active" });
-                    alert("Campaign restarted! Leads reset and drafting re-triggered.");
+                    alert("Campaign restarted!");
                   }
                 } catch (error) {
                   console.error("Error restarting campaign:", error);

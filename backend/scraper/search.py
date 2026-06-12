@@ -52,9 +52,17 @@ def _company_terms(company_name: Optional[str], company_domain: Optional[str]) -
 
 
 def _persona_terms(target_persona: Optional[str]) -> str:
+    """Return a short, Serper-safe keyword from the target persona.
+
+    The full persona may be "English Language Teachers, HR Managers, Training Directors"
+    which Serper rejects when quoted. We take only the first persona and shorten it.
+    """
     if target_persona:
-        return f'"{target_persona}"'
-    return '("HR" OR "training" OR "teacher" OR "instructor" OR "director" OR "manager")'
+        # Take the first persona before any comma, then max 3 words
+        first = target_persona.split(',')[0].strip()
+        words = first.split()[:3]
+        return ' '.join(words)
+    return 'HR manager teacher instructor'
 
 
 def _clean_result_url(url: str) -> Optional[str]:
@@ -125,7 +133,7 @@ def _serper_search(query: str, limit: int) -> List[Dict[str, str]]:
         response = requests.post(
             'https://google.serper.dev/search',
             headers={'X-API-KEY': api_key, 'Content-Type': 'application/json'},
-            json={'q': query, 'num': limit},
+            json={'q': query, 'num': min(limit, 10)},
             timeout=12,
         )
         response.raise_for_status()
@@ -241,15 +249,9 @@ def build_person_search_queries(
     queries: List[str] = []
     for company in _company_terms(company_name, company_domain):
         queries.extend([
-            f'{company} {persona} email',
-            f'site:linkedin.com/in {company} {persona}',
-            f'site:kariyer.net {company} {persona}',
-            f'site:youthall.com {company} {persona}',
-            f'site:researchgate.net/profile {company} {persona}',
-            f'site:academia.edu {company} {persona}',
-            f'site:orcid.org {company} {persona}',
-            f'site:edu.tr {company} ("akademik personel" OR "öğretim görevlisi" OR "English instructor")',
-            f'site:edu.tr {company} ("faculty" OR "staff" OR "academic staff" OR "instructor")',
+            f'{company} {persona} linkedin.com/in',
+            f'{company} {persona} email iletisim',
+            f'{company} kariyer.net',
         ])
     return queries
 

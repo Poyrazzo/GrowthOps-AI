@@ -84,19 +84,26 @@ class DynamicScraper:
             for c in contacts:
                 email = c.get('email')
                 linkedin_url = c.get('linkedin_url')
-                if not email and not linkedin_url:
+                profile_url = c.get('profile_url')
+                if not email and not linkedin_url and not profile_url:
                     continue
-                key = f"email:{email}" if email else f"linkedin:{linkedin_url.lower().rstrip('/')}"
+                if email:
+                    key = f"email:{email}"
+                elif linkedin_url:
+                    key = f"linkedin:{linkedin_url.lower().rstrip('/')}"
+                else:
+                    key = f"profile:{(c.get('first_name') or '')}_{(c.get('last_name') or '')}@{profile_url.rstrip('/')}"
                 cur = contacts_by_key.get(key)
                 if cur is None:
-                    contacts_by_key[key] = c
+                    contacts_by_key[key] = dict(c)
                 else:
-                    cur['linkedin_url'] = cur.get('linkedin_url') or c.get('linkedin_url')
+                    cur['linkedin_url'] = cur.get('linkedin_url') or linkedin_url
+                    cur['profile_url'] = cur.get('profile_url') or profile_url
                     cur['first_name'] = cur.get('first_name') or c.get('first_name')
                     cur['last_name'] = cur.get('last_name') or c.get('last_name')
                     cur['title'] = cur.get('title') or c.get('title')
 
-        _merge(extract_contacts(soup, html))
+        _merge(extract_contacts(soup, html, source_url=url))
 
         # Render contact/about sub-pages too (JS sites often hide emails there).
         candidate_links = []
@@ -113,7 +120,7 @@ class DynamicScraper:
             if not sub_html:
                 continue
             sub_soup = BeautifulSoup(sub_html, 'html.parser')
-            _merge(extract_contacts(sub_soup, sub_html))
+            _merge(extract_contacts(sub_soup, sub_html, source_url=link))
             for p in extract_social_links(sub_soup).get('linkedin_profiles', []):
                 socials['linkedin_profiles'].append(p)
 
