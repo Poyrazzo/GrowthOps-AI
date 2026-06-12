@@ -201,9 +201,16 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
                 and (lead.get('first_name') or lead.get('last_name') or lead.get('title'))
             )
 
+        def _looks_like_named_linkedin(lead):
+            # A LinkedIn URL alone is only useful if we have at least a name to go with it
+            return bool(
+                lead.get('linkedin_url')
+                and (lead.get('first_name') or lead.get('last_name') or lead.get('email'))
+            )
+
         cleaned_leads = [
             lead for lead in cleaned_leads
-            if lead.get('linkedin_url')
+            if _looks_like_named_linkedin(lead)
             or _looks_like_profile_human(lead)
             or (not lead.get('is_generic_email') and _looks_like_email_only_human(lead))
         ]

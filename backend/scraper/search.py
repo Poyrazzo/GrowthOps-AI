@@ -226,11 +226,15 @@ def search_web(query: str, limit: int = 10) -> List[Dict[str, str]]:
 
 
 def parse_person_from_search_result(result: Dict[str, str]) -> Dict[str, Optional[str]]:
+    from scraper.extractor import _normalize_token, _NON_PERSON_WORDS
     title = result.get('title') or ''
     primary = re.split(r'\s[-|–]\s', title, maxsplit=1)[0]
     primary = re.sub(r'\s+\|\s+(LinkedIn|Kariyer|Youthall|ResearchGate).*$',
                      '', primary, flags=re.I).strip()
     tokens = [t for t in re.split(r'\s+', primary) if t.replace('.', '').isalpha()]
+    # Reject if any token is a non-person word (job listing title, institution name, etc.)
+    if any(_normalize_token(t) in _NON_PERSON_WORDS for t in tokens):
+        return {'first_name': None, 'last_name': None, 'title': result.get('snippet') or None}
     first_name = tokens[0].title() if len(tokens) >= 2 else None
     last_name = tokens[-1].title() if len(tokens) >= 2 else None
     return {

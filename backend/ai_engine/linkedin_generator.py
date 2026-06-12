@@ -35,7 +35,9 @@ def generate_connection_request(lead_name: str, lead_title: str, company_name: s
         "campaign_vp": campaign_vp or "our services",
         "message_angle": message_angle or "General introduction"
     }, config=config)
-    return result.dict() if result else {}
+    if not result:
+        return {}
+    return result if isinstance(result, dict) else result.dict()
 
 def generate_dm_draft(lead_name: str, lead_title: str, company_name: str, campaign_vp: str, message_angle: str, lead_magnet: str = None) -> dict:
     """Drafts the follow-up DM sent manually after a connection is accepted (SRS 3.14)."""
@@ -67,4 +69,6 @@ def generate_dm_draft(lead_name: str, lead_title: str, company_name: str, campai
         "message_angle": message_angle or "General introduction",
         "lead_magnet": lead_magnet or "None"
     }, config=config)
-    return result.dict() if result else {}
+    if not result:
+        return {}
+    return result if isinstance(result, dict) else result.dict()

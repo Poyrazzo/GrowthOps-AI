@@ -28,4 +28,6 @@ def extract_company_info(domain: str, body_text: str) -> dict:
     config = {"callbacks": [handler]} if handler else {}
     
     result = chain.invoke({"domain": domain, "body_text": truncated_text}, config=config)
-    return result.dict() if result else {}
+    if not result:
+        return {}
+    return result if isinstance(result, dict) else result.dict()

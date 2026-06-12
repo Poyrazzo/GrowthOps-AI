@@ -70,7 +70,9 @@ def generate_email_draft(lead_name: str, lead_title: str, company_name: str, com
         "message_angle": message_angle or "General introduction",
         "lead_magnet": lead_magnet or "None"
     }, config=config)
-    return result.dict() if result else {}
+    if not result:
+        return {}
+    return result if isinstance(result, dict) else result.dict()
 
 def generate_followup_draft(lead_name: str, company_name: str, previous_emails: str, message_angle: str) -> dict:
     llm = get_llm()
@@ -100,7 +102,9 @@ def generate_followup_draft(lead_name: str, company_name: str, previous_emails: 
             "previous_emails": previous_emails,
             "message_angle": message_angle or "General follow-up"
         }, config=config)
-        return result.dict() if result else {}
+        if not result:
+            return {}
+        return result if isinstance(result, dict) else result.dict()
     except Exception as e:
         print(f"Failed to generate follow-up: {e}")
         return {}

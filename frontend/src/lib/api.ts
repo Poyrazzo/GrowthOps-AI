@@ -204,6 +204,11 @@ export async function createLeadSource(data: {
   return response.json();
 }
 
+export async function deleteSource(sourceId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/leadsources/${sourceId}/`, { method: "DELETE" });
+  if (!response.ok) throw new Error("Failed to delete source");
+}
+
 export async function triggerScrape(sourceId: string): Promise<{ detail: string; task_id: string }> {
   const response = await fetch(`${API_BASE_URL}/leadsources/${sourceId}/scrape/`, { method: "POST" });
   if (!response.ok) throw new Error("Failed to trigger scrape");

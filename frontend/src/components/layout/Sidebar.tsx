@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Megaphone, Users, LayoutList, CheckSquare, Settings, Menu, X, Rocket, Briefcase, Activity, Terminal } from "lucide-react";
+import { LayoutDashboard, Megaphone, Users, LayoutList, CheckSquare, Settings, Menu, X, Rocket, Briefcase, Activity, Terminal, MessageSquareReply } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ const menuItems = [
   { icon: Users, label: "Lead Database", href: "/leads" },
   { icon: LayoutList, label: "Sources", href: "/sources" },
   { icon: CheckSquare, label: "Approvals", href: "/approvals" },
+  { icon: MessageSquareReply, label: "Replies", href: "/replies" },
   { icon: Activity, label: "Activity Monitor", href: "/activity" },
   { icon: Briefcase, label: "Manual Tasks", href: "/tasks" },
   { icon: Terminal, label: "System Logs", href: "/logs" },

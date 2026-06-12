@@ -54,4 +54,6 @@ Classify the prospect's reply strictly into one of the allowed categories. Provi
         },
         config={"callbacks": callbacks}
     )
-    return result.dict() if result else {}
+    if not result:
+        return {}
+    return result if isinstance(result, dict) else result.dict()

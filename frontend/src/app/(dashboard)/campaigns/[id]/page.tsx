@@ -467,7 +467,7 @@ export default function CampaignDetail() {
               onClick={async () => {
                 try {
                   const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/email-accounts/dispatch_now/`,
+                    `${process.env.NEXT_PUBLIC_API_URL}/emailaccounts/dispatch_now/`,
                     { method: "POST" }
                   );
                   const data = await res.json();
@@ -484,7 +484,7 @@ export default function CampaignDetail() {
               onClick={async () => {
                 try {
                   const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/email-accounts/poll_now/`,
+                    `${process.env.NEXT_PUBLIC_API_URL}/emailaccounts/poll_now/`,
                     { method: "POST" }
                   );
                   const data = await res.json();

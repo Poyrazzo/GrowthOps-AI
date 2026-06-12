@@ -79,4 +79,6 @@ def score_lead(lead_title: str, company_vp: str, campaign_persona: str, availabl
         "campaign_persona": campaign_persona or "Any",
         "available_lead_magnets": magnets_text
     }, config=config)
-    return result.dict() if result else {}
+    if not result:
+        return {}
+    return result if isinstance(result, dict) else result.dict()
