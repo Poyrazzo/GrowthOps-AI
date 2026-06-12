@@ -9,3 +9,543 @@
 [2026-06-12 14:11:24] [INFO] [crm.tasks] TASK score_lead_task DONE lead=c04443f4-097a-4c6f-a61b-1d48f260453f score=70
 [2026-06-12 14:11:24] [INFO] [crm.tasks] TASK generate_draft_task START lead=c04443f4-097a-4c6f-a61b-1d48f260453f
 [2026-06-12 14:11:28] [INFO] [crm.tasks] TASK generate_draft_task DONE lead=c04443f4-097a-4c6f-a61b-1d48f260453f status=needs_review
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://sfl.bilkent.edu.tr/contact/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=c435f97d-d390-41b3-a223-3622fbf89e1e
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://sfl.bilkent.edu.tr/contact/
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://amerikankulturu.com.tr/iletisim/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=632512b9-2e4f-401d-a099-ffa9499ed2a2
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://amerikankulturu.com.tr/iletisim/
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.britishside.com/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=9b465588-4ce7-45aa-85c6-c058686cc66d
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://www.britishside.com/iletisim
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.wallstreetenglish.com.tr/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=1f78d158-160e-489f-986a-638304be7167
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://www.wallstreetenglish.com.tr/iletisim
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.kentingilizce.com/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=7cbb5392-8023-40a5-92ca-a7a7ba625655
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://www.kentingilizce.com/iletisim
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.sistemdil.com/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=2583900c-5fd3-4248-922f-056a257c680e
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://www.sistemdil.com/iletisim
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.englishcenter.com.tr/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6343f55c-3c5b-431e-8ed0-60fba8db4564
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://www.englishcenter.com.tr/iletisim
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.americanlife.com.tr/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=5c5431bd-b5ae-4599-8d9a-c5407e6a4517
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://www.americanlife.com.tr/iletisim
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.dilkurslari.org/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=48ef5afa-f313-490f-93a2-7b6757f0c057
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://www.dilkurslari.org/
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.kursrehberi.com/ingilizce-kurslari campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=03f3bd23-b05f-4a77-8931-25d38d46257a
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://www.kursrehberi.com/ingilizce-kurslari
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://ydyo.aydin.edu.tr/iletisim/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=2bcbba36-60c7-4f30-8357-3b209e58832f
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://ydyo.aydin.edu.tr/iletisim/
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://ingilizce.bogazici.edu.tr campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=a3366474-2e9b-49fa-a12b-8ccd27533b00
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://ingilizce.bogazici.edu.tr
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.armut.com/ingilizce-dersi campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=ebe280e5-0163-4cec-9ff2-9d62fd8ab3d4
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://www.armut.com/ingilizce-dersi
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.englishtime.com/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=5957b9ef-96f2-48c5-be8a-3af86d78b078
+[2026-06-12 14:17:20] [INFO] [scraper.static] StaticScraper starting: https://www.englishtime.com/iletisim
+[2026-06-12 14:17:20] [WARNING] [scraper.static] Error fetching https://sfl.bilkent.edu.tr/contact/: 404 Client Error: Not Found for url: https://sfl.bilkent.edu.tr/contact/
+[2026-06-12 14:17:20] [WARNING] [scraper.static] StaticScraper got no HTML for https://sfl.bilkent.edu.tr/contact/
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://sfl.bilkent.edu.tr/contact/
+[2026-06-12 14:17:20] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://sfl.bilkent.edu.tr/contact/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=c435f97d-d390-41b3-a223-3622fbf89e1e
+[2026-06-12 14:17:20] [INFO] [scraper.dynamic] DynamicScraper starting: https://sfl.bilkent.edu.tr/contact/
+[2026-06-12 14:17:21] [WARNING] [scraper.static] Error fetching https://www.englishcenter.com.tr/iletisim (SSL fallback failed): HTTPSConnectionPool(host='www.englishcenter.com.tr', port=443): Max retries exceeded with url: /iletisim (Caused by SSLError(SSLError(1, '[SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1016)')))
+[2026-06-12 14:17:21] [WARNING] [scraper.static] StaticScraper got no HTML for https://www.englishcenter.com.tr/iletisim
+[2026-06-12 14:17:21] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://www.englishcenter.com.tr/iletisim
+[2026-06-12 14:17:21] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://www.englishcenter.com.tr/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6343f55c-3c5b-431e-8ed0-60fba8db4564
+[2026-06-12 14:17:21] [INFO] [scraper.dynamic] DynamicScraper starting: https://www.englishcenter.com.tr/iletisim
+[2026-06-12 14:17:21] [INFO] [scraper.static] StaticScraper done https://www.sistemdil.com/iletisim — 1 contacts found
+[2026-06-12 14:17:21] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://www.sistemdil.com/iletisim contacts=1 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=2583900c-5fd3-4248-922f-056a257c680e
+[2026-06-12 14:17:21] [INFO] [crm.tasks] LEAD CREATED email=info@sistemdil.com campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=2583900c-5fd3-4248-922f-056a257c680e
+[2026-06-12 14:17:21] [INFO] [crm.tasks] SCRAPE RESULT url=https://www.sistemdil.com/iletisim processed=1 saved=1 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:17:21] [INFO] [scraper.static] StaticScraper done https://www.kursrehberi.com/ingilizce-kurslari — 0 contacts found
+[2026-06-12 14:17:21] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://www.kursrehberi.com/ingilizce-kurslari
+[2026-06-12 14:17:21] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://www.kursrehberi.com/ingilizce-kurslari campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=03f3bd23-b05f-4a77-8931-25d38d46257a
+[2026-06-12 14:17:21] [INFO] [scraper.dynamic] DynamicScraper starting: https://www.kursrehberi.com/ingilizce-kurslari
+[2026-06-12 14:17:21] [WARNING] [scraper.dynamic] Playwright error fetching https://www.englishcenter.com.tr/iletisim: Page.goto: net::ERR_SSL_PROTOCOL_ERROR at https://www.englishcenter.com.tr/iletisim
+Call log:
+navigating to "https://www.englishcenter.com.tr/iletisim", waiting until "networkidle"
+
+[2026-06-12 14:17:21] [WARNING] [scraper.dynamic] DynamicScraper got no HTML for https://www.englishcenter.com.tr/iletisim
+[2026-06-12 14:17:21] [ERROR] [crm.tasks] SCRAPE FAILED url=https://www.englishcenter.com.tr/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6343f55c-3c5b-431e-8ed0-60fba8db4564
+[2026-06-12 14:17:21] [DEBUG] [scraper.dynamic] Playwright fetched https://sfl.bilkent.edu.tr/contact/ (205 chars)
+[2026-06-12 14:17:21] [INFO] [scraper.dynamic] DynamicScraper done https://sfl.bilkent.edu.tr/contact/ — 0 contacts found
+[2026-06-12 14:17:21] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://sfl.bilkent.edu.tr/contact/ contacts=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=c435f97d-d390-41b3-a223-3622fbf89e1e
+[2026-06-12 14:17:21] [INFO] [crm.tasks] SCRAPE RESULT url=https://sfl.bilkent.edu.tr/contact/ processed=0 saved=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:17:23] [INFO] [crm.tasks] TASK score_lead_task START lead=5ac732f6-efcc-40c5-a99c-f23de06b5399
+[2026-06-12 14:17:24] [WARNING] [scraper.static] Error fetching https://www.britishside.com/iletisim: 404 Client Error: Not Found for url: https://britishside.com/iletisim
+[2026-06-12 14:17:24] [WARNING] [scraper.static] StaticScraper got no HTML for https://www.britishside.com/iletisim
+[2026-06-12 14:17:24] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://www.britishside.com/iletisim
+[2026-06-12 14:17:24] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://www.britishside.com/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=9b465588-4ce7-45aa-85c6-c058686cc66d
+[2026-06-12 14:17:24] [INFO] [scraper.dynamic] DynamicScraper starting: https://www.britishside.com/iletisim
+[2026-06-12 14:17:25] [WARNING] [scraper.static] Error fetching https://www.armut.com/ingilizce-dersi: 404 Client Error: Not Found for url: https://armut.com/ingilizce-dersi
+[2026-06-12 14:17:25] [WARNING] [scraper.static] StaticScraper got no HTML for https://www.armut.com/ingilizce-dersi
+[2026-06-12 14:17:25] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://www.armut.com/ingilizce-dersi
+[2026-06-12 14:17:25] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://www.armut.com/ingilizce-dersi campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=ebe280e5-0163-4cec-9ff2-9d62fd8ab3d4
+[2026-06-12 14:17:25] [INFO] [scraper.dynamic] DynamicScraper starting: https://www.armut.com/ingilizce-dersi
+[2026-06-12 14:17:25] [INFO] [scraper.static] StaticScraper done https://www.americanlife.com.tr/iletisim — 1 contacts found
+[2026-06-12 14:17:25] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://www.americanlife.com.tr/iletisim contacts=1 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=5c5431bd-b5ae-4599-8d9a-c5407e6a4517
+[2026-06-12 14:17:25] [INFO] [crm.tasks] LEAD CREATED email=info@americanlife.com.tr campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=5c5431bd-b5ae-4599-8d9a-c5407e6a4517
+[2026-06-12 14:17:25] [INFO] [crm.tasks] SCRAPE RESULT url=https://www.americanlife.com.tr/iletisim processed=1 saved=1 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:17:25] [INFO] [crm.tasks] TASK score_lead_task DONE lead=5ac732f6-efcc-40c5-a99c-f23de06b5399 score=70
+[2026-06-12 14:17:25] [INFO] [crm.tasks] TASK generate_draft_task START lead=5ac732f6-efcc-40c5-a99c-f23de06b5399
+[2026-06-12 14:17:26] [DEBUG] [scraper.dynamic] Playwright fetched https://www.armut.com/ingilizce-dersi (18107 chars)
+[2026-06-12 14:17:26] [INFO] [scraper.dynamic] DynamicScraper done https://www.armut.com/ingilizce-dersi — 0 contacts found
+[2026-06-12 14:17:26] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://www.armut.com/ingilizce-dersi contacts=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=ebe280e5-0163-4cec-9ff2-9d62fd8ab3d4
+[2026-06-12 14:17:26] [INFO] [crm.tasks] SCRAPE RESULT url=https://www.armut.com/ingilizce-dersi processed=0 saved=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:17:27] [DEBUG] [scraper.dynamic] Playwright fetched https://www.britishside.com/iletisim (53839 chars)
+[2026-06-12 14:17:27] [INFO] [scraper.dynamic] DynamicScraper done https://www.britishside.com/iletisim — 1 contacts found
+[2026-06-12 14:17:27] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://www.britishside.com/iletisim contacts=1 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=9b465588-4ce7-45aa-85c6-c058686cc66d
+[2026-06-12 14:17:27] [INFO] [crm.tasks] LEAD CREATED email=info@britishside.com campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=9b465588-4ce7-45aa-85c6-c058686cc66d
+[2026-06-12 14:17:27] [INFO] [crm.tasks] SCRAPE RESULT url=https://www.britishside.com/iletisim processed=1 saved=1 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:17:28] [INFO] [crm.tasks] TASK score_lead_task START lead=3f4415f6-2389-4f29-8cf7-0d769057a22c
+[2026-06-12 14:17:28] [INFO] [crm.tasks] TASK generate_draft_task DONE lead=5ac732f6-efcc-40c5-a99c-f23de06b5399 status=needs_review
+[2026-06-12 14:17:30] [INFO] [crm.tasks] TASK score_lead_task START lead=9db2eb3a-c8ef-499c-b891-77e1c6f65bdf
+[2026-06-12 14:17:31] [INFO] [crm.tasks] TASK score_lead_task DONE lead=3f4415f6-2389-4f29-8cf7-0d769057a22c score=70
+[2026-06-12 14:17:31] [INFO] [crm.tasks] TASK generate_draft_task START lead=3f4415f6-2389-4f29-8cf7-0d769057a22c
+[2026-06-12 14:17:31] [INFO] [scraper.static] StaticScraper done https://www.englishtime.com/iletisim — 1 contacts found
+[2026-06-12 14:17:31] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://www.englishtime.com/iletisim contacts=1 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=5957b9ef-96f2-48c5-be8a-3af86d78b078
+[2026-06-12 14:17:31] [INFO] [crm.tasks] SCRAPE RESULT url=https://www.englishtime.com/iletisim processed=1 saved=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:17:32] [INFO] [crm.tasks] TASK score_lead_task DONE lead=9db2eb3a-c8ef-499c-b891-77e1c6f65bdf score=70
+[2026-06-12 14:17:32] [INFO] [crm.tasks] TASK generate_draft_task START lead=9db2eb3a-c8ef-499c-b891-77e1c6f65bdf
+[2026-06-12 14:17:32] [WARNING] [scraper.static] Error fetching https://ydyo.aydin.edu.tr/iletisim/: HTTPSConnectionPool(host='ydyo.aydin.edu.tr', port=443): Max retries exceeded with url: /iletisim/ (Caused by NameResolutionError("HTTPSConnection(host='ydyo.aydin.edu.tr', port=443): Failed to resolve 'ydyo.aydin.edu.tr' ([Errno -2] Name or service not known)"))
+[2026-06-12 14:17:32] [WARNING] [scraper.static] StaticScraper got no HTML for https://ydyo.aydin.edu.tr/iletisim/
+[2026-06-12 14:17:32] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://ydyo.aydin.edu.tr/iletisim/
+[2026-06-12 14:17:32] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://ydyo.aydin.edu.tr/iletisim/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=2bcbba36-60c7-4f30-8357-3b209e58832f
+[2026-06-12 14:17:32] [INFO] [scraper.dynamic] DynamicScraper starting: https://ydyo.aydin.edu.tr/iletisim/
+[2026-06-12 14:17:32] [WARNING] [scraper.static] Error fetching https://www.dilkurslari.org/: HTTPSConnectionPool(host='www.dilkurslari.org', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='www.dilkurslari.org', port=443): Failed to resolve 'www.dilkurslari.org' ([Errno -3] Temporary failure in name resolution)"))
+[2026-06-12 14:17:32] [WARNING] [scraper.static] StaticScraper got no HTML for https://www.dilkurslari.org/
+[2026-06-12 14:17:32] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://www.dilkurslari.org/
+[2026-06-12 14:17:32] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://www.dilkurslari.org/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=48ef5afa-f313-490f-93a2-7b6757f0c057
+[2026-06-12 14:17:32] [INFO] [scraper.dynamic] DynamicScraper starting: https://www.dilkurslari.org/
+[2026-06-12 14:17:33] [WARNING] [scraper.dynamic] Playwright error fetching https://ydyo.aydin.edu.tr/iletisim/: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://ydyo.aydin.edu.tr/iletisim/
+Call log:
+navigating to "https://ydyo.aydin.edu.tr/iletisim/", waiting until "networkidle"
+
+[2026-06-12 14:17:33] [WARNING] [scraper.dynamic] DynamicScraper got no HTML for https://ydyo.aydin.edu.tr/iletisim/
+[2026-06-12 14:17:33] [ERROR] [crm.tasks] SCRAPE FAILED url=https://ydyo.aydin.edu.tr/iletisim/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=2bcbba36-60c7-4f30-8357-3b209e58832f
+[2026-06-12 14:17:33] [WARNING] [scraper.dynamic] Playwright error fetching https://www.dilkurslari.org/: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://www.dilkurslari.org/
+Call log:
+navigating to "https://www.dilkurslari.org/", waiting until "networkidle"
+
+[2026-06-12 14:17:33] [WARNING] [scraper.dynamic] DynamicScraper got no HTML for https://www.dilkurslari.org/
+[2026-06-12 14:17:33] [ERROR] [crm.tasks] SCRAPE FAILED url=https://www.dilkurslari.org/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=48ef5afa-f313-490f-93a2-7b6757f0c057
+[2026-06-12 14:17:34] [INFO] [crm.tasks] TASK generate_draft_task DONE lead=3f4415f6-2389-4f29-8cf7-0d769057a22c status=needs_review
+[2026-06-12 14:17:36] [WARNING] [scraper.static] Error fetching https://www.wallstreetenglish.com.tr/iletisim: HTTPSConnectionPool(host='www.wallstreetenglish.com.tr', port=443): Max retries exceeded with url: /iletisim (Caused by NameResolutionError("HTTPSConnection(host='www.wallstreetenglish.com.tr', port=443): Failed to resolve 'www.wallstreetenglish.com.tr' ([Errno -2] Name or service not known)"))
+[2026-06-12 14:17:36] [WARNING] [scraper.static] StaticScraper got no HTML for https://www.wallstreetenglish.com.tr/iletisim
+[2026-06-12 14:17:36] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://www.wallstreetenglish.com.tr/iletisim
+[2026-06-12 14:17:36] [WARNING] [scraper.static] Error fetching https://amerikankulturu.com.tr/iletisim/: HTTPSConnectionPool(host='amerikankulturu.com.tr', port=443): Max retries exceeded with url: /iletisim/ (Caused by NameResolutionError("HTTPSConnection(host='amerikankulturu.com.tr', port=443): Failed to resolve 'amerikankulturu.com.tr' ([Errno -2] Name or service not known)"))
+[2026-06-12 14:17:36] [WARNING] [scraper.static] StaticScraper got no HTML for https://amerikankulturu.com.tr/iletisim/
+[2026-06-12 14:17:36] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://amerikankulturu.com.tr/iletisim/
+[2026-06-12 14:17:36] [WARNING] [scraper.static] Error fetching https://www.kentingilizce.com/iletisim: HTTPSConnectionPool(host='www.kentingilizce.com', port=443): Max retries exceeded with url: /iletisim (Caused by NameResolutionError("HTTPSConnection(host='www.kentingilizce.com', port=443): Failed to resolve 'www.kentingilizce.com' ([Errno -2] Name or service not known)"))
+[2026-06-12 14:17:36] [WARNING] [scraper.static] StaticScraper got no HTML for https://www.kentingilizce.com/iletisim
+[2026-06-12 14:17:36] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://www.kentingilizce.com/iletisim
+[2026-06-12 14:17:36] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://amerikankulturu.com.tr/iletisim/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=632512b9-2e4f-401d-a099-ffa9499ed2a2
+[2026-06-12 14:17:36] [INFO] [scraper.dynamic] DynamicScraper starting: https://amerikankulturu.com.tr/iletisim/
+[2026-06-12 14:17:36] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://www.wallstreetenglish.com.tr/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=1f78d158-160e-489f-986a-638304be7167
+[2026-06-12 14:17:36] [INFO] [scraper.dynamic] DynamicScraper starting: https://www.wallstreetenglish.com.tr/iletisim
+[2026-06-12 14:17:36] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://www.kentingilizce.com/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=7cbb5392-8023-40a5-92ca-a7a7ba625655
+[2026-06-12 14:17:36] [INFO] [scraper.dynamic] DynamicScraper starting: https://www.kentingilizce.com/iletisim
+[2026-06-12 14:17:36] [WARNING] [scraper.static] Error fetching https://ingilizce.bogazici.edu.tr: HTTPSConnectionPool(host='ingilizce.bogazici.edu.tr', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='ingilizce.bogazici.edu.tr', port=443): Failed to resolve 'ingilizce.bogazici.edu.tr' ([Errno -3] Temporary failure in name resolution)"))
+[2026-06-12 14:17:36] [WARNING] [scraper.static] StaticScraper got no HTML for https://ingilizce.bogazici.edu.tr
+[2026-06-12 14:17:36] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://ingilizce.bogazici.edu.tr
+[2026-06-12 14:17:36] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://ingilizce.bogazici.edu.tr campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=a3366474-2e9b-49fa-a12b-8ccd27533b00
+[2026-06-12 14:17:36] [INFO] [scraper.dynamic] DynamicScraper starting: https://ingilizce.bogazici.edu.tr
+[2026-06-12 14:17:36] [WARNING] [scraper.dynamic] Playwright timeout fetching https://www.kursrehberi.com/ingilizce-kurslari
+[2026-06-12 14:17:36] [WARNING] [scraper.dynamic] DynamicScraper got no HTML for https://www.kursrehberi.com/ingilizce-kurslari
+[2026-06-12 14:17:36] [ERROR] [crm.tasks] SCRAPE FAILED url=https://www.kursrehberi.com/ingilizce-kurslari campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=03f3bd23-b05f-4a77-8931-25d38d46257a
+[2026-06-12 14:17:37] [WARNING] [scraper.dynamic] Playwright error fetching https://www.wallstreetenglish.com.tr/iletisim: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://www.wallstreetenglish.com.tr/iletisim
+Call log:
+navigating to "https://www.wallstreetenglish.com.tr/iletisim", waiting until "networkidle"
+
+[2026-06-12 14:17:37] [WARNING] [scraper.dynamic] DynamicScraper got no HTML for https://www.wallstreetenglish.com.tr/iletisim
+[2026-06-12 14:17:37] [ERROR] [crm.tasks] SCRAPE FAILED url=https://www.wallstreetenglish.com.tr/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=1f78d158-160e-489f-986a-638304be7167
+[2026-06-12 14:17:37] [WARNING] [scraper.dynamic] Playwright error fetching https://amerikankulturu.com.tr/iletisim/: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://amerikankulturu.com.tr/iletisim/
+Call log:
+navigating to "https://amerikankulturu.com.tr/iletisim/", waiting until "networkidle"
+
+[2026-06-12 14:17:37] [WARNING] [scraper.dynamic] DynamicScraper got no HTML for https://amerikankulturu.com.tr/iletisim/
+[2026-06-12 14:17:37] [ERROR] [crm.tasks] SCRAPE FAILED url=https://amerikankulturu.com.tr/iletisim/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=632512b9-2e4f-401d-a099-ffa9499ed2a2
+[2026-06-12 14:17:37] [WARNING] [scraper.dynamic] Playwright error fetching https://www.kentingilizce.com/iletisim: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://www.kentingilizce.com/iletisim
+Call log:
+navigating to "https://www.kentingilizce.com/iletisim", waiting until "networkidle"
+
+[2026-06-12 14:17:37] [WARNING] [scraper.dynamic] DynamicScraper got no HTML for https://www.kentingilizce.com/iletisim
+[2026-06-12 14:17:37] [ERROR] [crm.tasks] SCRAPE FAILED url=https://www.kentingilizce.com/iletisim campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=7cbb5392-8023-40a5-92ca-a7a7ba625655
+[2026-06-12 14:17:37] [WARNING] [scraper.dynamic] Playwright error fetching https://ingilizce.bogazici.edu.tr: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://ingilizce.bogazici.edu.tr/
+Call log:
+navigating to "https://ingilizce.bogazici.edu.tr/", waiting until "networkidle"
+
+[2026-06-12 14:17:37] [WARNING] [scraper.dynamic] DynamicScraper got no HTML for https://ingilizce.bogazici.edu.tr
+[2026-06-12 14:17:37] [ERROR] [crm.tasks] SCRAPE FAILED url=https://ingilizce.bogazici.edu.tr campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=a3366474-2e9b-49fa-a12b-8ccd27533b00
+[2026-06-12 14:17:37] [INFO] [crm.tasks] TASK generate_draft_task DONE lead=9db2eb3a-c8ef-499c-b891-77e1c6f65bdf status=needs_review
+[2026-06-12 14:18:14] [INFO] [crm.tasks] TASK run_static_scrape START url=https://sfl.bilkent.edu.tr/contact/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=c435f97d-d390-41b3-a223-3622fbf89e1e
+[2026-06-12 14:18:14] [INFO] [scraper.static] StaticScraper starting: https://sfl.bilkent.edu.tr/contact/
+[2026-06-12 14:18:14] [WARNING] [scraper.static] Error fetching https://sfl.bilkent.edu.tr/contact/: 404 Client Error: Not Found for url: https://sfl.bilkent.edu.tr/contact/
+[2026-06-12 14:18:14] [WARNING] [scraper.static] StaticScraper got no HTML for https://sfl.bilkent.edu.tr/contact/
+[2026-06-12 14:18:14] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://sfl.bilkent.edu.tr/contact/
+[2026-06-12 14:18:14] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://sfl.bilkent.edu.tr/contact/ campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=c435f97d-d390-41b3-a223-3622fbf89e1e
+[2026-06-12 14:18:14] [INFO] [scraper.dynamic] DynamicScraper starting: https://sfl.bilkent.edu.tr/contact/
+[2026-06-12 14:18:15] [DEBUG] [scraper.dynamic] Playwright fetched https://sfl.bilkent.edu.tr/contact/ (205 chars)
+[2026-06-12 14:18:15] [INFO] [scraper.dynamic] DynamicScraper done https://sfl.bilkent.edu.tr/contact/ — 0 contacts found
+[2026-06-12 14:18:15] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://sfl.bilkent.edu.tr/contact/ contacts=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=c435f97d-d390-41b3-a223-3622fbf89e1e
+[2026-06-12 14:18:15] [INFO] [crm.tasks] SCRAPE RESULT url=https://sfl.bilkent.edu.tr/contact/ processed=0 saved=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:20:54] [INFO] [crm.tasks] TASK run_static_scrape START url=https://ingilizce.bogazici.edu.tr campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=a3366474-2e9b-49fa-a12b-8ccd27533b00
+[2026-06-12 14:20:54] [INFO] [scraper.static] StaticScraper starting: https://ingilizce.bogazici.edu.tr
+[2026-06-12 14:20:54] [WARNING] [scraper.static] Error fetching https://ingilizce.bogazici.edu.tr: HTTPSConnectionPool(host='ingilizce.bogazici.edu.tr', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='ingilizce.bogazici.edu.tr', port=443): Failed to resolve 'ingilizce.bogazici.edu.tr' ([Errno -2] Name or service not known)"))
+[2026-06-12 14:20:54] [WARNING] [scraper.static] StaticScraper got no HTML for https://ingilizce.bogazici.edu.tr
+[2026-06-12 14:20:54] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://ingilizce.bogazici.edu.tr
+[2026-06-12 14:20:54] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://ingilizce.bogazici.edu.tr campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=a3366474-2e9b-49fa-a12b-8ccd27533b00
+[2026-06-12 14:20:54] [INFO] [scraper.dynamic] DynamicScraper starting: https://ingilizce.bogazici.edu.tr
+[2026-06-12 14:20:54] [WARNING] [scraper.dynamic] Playwright error fetching https://ingilizce.bogazici.edu.tr: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://ingilizce.bogazici.edu.tr/
+Call log:
+navigating to "https://ingilizce.bogazici.edu.tr/", waiting until "networkidle"
+
+[2026-06-12 14:20:54] [WARNING] [scraper.dynamic] DynamicScraper got no HTML for https://ingilizce.bogazici.edu.tr
+[2026-06-12 14:20:54] [ERROR] [crm.tasks] SCRAPE FAILED url=https://ingilizce.bogazici.edu.tr campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=a3366474-2e9b-49fa-a12b-8ccd27533b00
+[2026-06-12 14:29:45] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.englishtime.com/egitmenlerimiz campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:45] [INFO] [scraper.static] StaticScraper starting: https://www.englishtime.com/egitmenlerimiz (directory=False)
+[2026-06-12 14:29:47] [DEBUG] [scraper.static] StaticScraper crawling sub-page: https://www.englishtime.com/hizmetler/hizmetler-kisisel-veriler-politikasi
+[2026-06-12 14:29:47] [DEBUG] [scraper.static] StaticScraper crawling sub-page: https://www.englishtime.com/kurumsal/yurtdisi-egitim-danismanligi
+[2026-06-12 14:29:48] [DEBUG] [scraper.static] StaticScraper crawling sub-page: https://www.englishtime.com/kurumsal/egitimler
+[2026-06-12 14:29:49] [DEBUG] [scraper.static] StaticScraper crawling sub-page: https://www.englishtime.com/kurumsal/ingilizce-kursu-advanced
+[2026-06-12 14:29:49] [DEBUG] [scraper.static] StaticScraper crawling sub-page: https://www.englishtime.com/kurumsal/ingilizce-kursu-upper-intermediate
+[2026-06-12 14:29:50] [DEBUG] [scraper.static] StaticScraper crawling sub-page: https://www.englishtime.com/kurumsal/et-ingilizce-kursu-ingilizce-kursu-intermediate
+[2026-06-12 14:29:51] [INFO] [scraper.static] StaticScraper done https://www.englishtime.com/egitmenlerimiz — 107 contacts found
+[2026-06-12 14:29:51] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://www.englishtime.com/egitmenlerimiz contacts=107 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=eskisehirsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=mimaroba.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=umitkoysube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=aydinsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=sakaryasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=fethiyesube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=cukurova.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=corlusube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=batman.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=bakirkoysube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=keciorensube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=eryamansube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=karaman.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=umraniyesube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=denizlisube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=gaziosmanpasasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=arnavutkoy.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=mersinsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=tarsus.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=kirklarelisube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=kirsehir.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=gemlik.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=muglasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=silivri.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=bishkek@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=manavgat.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=bahcesehirsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=kayserisube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=burdursube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=adiyamansube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=beylikduzu@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=korfezsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=fatihsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=elazigsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=amasyasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=hatay.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=konya@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=ereglisube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=larasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=bursasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=bandirmasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=adanasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=sultangazisube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=mecidiyekoysube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=bayrampasa.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=sirinevlersube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=canakkalesube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=karakoprusube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=pendik@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=izmirsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=yuksekovasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=didimsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=sefakoysube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=canadabranch@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=tokat.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=kastamonu.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=diyarbakirbaglar.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=cekmekoysube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=esentepe.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=elvankentsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=aksaraysube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=sincansube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=sancaktepe@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=maltepesube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=edirne@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=mardin.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=malatyasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=cerkezkoysube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=ispartasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=izmitsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=antalyasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=gaziantepsahinbeysube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=kadikoysube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=alanyasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=basaksehirsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=dalamansube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=nevsehirsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=atasehirsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=esenyurtsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=kurumsal@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=avcilarsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=corum.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=siirtsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=tekirdagsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=bolu.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=bagcilarsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=hakkarisube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=afyonkarahisarsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=gaziantepsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=gunesli.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=diyarbakirsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=luleburgazsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=gebzesube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=kavaciksube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=adiyamankahtasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=kurumsalegitim@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=sultanbeylisube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=erzurumsube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=trabzon.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=ankarasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=erciyessube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=sanliurfasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=ankarapursaklar.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=ortacasube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=konyabosna@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] LEAD CREATED email=nigde.sube@englishtime.com title=None campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=6914109a-19c6-440e-bf07-b7b8dfca25f5
+[2026-06-12 14:29:51] [INFO] [crm.tasks] SCRAPE RESULT url=https://www.englishtime.com/egitmenlerimiz processed=107 saved=106 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.armut.com/ingilizce-dersi campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=ebe280e5-0163-4cec-9ff2-9d62fd8ab3d4
+[2026-06-12 14:29:51] [INFO] [scraper.static] StaticScraper starting: https://www.armut.com/ingilizce-dersi (directory=True)
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=815f310b-967e-4f88-857b-ffca9afe3c3b
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=aabcf18c-2476-438a-b0de-facdefee22eb
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=c54f3f76-afbe-42e2-a6d9-7b4e82595df1
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=05c2355f-54f3-4c99-89a9-77fd625c4b9c
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=3a3f9db4-677b-4da7-9f43-135f94331af8
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=19cca209-3aee-4b15-89c2-2a43cc668117
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=f972318f-3f48-4ccc-ad80-5070b9d48767
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=a22a3f93-a429-47e6-ace4-a1f533f152d8
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=13283966-be59-473f-81c2-50e9bba4f560
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=fa989d2b-5d8d-4d33-ad4b-fb32bddb1b87
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=c4e481b6-5d35-4d23-be3d-00c35b1b80e4
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=4e439c8a-0f39-4ea5-84a5-61f246589c87
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=fe305d45-614a-428b-9c9e-c68d1de315e8
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=98f7de17-72e0-4bfb-a3d0-10753c47a356
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=af0bc367-fd13-4dab-9551-e9e8c4ba1153
+[2026-06-12 14:29:51] [INFO] [crm.tasks] TASK score_lead_task START lead=9cad5840-ed90-4a39-b5a4-f893723ba2fc
+[2026-06-12 14:29:52] [WARNING] [scraper.static] Error fetching https://www.armut.com/ingilizce-dersi: 404 Client Error: Not Found for url: https://armut.com/ingilizce-dersi
+[2026-06-12 14:29:52] [WARNING] [scraper.static] StaticScraper got no HTML for https://www.armut.com/ingilizce-dersi
+[2026-06-12 14:29:52] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://www.armut.com/ingilizce-dersi
+[2026-06-12 14:29:52] [INFO] [crm.tasks] TASK run_static_scrape START url=https://www.britishside.com/ekibimiz campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=0b3e17fa-4db4-4ab6-965a-dd035d3f6c69
+[2026-06-12 14:29:52] [INFO] [scraper.static] StaticScraper starting: https://www.britishside.com/ekibimiz (directory=False)
+[2026-06-12 14:29:52] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://www.armut.com/ingilizce-dersi campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=ebe280e5-0163-4cec-9ff2-9d62fd8ab3d4
+[2026-06-12 14:29:52] [INFO] [scraper.dynamic] DynamicScraper starting: https://www.armut.com/ingilizce-dersi
+[2026-06-12 14:29:53] [DEBUG] [scraper.dynamic] Playwright fetched https://www.armut.com/ingilizce-dersi (18107 chars)
+[2026-06-12 14:29:53] [INFO] [scraper.dynamic] DynamicScraper done https://www.armut.com/ingilizce-dersi — 0 contacts found
+[2026-06-12 14:29:53] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://www.armut.com/ingilizce-dersi contacts=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=ebe280e5-0163-4cec-9ff2-9d62fd8ab3d4
+[2026-06-12 14:29:54] [INFO] [crm.tasks] SCRAPE RESULT url=https://www.armut.com/ingilizce-dersi processed=0 saved=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=aabcf18c-2476-438a-b0de-facdefee22eb score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=cef28ad1-f259-4df3-981b-0bc8a763aa11
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=f972318f-3f48-4ccc-ad80-5070b9d48767 score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=4e439c8a-0f39-4ea5-84a5-61f246589c87 score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=ad3eee07-1b47-4f34-b5f3-b705fe5d4658
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=b92cb022-80d8-40fe-9137-3bd9d44ed320
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=c4e481b6-5d35-4d23-be3d-00c35b1b80e4 score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=aa9cc4dc-2f8d-4a1b-a8ab-1b51d646124b
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=815f310b-967e-4f88-857b-ffca9afe3c3b score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=a55bc1ab-2996-4760-8d90-c9d02580e95e
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=fe305d45-614a-428b-9c9e-c68d1de315e8 score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=eeb5a20c-4d7f-4650-bc16-83ac6380c389
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=9cad5840-ed90-4a39-b5a4-f893723ba2fc score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=de51159a-3ba5-4c08-9a6f-bf6fc242bc3a
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=fa989d2b-5d8d-4d33-ad4b-fb32bddb1b87 score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=3a3f9db4-677b-4da7-9f43-135f94331af8 score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=945e3bfb-08ae-44f6-88f1-0c1c56b47efc
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=85651e90-8ac4-408a-b2d0-a9654badb8f7
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=13283966-be59-473f-81c2-50e9bba4f560 score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=ba5f4371-53fe-49c1-a33a-7c1968521f3d
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=af0bc367-fd13-4dab-9551-e9e8c4ba1153 score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=72da71a4-85b4-433f-91f9-bbdd747124d7
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=05c2355f-54f3-4c99-89a9-77fd625c4b9c score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=26f5f5f4-276e-4772-8f5f-026a0562112d
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=98f7de17-72e0-4bfb-a3d0-10753c47a356 score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=e0866fcc-b113-4c07-a235-e3dbf8dfe68f
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task DONE lead=c54f3f76-afbe-42e2-a6d9-7b4e82595df1 score=50
+[2026-06-12 14:29:54] [INFO] [crm.tasks] TASK score_lead_task START lead=668ab239-8424-4b7f-8257-d9c07dba84ea
+[2026-06-12 14:29:55] [WARNING] [scraper.static] Error fetching https://www.britishside.com/ekibimiz: 404 Client Error: Not Found for url: https://britishside.com/ekibimiz
+[2026-06-12 14:29:55] [WARNING] [scraper.static] StaticScraper got no HTML for https://www.britishside.com/ekibimiz
+[2026-06-12 14:29:55] [INFO] [crm.tasks] TASK run_static_scrape no contacts found, escalating to dynamic scraper: https://www.britishside.com/ekibimiz
+[2026-06-12 14:29:55] [INFO] [crm.tasks] TASK run_dynamic_scrape START url=https://www.britishside.com/ekibimiz campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=0b3e17fa-4db4-4ab6-965a-dd035d3f6c69
+[2026-06-12 14:29:55] [INFO] [scraper.dynamic] DynamicScraper starting: https://www.britishside.com/ekibimiz
+[2026-06-12 14:29:55] [INFO] [crm.tasks] TASK score_lead_task DONE lead=a22a3f93-a429-47e6-ace4-a1f533f152d8 score=50
+[2026-06-12 14:29:55] [INFO] [crm.tasks] TASK score_lead_task START lead=50a831c2-ed0d-413d-b4e8-4281f2b645d8
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=b92cb022-80d8-40fe-9137-3bd9d44ed320 score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=9b723625-4dad-42cb-818c-86a17eac88a5
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=a55bc1ab-2996-4760-8d90-c9d02580e95e score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=aa9cc4dc-2f8d-4a1b-a8ab-1b51d646124b score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=7a45405e-9c6c-4358-8633-0ee1b4ca053c
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=42365ccc-98f0-4ee6-b13f-06ca12d79f46
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=de51159a-3ba5-4c08-9a6f-bf6fc242bc3a score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=7947b944-9d55-46e0-8503-082645a5ef5c
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=85651e90-8ac4-408a-b2d0-a9654badb8f7 score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=5f0a7f8a-045c-4598-963f-048f280d6eae
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=cef28ad1-f259-4df3-981b-0bc8a763aa11 score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=945e3bfb-08ae-44f6-88f1-0c1c56b47efc score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=984fe7f5-7ff2-47e8-9b7e-9db568c161dd
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=e2cb59cb-2994-44e6-a9a2-aa0492d096d9
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=ad3eee07-1b47-4f34-b5f3-b705fe5d4658 score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=6d3f4cc7-09a1-4f63-8ff5-01a59ab37300
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=eeb5a20c-4d7f-4650-bc16-83ac6380c389 score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=26f5f5f4-276e-4772-8f5f-026a0562112d score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=bdc1da6e-c8c9-4a23-a833-1f5529d21bb9
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=c8fa4804-7060-44a0-9164-4eac5672d6d0
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=ba5f4371-53fe-49c1-a33a-7c1968521f3d score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=3b4e1a3b-ec21-417d-913e-ab9077f91d5f
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=19cca209-3aee-4b15-89c2-2a43cc668117 score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=9dbd0d4c-a10b-4e56-818f-b6eed702d9f5
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task DONE lead=668ab239-8424-4b7f-8257-d9c07dba84ea score=50
+[2026-06-12 14:29:56] [INFO] [crm.tasks] TASK score_lead_task START lead=07ccee96-d68d-41a8-b583-d2e69f82d73a
+[2026-06-12 14:29:57] [INFO] [crm.tasks] TASK score_lead_task DONE lead=e0866fcc-b113-4c07-a235-e3dbf8dfe68f score=50
+[2026-06-12 14:29:57] [INFO] [crm.tasks] TASK score_lead_task START lead=b9a6012e-a306-44ff-9305-472f85e0b237
+[2026-06-12 14:29:57] [INFO] [crm.tasks] TASK score_lead_task DONE lead=72da71a4-85b4-433f-91f9-bbdd747124d7 score=50
+[2026-06-12 14:29:57] [INFO] [crm.tasks] TASK score_lead_task START lead=bc623280-0fc1-40b3-8dd9-a02031fba407
+[2026-06-12 14:29:57] [INFO] [crm.tasks] TASK score_lead_task DONE lead=7a45405e-9c6c-4358-8633-0ee1b4ca053c score=50
+[2026-06-12 14:29:57] [INFO] [crm.tasks] TASK score_lead_task START lead=dff4162c-d87e-48d0-a00d-364a906e396d
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=50a831c2-ed0d-413d-b4e8-4281f2b645d8 score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=7480b781-3f24-4adc-aeda-e6bb8a5d8e50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=42365ccc-98f0-4ee6-b13f-06ca12d79f46 score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=e2cb59cb-2994-44e6-a9a2-aa0492d096d9 score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=960fecf8-6eed-4d00-9575-a8c35bee0ecd
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=294df214-3902-4b64-9b13-49ab384f0805
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=9b723625-4dad-42cb-818c-86a17eac88a5 score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=9ab7d06e-2b87-4056-8b42-cbbfc5ae4648
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=6d3f4cc7-09a1-4f63-8ff5-01a59ab37300 score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=5f0a7f8a-045c-4598-963f-048f280d6eae score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=ff48e1ed-e597-4be8-bac2-a3a4a52320ca
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=361db7b0-0dc2-42e9-8c99-732c669000c6
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=984fe7f5-7ff2-47e8-9b7e-9db568c161dd score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=c58526bc-6171-48d6-9d6e-ae0c75391684
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=c8fa4804-7060-44a0-9164-4eac5672d6d0 score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=7524260d-b13e-4700-8bcd-c5a696d642dc
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=3b4e1a3b-ec21-417d-913e-ab9077f91d5f score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=899e68b8-8ba0-48ab-9b6f-ef83471a2694
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=bdc1da6e-c8c9-4a23-a833-1f5529d21bb9 score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=85b99bb6-30d0-41a2-af90-c497dd61b6e5
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=9dbd0d4c-a10b-4e56-818f-b6eed702d9f5 score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=3a0a0c2d-0e21-434d-ab9e-0b0d2ba76842
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=07ccee96-d68d-41a8-b583-d2e69f82d73a score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=6ebbb47f-792d-4883-b539-9a829e5487af
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task DONE lead=b9a6012e-a306-44ff-9305-472f85e0b237 score=50
+[2026-06-12 14:29:58] [INFO] [crm.tasks] TASK score_lead_task START lead=28a9b0c5-9c06-44bf-a37a-80118f4f921c
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task DONE lead=bc623280-0fc1-40b3-8dd9-a02031fba407 score=50
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task START lead=29d6fe0f-bd8d-4bb8-a47e-8a489ba3ae96
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task DONE lead=7947b944-9d55-46e0-8503-082645a5ef5c score=50
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task START lead=f873f0b9-b0ba-41b2-8d56-58501b060be4
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task DONE lead=dff4162c-d87e-48d0-a00d-364a906e396d score=50
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task START lead=61e338cf-f129-46f5-9781-f4018c18a955
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task DONE lead=960fecf8-6eed-4d00-9575-a8c35bee0ecd score=50
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task DONE lead=294df214-3902-4b64-9b13-49ab384f0805 score=50
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task START lead=e488e4ef-7079-4633-a422-8416199042c1
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task START lead=94317d27-4215-4ef2-bbfb-4378d64a013c
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task DONE lead=7480b781-3f24-4adc-aeda-e6bb8a5d8e50 score=50
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task START lead=b9c85adb-96b5-4cfa-8af0-ef77283bd758
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task DONE lead=361db7b0-0dc2-42e9-8c99-732c669000c6 score=50
+[2026-06-12 14:29:59] [INFO] [crm.tasks] TASK score_lead_task START lead=cf3e493b-4abf-4785-84b2-e14b465cb8e8
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task DONE lead=c58526bc-6171-48d6-9d6e-ae0c75391684 score=50
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task START lead=8c03db72-c56e-401b-a261-d050a40c9836
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task DONE lead=899e68b8-8ba0-48ab-9b6f-ef83471a2694 score=50
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task START lead=640b8d8f-8d28-4ec2-98b1-2c003a58f5ed
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task DONE lead=7524260d-b13e-4700-8bcd-c5a696d642dc score=50
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task START lead=1e21db44-8f88-420d-b549-af451fb75ccc
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task DONE lead=85b99bb6-30d0-41a2-af90-c497dd61b6e5 score=50
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task START lead=6fee7e1c-23c9-4c1d-bdac-1c9bd82e2da1
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task DONE lead=3a0a0c2d-0e21-434d-ab9e-0b0d2ba76842 score=50
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task START lead=4d3fa333-5bcf-4c65-84f3-d87f10ac9253
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task DONE lead=6ebbb47f-792d-4883-b539-9a829e5487af score=50
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task START lead=705e460a-d9c4-4974-8ec3-93b3bd34fd8d
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task DONE lead=ff48e1ed-e597-4be8-bac2-a3a4a52320ca score=50
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task START lead=49aad187-8cbd-4faa-9fc8-5f2690d3667e
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task DONE lead=9ab7d06e-2b87-4056-8b42-cbbfc5ae4648 score=50
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task START lead=2773de31-bb2b-4fbf-abf4-b826ce21ec09
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task DONE lead=28a9b0c5-9c06-44bf-a37a-80118f4f921c score=50
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task START lead=1d441578-c3db-49fa-9bb5-f760944f548f
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task DONE lead=29d6fe0f-bd8d-4bb8-a47e-8a489ba3ae96 score=50
+[2026-06-12 14:30:00] [INFO] [crm.tasks] TASK score_lead_task START lead=46d7d795-bd19-49e8-8336-92c2b639c6f8
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task DONE lead=f873f0b9-b0ba-41b2-8d56-58501b060be4 score=50
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task START lead=4db87e34-5b5e-4102-8d27-640cc1e43231
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task DONE lead=94317d27-4215-4ef2-bbfb-4378d64a013c score=50
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task START lead=f736218d-7e65-4425-9c49-db9e1d0ad18f
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task DONE lead=e488e4ef-7079-4633-a422-8416199042c1 score=50
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task START lead=aa86cc0f-82c1-4339-be92-e8dfc4965a9a
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task DONE lead=cf3e493b-4abf-4785-84b2-e14b465cb8e8 score=50
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task START lead=536ed11e-b608-4b22-b9fe-87fe3b658f32
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task DONE lead=61e338cf-f129-46f5-9781-f4018c18a955 score=50
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task START lead=4ff2f107-daf2-4688-8719-87d62f8d56fe
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task DONE lead=b9c85adb-96b5-4cfa-8af0-ef77283bd758 score=50
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task START lead=3089d1ee-cff0-45ad-91f9-a80ddf41eee4
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task DONE lead=1e21db44-8f88-420d-b549-af451fb75ccc score=50
+[2026-06-12 14:30:01] [INFO] [crm.tasks] TASK score_lead_task START lead=bd67284e-ad1a-467b-a6af-8e6d32c65339
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task DONE lead=640b8d8f-8d28-4ec2-98b1-2c003a58f5ed score=50
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task START lead=948ee2f7-af52-4c1c-9d86-5df93ea8fbad
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task DONE lead=49aad187-8cbd-4faa-9fc8-5f2690d3667e score=50
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task DONE lead=8c03db72-c56e-401b-a261-d050a40c9836 score=50
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task START lead=98747efe-e001-4ee1-a487-a9a564b9b4d7
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task START lead=352e2027-65cf-4469-965a-836fb433c0eb
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task DONE lead=705e460a-d9c4-4974-8ec3-93b3bd34fd8d score=50
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task START lead=8281eb53-d27d-496f-a38b-2b5bde89fb8e
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task DONE lead=6fee7e1c-23c9-4c1d-bdac-1c9bd82e2da1 score=50
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task START lead=123137ed-6607-4ac7-959f-0ed15c1ce268
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task DONE lead=4d3fa333-5bcf-4c65-84f3-d87f10ac9253 score=50
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task START lead=927b4afe-aff3-4e47-8831-34710bbe5a40
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task DONE lead=2773de31-bb2b-4fbf-abf4-b826ce21ec09 score=50
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task START lead=27edf673-dd42-4a7a-a9bb-450ebe09d823
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task DONE lead=46d7d795-bd19-49e8-8336-92c2b639c6f8 score=50
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task START lead=f9e020ff-0739-440f-af83-0b0bbd67dc3c
+[2026-06-12 14:30:02] [DEBUG] [scraper.dynamic] Playwright fetched https://www.britishside.com/ekibimiz (53837 chars)
+[2026-06-12 14:30:02] [INFO] [scraper.dynamic] DynamicScraper done https://www.britishside.com/ekibimiz — 1 contacts found
+[2026-06-12 14:30:02] [INFO] [crm.tasks] SCRAPE SUCCESS url=https://www.britishside.com/ekibimiz contacts=1 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530 source=0b3e17fa-4db4-4ab6-965a-dd035d3f6c69
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task DONE lead=1d441578-c3db-49fa-9bb5-f760944f548f score=50
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task DONE lead=4db87e34-5b5e-4102-8d27-640cc1e43231 score=50
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task START lead=b14e9181-8d23-4228-8fc5-553192113dfe
+[2026-06-12 14:30:02] [INFO] [crm.tasks] TASK score_lead_task START lead=bad8cc73-631d-49be-800e-a3ae116521f3
+[2026-06-12 14:30:02] [INFO] [crm.tasks] SCRAPE RESULT url=https://www.britishside.com/ekibimiz processed=1 saved=0 campaign=c2860f57-62ab-4746-a266-7f6e10fa6530
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=f736218d-7e65-4425-9c49-db9e1d0ad18f score=50
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=4a7d1a6e-5fa4-431f-8075-573128d6c880
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=aa86cc0f-82c1-4339-be92-e8dfc4965a9a score=70
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=ea87caec-c7c9-40e4-9152-041f7cb425ed
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=3089d1ee-cff0-45ad-91f9-a80ddf41eee4 score=50
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=29644548-4c9c-434e-96a9-38475639f5c3
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=4ff2f107-daf2-4688-8719-87d62f8d56fe score=50
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=f8c3130e-79f4-4c52-8dd9-19273f897f8d
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=bd67284e-ad1a-467b-a6af-8e6d32c65339 score=50
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=722a7c72-1e91-412e-8e2b-84b6eb78383f
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=536ed11e-b608-4b22-b9fe-87fe3b658f32 score=50
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=c3a8dc87-3367-4f92-8320-eff13b876fda
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=98747efe-e001-4ee1-a487-a9a564b9b4d7 score=50
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=f4f58751-2ba5-49a1-ac41-f683e5797f5f
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=352e2027-65cf-4469-965a-836fb433c0eb score=50
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=1d79ed00-7e73-4585-8ad5-2b14e75c9614
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=123137ed-6607-4ac7-959f-0ed15c1ce268 score=50
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=948ee2f7-af52-4c1c-9d86-5df93ea8fbad score=50
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=1b6f7f55-2db9-4dd7-a861-8dd1afcf1e27
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=9dd1845a-47bf-43e3-b57e-cddd66429205
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task DONE lead=8281eb53-d27d-496f-a38b-2b5bde89fb8e score=50
+[2026-06-12 14:30:03] [INFO] [crm.tasks] TASK score_lead_task START lead=e3dacba2-2511-4ae0-acea-05b0a9e3fb62
+[2026-06-12 14:30:04] [INFO] [crm.tasks] TASK score_lead_task DONE lead=f9e020ff-0739-440f-af83-0b0bbd67dc3c score=50
+[2026-06-12 14:30:04] [INFO] [crm.tasks] TASK score_lead_task START lead=1e61cd04-e6d6-447d-a8a1-c49f3dba95d6
+[2026-06-12 14:30:04] [INFO] [crm.tasks] TASK score_lead_task DONE lead=bad8cc73-631d-49be-800e-a3ae116521f3 score=50
+[2026-06-12 14:30:04] [INFO] [crm.tasks] TASK generate_draft_task START lead=aa86cc0f-82c1-4339-be92-e8dfc4965a9a
+[2026-06-12 14:30:04] [INFO] [crm.tasks] TASK score_lead_task DONE lead=27edf673-dd42-4a7a-a9bb-450ebe09d823 score=50
+[2026-06-12 14:30:04] [INFO] [crm.tasks] TASK score_lead_task DONE lead=4a7d1a6e-5fa4-431f-8075-573128d6c880 score=50
+[2026-06-12 14:30:04] [INFO] [crm.tasks] TASK score_lead_task DONE lead=ea87caec-c7c9-40e4-9152-041f7cb425ed score=50
+[2026-06-12 14:30:05] [INFO] [crm.tasks] TASK score_lead_task DONE lead=f8c3130e-79f4-4c52-8dd9-19273f897f8d score=50
+[2026-06-12 14:30:05] [INFO] [crm.tasks] TASK score_lead_task DONE lead=c3a8dc87-3367-4f92-8320-eff13b876fda score=50
+[2026-06-12 14:30:05] [INFO] [crm.tasks] TASK score_lead_task DONE lead=927b4afe-aff3-4e47-8831-34710bbe5a40 score=50
+[2026-06-12 14:30:05] [INFO] [crm.tasks] TASK score_lead_task DONE lead=1d79ed00-7e73-4585-8ad5-2b14e75c9614 score=40
+[2026-06-12 14:30:05] [INFO] [crm.tasks] TASK score_lead_task DONE lead=1b6f7f55-2db9-4dd7-a861-8dd1afcf1e27 score=50
+[2026-06-12 14:30:05] [INFO] [crm.tasks] TASK score_lead_task DONE lead=e3dacba2-2511-4ae0-acea-05b0a9e3fb62 score=50
+[2026-06-12 14:30:05] [INFO] [crm.tasks] TASK score_lead_task DONE lead=29644548-4c9c-434e-96a9-38475639f5c3 score=40
+[2026-06-12 14:30:05] [INFO] [crm.tasks] TASK score_lead_task DONE lead=9dd1845a-47bf-43e3-b57e-cddd66429205 score=50
+[2026-06-12 14:30:06] [INFO] [crm.tasks] TASK score_lead_task DONE lead=1e61cd04-e6d6-447d-a8a1-c49f3dba95d6 score=50
+[2026-06-12 14:30:06] [INFO] [crm.tasks] TASK score_lead_task DONE lead=b14e9181-8d23-4228-8fc5-553192113dfe score=50
+[2026-06-12 14:30:06] [INFO] [crm.tasks] TASK score_lead_task DONE lead=f4f58751-2ba5-49a1-ac41-f683e5797f5f score=50
+[2026-06-12 14:30:06] [INFO] [crm.tasks] TASK score_lead_task DONE lead=722a7c72-1e91-412e-8e2b-84b6eb78383f score=50
+[2026-06-12 14:30:07] [INFO] [crm.tasks] TASK generate_draft_task DONE lead=aa86cc0f-82c1-4339-be92-e8dfc4965a9a status=needs_review

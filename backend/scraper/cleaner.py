@@ -26,7 +26,7 @@ class DataCleaner:
         self.df = pd.DataFrame(raw_data_list)
 
         # Ensure standard columns exist even if empty
-        expected_columns = ['email', 'linkedin_url', 'first_name', 'last_name', 'url']
+        expected_columns = ['email', 'linkedin_url', 'first_name', 'last_name', 'url', 'title']
         for col in expected_columns:
             if col not in self.df.columns:
                 self.df[col] = None
@@ -66,6 +66,9 @@ class DataCleaner:
 
         for col in ['first_name', 'last_name']:
             self.df[col] = self.df[col].map(clean_name)
+
+        # title is free-form text — just strip whitespace
+        self.df['title'] = self.df['title'].map(lambda v: DataCleaner._clean_str(v))
 
     def _flag_generic_emails(self):
         """Flags role-based inboxes (info@, support@, ...) so they can be human-reviewed (SRS 3.6)."""

@@ -111,6 +111,7 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
                 linkedin_url=linkedin_url,
                 first_name=lead_data.get('first_name'),
                 last_name=lead_data.get('last_name'),
+                title=lead_data.get('title'),
                 campaign=campaign,
                 company=company,
                 source=source,
@@ -118,7 +119,8 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
                 status='uncontacted'
             )
             saved_count += 1
-            logger.info("LEAD CREATED email=%s campaign=%s source=%s", email, campaign_id, source_id)
+            logger.info("LEAD CREATED email=%s title=%s campaign=%s source=%s",
+                        email, lead_data.get('title'), campaign_id, source_id)
             log_activity(lead, 'lead_created', f"Scraped from {url}", {"source_url": url})
             # Leads not tied to the page's own company won't be reached by the
             # page-company enrichment fan-out below, so score them directly.
@@ -160,8 +162,10 @@ def run_static_scrape(self, url: str, campaign_id: str = None, proxy_url: str = 
     contacts, the page is likely JS-rendered — automatically retry with the
     Playwright (dynamic) scraper before giving up."""
     logger.info("TASK run_static_scrape START url=%s campaign=%s source=%s", url, campaign_id, source_id)
+    source = LeadSource.objects.filter(id=source_id).first() if source_id else None
+    is_directory = source and source.source_type == 'directory'
     scraper = StaticScraper()
-    result = scraper.scrape_website(url, proxy_url=proxy_url)
+    result = scraper.scrape_website(url, proxy_url=proxy_url, is_directory=is_directory)
 
     no_contacts = not result.get('emails') and not result.get('social_links', {}).get('linkedin_profiles')
     if no_contacts:

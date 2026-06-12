@@ -5,7 +5,7 @@ import urllib3
 from bs4 import BeautifulSoup
 from typing import Dict, Any, Optional, List
 
-from .extractor import extract_contacts, find_contact_links, extract_social_links
+from .extractor import extract_contacts, find_contact_links, find_listing_links, extract_social_links
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -23,8 +23,10 @@ class StaticScraper:
         'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
     }
 
-    # How many contact sub-pages to follow per site.
-    MAX_SUBPAGES = 4
+    # How many contact/team sub-pages to follow per site.
+    MAX_SUBPAGES = 6
+    # For directory sources: how many individual listing pages to crawl into.
+    MAX_LISTING_PAGES = 20
 
     def __init__(self, timeout: int = 12):
         self.timeout = timeout
@@ -76,10 +78,11 @@ class StaticScraper:
     def extract_social_links(self, soup: BeautifulSoup) -> Dict[str, Any]:
         return extract_social_links(soup)
 
-    def scrape_website(self, url: str, proxy_url: Optional[str] = None) -> Dict[str, Any]:
-        """Fetch the landing page, then crawl a few contact/about/team sub-pages,
-        aggregating contacts (with names) and social links across all of them."""
-        logger.info("StaticScraper starting: %s", url)
+    def scrape_website(self, url: str, proxy_url: Optional[str] = None,
+                       is_directory: bool = False) -> Dict[str, Any]:
+        """Fetch the landing page, crawl sub-pages, and for directory sources
+        also follow individual listing links to find people inside each listing."""
+        logger.info("StaticScraper starting: %s (directory=%s)", url, is_directory)
         result = {
             'url': url, 'success': False, 'metadata': {}, 'body_text': '',
             'emails': [], 'contacts': [], 'social_links': {}
@@ -99,17 +102,22 @@ class StaticScraper:
 
         def _merge(contacts):
             for c in contacts:
-                cur = contacts_by_email.get(c['email'])
+                email = c.get('email')
+                if not email:
+                    continue
+                cur = contacts_by_email.get(email)
                 if cur is None:
-                    contacts_by_email[c['email']] = c
+                    contacts_by_email[email] = c
                 else:
-                    cur['first_name'] = cur['first_name'] or c['first_name']
-                    cur['last_name'] = cur['last_name'] or c['last_name']
+                    cur['first_name'] = cur['first_name'] or c.get('first_name')
+                    cur['last_name'] = cur['last_name'] or c.get('last_name')
+                    cur['title'] = cur.get('title') or c.get('title')
 
         _merge(extract_contacts(soup, html))
 
-        # Crawl contact/about/team sub-pages for more (and better) contacts.
+        # Crawl contact/about/team sub-pages for richer contacts.
         for link in find_contact_links(soup, url, limit=self.MAX_SUBPAGES):
+            logger.debug("StaticScraper crawling sub-page: %s", link)
             sub_html = self.fetch_html(link, proxy_url=proxy_url)
             if not sub_html:
                 continue
@@ -119,6 +127,25 @@ class StaticScraper:
             socials.setdefault('linkedin_company', sub_socials.get('linkedin_company'))
             for p in sub_socials.get('linkedin_profiles', []):
                 socials['linkedin_profiles'].append(p)
+
+        # For directory/listing pages: follow individual listing links to find
+        # people inside each school / tutor profile page.
+        if is_directory:
+            listing_links = find_listing_links(soup, url, limit=self.MAX_LISTING_PAGES)
+            logger.info("StaticScraper directory mode: found %d listing links in %s",
+                        len(listing_links), url)
+            for link in listing_links:
+                logger.debug("StaticScraper crawling listing: %s", link)
+                lst_html = self.fetch_html(link, proxy_url=proxy_url)
+                if not lst_html:
+                    continue
+                lst_soup = BeautifulSoup(lst_html, 'html.parser')
+                _merge(extract_contacts(lst_soup, lst_html))
+                for sub_link in find_contact_links(lst_soup, link, limit=2):
+                    s_html = self.fetch_html(sub_link, proxy_url=proxy_url)
+                    if s_html:
+                        s_soup = BeautifulSoup(s_html, 'html.parser')
+                        _merge(extract_contacts(s_soup, s_html))
 
         contacts = list(contacts_by_email.values())
         result['contacts'] = contacts
