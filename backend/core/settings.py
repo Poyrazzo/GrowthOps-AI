@@ -162,6 +162,11 @@ SEARCH_API_KEY = os.environ.get('SEARCH_API_KEY', '')
 SEARCH_BASE_URL = os.environ.get('SEARCH_BASE_URL', '')
 SEARCH_DISCOVERY_RESULT_LIMIT = int(os.environ.get('SEARCH_DISCOVERY_RESULT_LIMIT', 10))
 
+# AdsPower — LinkedIn profile enrichment via real browser
+ADSPOWER_API_URL = os.environ.get('ADSPOWER_API_URL', 'http://host.docker.internal:50325')
+ADSPOWER_PROFILE_ID = os.environ.get('ADSPOWER_PROFILE_ID', '')
+LINKEDIN_ENRICHMENT_ENABLED = os.environ.get('LINKEDIN_ENRICHMENT_ENABLED', 'false').lower() in ('1', 'true', 'yes', 'on')
+
 # --- TEST-MODE SAFETY ---------------------------------------------------
 # While OUTREACH_TEST_MODE is on, EVERY outgoing email is redirected to
 # TEST_REDIRECT_EMAIL no matter which lead it was drafted for. This makes it

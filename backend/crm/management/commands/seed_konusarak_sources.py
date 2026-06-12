@@ -73,6 +73,10 @@ SOURCES = [
     ("https://www.yenibiris.com/is-ilanlari/egitim-kurumu", "directory", "HR/Training Job Listings", 80),
     ("https://www.kariyer.net/is-ilani?pozisyon=ingilizce-egitmen", "directory", "Job Listing Board", 78),
 ]
+# LinkedIn is NOT listed here as explicit sources.
+# When LINKEDIN_ENRICHMENT_ENABLED=true, the beat task automatically generates
+# LinkedIn People search queries from campaign.target_persona and runs them —
+# no manual sources needed.
 
 
 class Command(BaseCommand):

@@ -8,6 +8,7 @@ from scraper.static import StaticScraper
 from scraper.dynamic import DynamicScraper
 from scraper.cleaner import DataCleaner
 from scraper.extractor import extract_contacts, extract_social_links
+from scraper.linkedin import scrape_linkedin_profile as _scrape_linkedin_profile, search_and_scrape_linkedin
 from scraper.search import (
     discover_person_pages,
     is_linkedin_profile_url,
@@ -244,6 +245,14 @@ def _process_and_save_scrape_result(result: dict, campaign_id: str = None, sourc
             logger.info("LEAD CREATED email=%s title=%s campaign=%s source=%s",
                         email, lead_data.get('title'), campaign_id, source_id)
             log_activity(lead, 'lead_created', f"Scraped from {url}", {"source_url": url})
+            # Queue LinkedIn enrichment if the lead has a LinkedIn URL and enrichment is on
+            if (lead.linkedin_url or (lead.profile_url and 'linkedin.com' in (lead.profile_url or ''))):
+                if getattr(settings, 'LINKEDIN_ENRICHMENT_ENABLED', False):
+                    enrich_linkedin_lead_task.apply_async(
+                        args=[str(lead.id)],
+                        countdown=5,  # small delay so the lead row is committed
+                        queue='playwright',
+                    )
             # Leads not tied to the page's own company won't be reached by the
             # page-company enrichment fan-out below, so score them directly.
             if not page_company or lead.company_id != page_company.id:
@@ -335,6 +344,199 @@ def run_dynamic_scrape(self, url: str, campaign_id: str = None, adspower_profile
     result = scraper.scrape_website(url, adspower_profile_id=adspower_profile_id, proxy_url=proxy_url)
     return _process_and_save_scrape_result(result, campaign_id, source_id)
 
+@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=2, queue='playwright')
+def enrich_linkedin_lead_task(self, lead_id: str):
+    """Open the lead's LinkedIn profile via AdsPower and enrich stored data.
+
+    Runs on the playwright queue so it has access to the Playwright / Chrome runtime.
+    Only executes when LINKEDIN_ENRICHMENT_ENABLED=true and ADSPOWER_PROFILE_ID is set.
+    """
+    if not getattr(settings, 'LINKEDIN_ENRICHMENT_ENABLED', False):
+        return {'skipped': 'LINKEDIN_ENRICHMENT_ENABLED is false'}
+
+    adspower_profile_id = getattr(settings, 'ADSPOWER_PROFILE_ID', '')
+    adspower_api_url = getattr(settings, 'ADSPOWER_API_URL', 'http://host.docker.internal:50325')
+    if not adspower_profile_id:
+        return {'skipped': 'ADSPOWER_PROFILE_ID not configured'}
+
+    lead = Lead.objects.filter(id=lead_id).first()
+    if not lead:
+        logger.warning("enrich_linkedin_lead_task: lead %s not found", lead_id)
+        return {'error': 'lead not found'}
+
+    linkedin_url = lead.linkedin_url or lead.profile_url
+    if not linkedin_url or 'linkedin.com' not in linkedin_url:
+        return {'skipped': 'no linkedin url on lead'}
+
+    logger.info("TASK enrich_linkedin_lead START lead=%s url=%s", lead_id, linkedin_url)
+    data = _scrape_linkedin_profile(
+        linkedin_url=linkedin_url,
+        adspower_profile_id=adspower_profile_id,
+        adspower_api_url=adspower_api_url,
+    )
+
+    if not data.get('success'):
+        logger.warning("TASK enrich_linkedin_lead FAILED lead=%s url=%s", lead_id, linkedin_url)
+        return {'success': False}
+
+    updated = False
+    if data.get('first_name') and not lead.first_name:
+        lead.first_name = data['first_name']
+        updated = True
+    if data.get('last_name') and not lead.last_name:
+        lead.last_name = data['last_name']
+        updated = True
+    if data.get('title') and not lead.title:
+        lead.title = data['title']
+        updated = True
+    if data.get('email') and not lead.email:
+        # A real email was found on their LinkedIn — update the lead
+        if not Lead.objects.filter(email=data['email']).exclude(id=lead.id).exists():
+            lead.email = data['email']
+            lead.is_generic_email = False
+            updated = True
+    if data.get('company') and not lead.company:
+        # Try to match to an existing Company record by name
+        company = Company.objects.filter(name__iexact=data['company']).first()
+        if company:
+            lead.company = company
+            updated = True
+
+    if updated:
+        lead.save()
+        logger.info(
+            "TASK enrich_linkedin_lead ENRICHED lead=%s name=%s %s title=%s email=%s",
+            lead_id, lead.first_name, lead.last_name, lead.title, lead.email,
+        )
+        log_activity(lead, 'linkedin_enriched',
+                     f"LinkedIn profile enriched via AdsPower: {linkedin_url}",
+                     {'linkedin_url': linkedin_url})
+        # Re-score now that we have richer data
+        score_lead_task.delay(lead_id)
+
+    return {'success': True, 'updated': updated}
+
+
+@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=2, queue='playwright')
+def run_linkedin_source_scrape(self, source_id: str, campaign_id: str = None):
+    """Scrape a LinkedIn people-search source via AdsPower.
+
+    The LeadSource.url should be a LinkedIn search URL:
+      https://www.linkedin.com/search/results/people/?keywords=english+trainer+istanbul
+    or just a keyword string that will be used as the search query.
+
+    Results are saved as leads with linkedin_url set. The enrich_linkedin_lead_task
+    is then queued for each new lead if LINKEDIN_ENRICHMENT_ENABLED=true.
+    """
+    if not getattr(settings, 'LINKEDIN_ENRICHMENT_ENABLED', False):
+        return {'skipped': 'LINKEDIN_ENRICHMENT_ENABLED is false'}
+
+    adspower_profile_id = getattr(settings, 'ADSPOWER_PROFILE_ID', '')
+    adspower_api_url = getattr(settings, 'ADSPOWER_API_URL', 'http://host.docker.internal:50325')
+    if not adspower_profile_id:
+        return {'skipped': 'ADSPOWER_PROFILE_ID not set'}
+
+    source = LeadSource.objects.filter(id=source_id).first()
+    campaign = Campaign.objects.filter(id=campaign_id).first() if campaign_id else None
+
+    url = source.url if source else ''
+    # If URL is a linkedin search URL, extract keywords; otherwise treat url as keyword string
+    if 'linkedin.com/search' in url:
+        parsed = urllib.parse.urlparse(url)
+        keywords = urllib.parse.parse_qs(parsed.query).get('keywords', [url])[0]
+    else:
+        keywords = url
+
+    logger.info("TASK run_linkedin_source_scrape START keywords=%r campaign=%s", keywords, campaign_id)
+
+    people = search_and_scrape_linkedin(
+        keywords=keywords,
+        adspower_profile_id=adspower_profile_id,
+        adspower_api_url=adspower_api_url,
+        limit=30,
+        enrich_profiles=False,  # fast pass — collect cards; full profiles enriched separately
+    )
+
+    if not people:
+        logger.info("TASK run_linkedin_source_scrape no people found for keywords=%r", keywords)
+        if source:
+            source.last_scraped_at = timezone.now()
+            source.save(update_fields=['last_scraped_at'])
+        return {'success': True, 'saved': 0}
+
+    # Clean and save
+    cleaned = DataCleaner(people).process()
+    saved_count = 0
+    for lead_data in cleaned:
+        linkedin_url = lead_data.get('linkedin_url')
+        profile_url = lead_data.get('profile_url') or linkedin_url
+        if not linkedin_url and not profile_url:
+            continue
+
+        lead = Lead.objects.filter(linkedin_url=linkedin_url).first() if linkedin_url else None
+        if not lead and profile_url:
+            lead = Lead.objects.filter(profile_url=profile_url).first()
+
+        if not lead:
+            # Try to infer company domain from keywords for company resolution
+            page_company = None
+            lead = Lead.objects.create(
+                email=None,
+                linkedin_url=linkedin_url,
+                profile_url=profile_url,
+                first_name=lead_data.get('first_name'),
+                last_name=lead_data.get('last_name'),
+                title=lead_data.get('title'),
+                campaign=campaign,
+                source=source,
+                is_generic_email=False,
+                status='uncontacted',
+            )
+            saved_count += 1
+            logger.info("LEAD CREATED (linkedin) linkedin=%s title=%s campaign=%s",
+                        linkedin_url, lead_data.get('title'), campaign_id)
+            log_activity(lead, 'lead_created',
+                         f"Found via LinkedIn search: {keywords}",
+                         {'keywords': keywords, 'linkedin_url': linkedin_url})
+
+            # Queue deep profile enrichment
+            enrich_linkedin_lead_task.apply_async(
+                args=[str(lead.id)],
+                countdown=10,
+                queue='playwright',
+            )
+            # Queue scoring after a delay (so enrichment can finish first)
+            score_lead_task.apply_async(args=[str(lead.id)], countdown=90)
+        else:
+            # Update missing fields on existing lead
+            updated = False
+            if linkedin_url and not lead.linkedin_url:
+                lead.linkedin_url = linkedin_url
+                updated = True
+            if lead_data.get('title') and not lead.title:
+                lead.title = lead_data['title']
+                updated = True
+            if campaign and not lead.campaign:
+                lead.campaign = campaign
+                updated = True
+            if source and not lead.source:
+                lead.source = source
+                updated = True
+            if updated:
+                lead.save()
+                # Re-queue enrichment to pick up any updates
+                enrich_linkedin_lead_task.apply_async(
+                    args=[str(lead.id)], countdown=10, queue='playwright'
+                )
+
+    if source:
+        source.last_scraped_at = timezone.now()
+        source.save(update_fields=['last_scraped_at'])
+
+    logger.info("TASK run_linkedin_source_scrape DONE keywords=%r saved=%d", keywords, saved_count)
+    return {'success': True, 'saved': saved_count, 'found': len(people)}
+
+
 @shared_task
 def trigger_scheduled_scrapes_task():
     """Beat task: walks active campaigns and enqueues scrapes for their due LeadSources."""
@@ -352,9 +554,10 @@ def trigger_scheduled_scrapes_task():
             logger.debug("Campaign %s ended, skipping", campaign.name)
             continue
 
-        sources = campaign.sources.exclude(source_type='linkedin').order_by('-priority_score')
-        logger.info("Campaign %s has %d scrapeable sources", campaign.name, sources.count())
-        for source in sources:
+        all_sources = campaign.sources.order_by('-priority_score')
+        logger.info("Campaign %s has %d sources total", campaign.name, all_sources.count())
+
+        for source in all_sources:
             if source.last_scraped_at and source.last_scraped_at > refresh_cutoff:
                 logger.debug("Source %s recently scraped, skipping", source.url)
                 continue
@@ -362,12 +565,25 @@ def trigger_scheduled_scrapes_task():
             source.last_scraped_at = timezone.now()
             source.save(update_fields=['last_scraped_at'])
 
-            if source.source_type == 'dynamic':
+            if source.source_type == 'linkedin':
+                if getattr(settings, 'LINKEDIN_ENRICHMENT_ENABLED', False):
+                    run_linkedin_source_scrape.apply_async(
+                        args=[str(source.id)],
+                        kwargs={'campaign_id': str(campaign.id)},
+                        queue='playwright',
+                    )
+                    triggered += 1
+                    logger.info("QUEUED linkedin scrape for %s (campaign: %s)", source.url, campaign.name)
+                else:
+                    logger.debug("Skipping LinkedIn source %s — LINKEDIN_ENRICHMENT_ENABLED=false", source.url)
+            elif source.source_type == 'dynamic':
                 run_dynamic_scrape.delay(source.url, campaign_id=str(campaign.id), source_id=str(source.id))
+                triggered += 1
+                logger.info("QUEUED dynamic scrape for %s (campaign: %s)", source.url, campaign.name)
             else:
                 run_static_scrape.delay(source.url, campaign_id=str(campaign.id), source_id=str(source.id))
-            triggered += 1
-            logger.info("QUEUED scrape for %s (campaign: %s)", source.url, campaign.name)
+                triggered += 1
+                logger.info("QUEUED static scrape for %s (campaign: %s)", source.url, campaign.name)
 
     logger.info("BEAT trigger_scheduled_scrapes_task: triggered %d scrapes", triggered)
     return f"Triggered {triggered} scrapes"
